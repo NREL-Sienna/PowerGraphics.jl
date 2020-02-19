@@ -1,7 +1,7 @@
 using DataFrames
 using Dates
 using Plots
-using PowerSimulationsPlots
+using InfrastructureSystemsPlots
 using PowerSimulations
 using InfrastructureSystems
 using Test
@@ -9,7 +9,7 @@ using TestSetExtensions
 using Weave
 
 const PSI = PowerSimulations
-const PSP = PowerSimulationsPlots
+const PSP = InfrastructureSystemsPlots
 const IS = InfrastructureSystems
 path = joinpath(pwd(), "plots")
 !isdir(path) && mkdir(path)

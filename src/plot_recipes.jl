@@ -1,7 +1,8 @@
 ### PlotlyJS set up
 import PlotlyJS
 import WebIO
-WebIO.install_jupyter_nbextension()
+
+# WebIO.install_jupyter_nbextension()
 
 function set_seriescolor(seriescolor::Array, gens::Array)
     colors = []
@@ -221,7 +222,7 @@ function plotly_bar_gen(bar_gen::BarGeneration, seriescolor::Array; kwargs...)
 end
 
 function plotly_bar_gen(
-    bar_gen::Array{PowerSimulationsPlots.BarGeneration},
+    bar_gen::Array{BarGeneration},
     seriescolor::Array;
     kwargs...,
 )
@@ -406,7 +407,7 @@ RecipesBase.@recipe function StackedPlot(
 end
 
 RecipesBase.@recipe function StackedPlot(
-    results::Array{PowerSimulationsPlots.StackedArea},
+    results::Array{StackedArea},
     variable::String,
     seriescolor::Array,
 )

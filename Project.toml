@@ -1,5 +1,5 @@
-name = "PowerSimulationsPlots"
-uuid = "0110965f-f4a3-43c4-8c1d-fc11c89967fa"
+name = "InfrastructureSystemsPlots"
+uuid = "5f7eddb3-86b1-49e8-a95a-ddc0f45eea41"
 authors = ["Lily Hanig <lily.hanig@nrel.gov>"]
 version = "0.1.0"
 

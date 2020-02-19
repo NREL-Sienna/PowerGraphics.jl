@@ -1,4 +1,4 @@
-using PowerSimulationsPlots
+using InfrastructureSystemsPlots
 using DataFrames
 using Dates
 using PowerSimulations
