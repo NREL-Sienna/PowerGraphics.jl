@@ -20,11 +20,9 @@ import Colors
 import DataFrames
 import Feather
 
-import PowerSimulations
 import PowerSystems
 import InfrastructureSystems
 
-const PSI = PowerSimulations
 const PSY = PowerSystems
 const IS = InfrastructureSystems
 include("plot_results.jl")

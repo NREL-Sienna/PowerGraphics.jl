@@ -78,9 +78,9 @@ PLOTLY_DEFAULT = vcat(
     CURTAILMENT_288,
 )
 
-VARIABLE_TYPES = [PSI.ACTIVE_POWER, "Spin", "Reg", "Flex"]
+VARIABLE_TYPES = ["P", "Spin", "Reg", "Flex"]
 
-function _filter_variables(results::PSI.Results; kwargs...)
+function _filter_variables(results::IS.Results; kwargs...)
     filter_results = Dict()
     reserves = get(kwargs, :reserves, false)
     if reserves
@@ -98,7 +98,7 @@ function _filter_variables(results::PSI.Results; kwargs...)
             end
         end
     end
-    results = PSI._make_results(
+    results = IS._make_results(
         filter_results,
         results.total_cost,
         results.optimizer_log,
@@ -170,24 +170,24 @@ fuel_plot(res, sys)
 - `seriescolor::Array`: Set different colors for the plots
 - `reserves::Bool`: if reserves = true, the researves will be plotted with the active power
 """
-function fuel_plot(res::PSI.Results, sys::PSY.System; kwargs...)
+function fuel_plot(res::IS.Results, sys::PSY.System; kwargs...)
     ref = make_fuel_dictionary(sys, res)
     fuel_plot(res, ref; kwargs...)
 end
 
-function fuel_plot(res::Array{PSI.Results}, sys::PSY.System; kwargs...)
+function fuel_plot(res::Array{IS.Results}, sys::PSY.System; kwargs...)
     ref = make_fuel_dictionary(sys, res)
     fuel_plot(res, ref; kwargs...)
 end
 """
-    fuel_plot(results::PSI.Results, generators)
+    fuel_plot(results::IS.Results, generators)
 
 This function makes a stack plot of the results by fuel type
 and assigns each fuel type a specific color.
 
 # Arguments
 
-- `res::PSI.Results = results`: results to be plotted
+- `res::IS.Results = results`: results to be plotted
 - `generators::Dict`: the dictionary of fuel type and an array
  of the generators per fuel type, or some other specified category order
 
@@ -206,7 +206,7 @@ fuel_plot(res, generator_dict)
 - `reserves::Bool`: if reserves = true, the researves will be plotted with the active power
 """
 
-function fuel_plot(res::PSI.Results, generator_dict::Dict; kwargs...)
+function fuel_plot(res::IS.Results, generator_dict::Dict; kwargs...)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     res = _filter_variables(res; kwargs...)
@@ -274,13 +274,13 @@ function _fuel_plot_internal(
 end
 
 """
-   bar_plot(results::PSI.Results)
+   bar_plot(results::IS.Results)
   
 This function plots a bar plot for the generators in each variable within
 the results variables dictionary, and makes a bar plot for all of the variables.
 
 # Arguments
-- `res::PSI.Results = results`: results to be plotted
+- `res::IS.Results = results`: results to be plotted
 
 # Example
 
@@ -296,7 +296,7 @@ bar_plot(results)
 - `reserves::Bool`: if reserves = true, the researves will be plotted with the active power
 """
 
-function bar_plot(res::PSI.Results; kwargs...)
+function bar_plot(res::IS.Results; kwargs...)
     backend = Plots.backend()
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
@@ -309,13 +309,13 @@ function bar_plot(res::PSI.Results; kwargs...)
 end
 
 """
-   bar_plot(results::Array{PSI.Results})
+   bar_plot(results::Array{IS.Results})
   
 This function plots a subplot for each result. Each subplot has a bar plot for the generators in each variable within
 the results variables dictionary, and makes a bar plot for all of the variables per result object.
 
 # Arguments
-- `res::Array{PSI.Results} = [results1; results2]`: results to be plotted
+- `res::Array{IS.Results} = [results1; results2]`: results to be plotted
 
 # Example
 
@@ -349,12 +349,12 @@ function bar_plot(results::Array{}; kwargs...)
     _bar_plot_internal(new_results, bar_gen, backend, save_fig, set_display; kwargs...)
 end
 
-function bar_plot(res::PSI.Results, variables::Array; kwargs...)
+function bar_plot(res::IS.Results, variables::Array; kwargs...)
     res_var = Dict()
     for variable in variables
         res_var[variable] = res.variables[variable]
     end
-    results = PSI.OperationsProblemResults(
+    results = IS.OperationsProblemResults(
         res_var,
         res.total_cost,
         res.optimizer_log,
@@ -363,14 +363,14 @@ function bar_plot(res::PSI.Results, variables::Array; kwargs...)
     bar_plot(results; kwargs...)
 end
 
-function bar_plot(results::Array{PSI.Results}, variables::Array; kwargs...)
+function bar_plot(results::Array{IS.Results}, variables::Array; kwargs...)
     new_results = []
     for res in results
         res_var = Dict()
         for variable in variables
             res_var[variable] = res.variables[variable]
         end
-        new_res = PSI.OperationsProblemResults(
+        new_res = IS.OperationsProblemResults(
             res_var,
             res.total_cost,
             res.optimizer_log,
@@ -382,7 +382,7 @@ function bar_plot(results::Array{PSI.Results}, variables::Array; kwargs...)
 end
 
 function _bar_plot_internal(
-    res::PSI.Results,
+    res::IS.Results,
     bar_gen::BarGeneration,
     backend::Plots.PlotlyJSBackend,
     save_fig::Any,
@@ -408,7 +408,7 @@ function _bar_plot_internal(
 end
 
 function _bar_plot_internal(
-    res::PSI.Results,
+    res::IS.Results,
     bar_gen::BarGeneration,
     backend::Any,
     save_fig::Any,
@@ -459,13 +459,13 @@ function _bar_plot_internal(
 end
 
 """
-     stack_plot(results::PSI.Results)
+     stack_plot(results::IS.Results)
 
 This function plots a stack plot for the generators in each variable within
 the results variables dictionary, and makes a stack plot for all of the variables.
 
 # Arguments
-- `res::PSI.Results = results`: results to be plotted
+- `res::IS.Results = results`: results to be plotted
 
 # Examples
 
@@ -481,7 +481,7 @@ stack_plot(results)
 - `reserves::Bool`: if reserves = true, the researves will be plotted with the active power
 """
 
-function stack_plot(res::PSI.Results; kwargs...)
+function stack_plot(res::IS.Results; kwargs...)
     set_display = get(kwargs, :set_display, true)
     backend = Plots.backend()
     save_fig = get(kwargs, :save, nothing)
@@ -494,13 +494,13 @@ function stack_plot(res::PSI.Results; kwargs...)
 end
 
 """
-     stack_plot(results::Array{PSI.Results})
+     stack_plot(results::Array{IS.Results})
 
 This function plots a subplot for each result object. Each subplot stacks the generators in each variable within
 results variables dictionary, and makes a stack plot for all of the variables per result object.
 
 # Arguments
-- `res::Array{PSI.Results} = [results1, results2]`: results to be plotted
+- `res::Array{IS.Results} = [results1, results2]`: results to be plotted
 
 # Examples
 
@@ -542,13 +542,13 @@ function stack_plot(results::Array{}; kwargs...)
 end
 
 """
-     stack_plot(results::PSI.Results, variables::Array)
+     stack_plot(results::IS.Results, variables::Array)
 
 This function plots a stack plot for the generators in each variable within
 the results variables dictionary, and makes a stack plot for all of the variables in the array.
 
 # Arguments
-- `res::PSI.Results = results`: results to be plotted
+- `res::IS.Results = results`: results to be plotted
 - `variables::Array`: list of variables to be plotted in the results
 
 # Examples
@@ -566,12 +566,12 @@ stack_plot(results, variables)
 - `reserves::Bool`: if reserves = true, the researves will be plotted with the active power
 """
 
-function stack_plot(res::PSI.Results, variables::Array; kwargs...)
+function stack_plot(res::IS.Results, variables::Array; kwargs...)
     res_var = Dict()
     for variable in variables
         res_var[variable] = res.variables[variable]
     end
-    results = PSI.OperationsProblemResults(
+    results = IS.OperationsProblemResults(
         res_var,
         res.total_cost,
         res.optimizer_log,
@@ -580,14 +580,14 @@ function stack_plot(res::PSI.Results, variables::Array; kwargs...)
     stack_plot(results; kwargs...)
 end
 
-function stack_plot(results::Array{PSI.Results}, variables::Array; kwargs...)
+function stack_plot(results::Array{IS.Results}, variables::Array; kwargs...)
     new_results = []
     for res in results
         res_var = Dict()
         for variable in variables
             res_var[variable] = res.variables[variable]
         end
-        new_res = PSI.OperationsProblemResults(
+        new_res = IS.OperationsProblemResults(
             res_var,
             res.total_cost,
             res.optimizer_log,
@@ -599,8 +599,8 @@ function stack_plot(results::Array{PSI.Results}, variables::Array; kwargs...)
 end
 
 function _stack_plot_internal(
-    res::Any,
-    stack::Any,
+    res::IS.Results,
+    stack::StackedGeneration,
     backend::Plots.PlotlyJSBackend,
     save_fig::Any,
     set_display::Bool;
@@ -612,7 +612,20 @@ function _stack_plot_internal(
 end
 
 function _stack_plot_internal(
-    res::PSI.Results,
+    res::Array{},
+    stack::Array{},
+    backend::Plots.PlotlyJSBackend,
+    save_fig::Any,
+    set_display::Bool;
+    kwargs...,
+)
+    seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
+    plotly_stack_plots(res, seriescolor; kwargs...)
+    plotly_stack_gen(stack, seriescolor; kwargs...)
+end
+
+function _stack_plot_internal(
+    res::IS.Results,
     stack::StackedGeneration,
     backend::Any,
     save_fig::Any,

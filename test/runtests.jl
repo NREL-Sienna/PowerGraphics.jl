@@ -10,10 +10,6 @@ using PowerSystems
 import PowerSystems: PowerSystemTableData
 const PSY = PowerSystems
 
-@test 1 = 1
-
-#= Enable once the tests are properly developed
-
 macro includetests(testarg...)
     if length(testarg) == 0
         tests = []
@@ -88,4 +84,3 @@ finally
     global_logger(logger)
     nothing
 end
-=#

@@ -23,13 +23,13 @@ struct BarGeneration
 end
 
 """
-    variable = get_stacked_plot_data(res::PSI.Results, variable::String)
+    variable = get_stacked_plot_data(res::IS.Results, variable::String)
 
 This function takes in results and uses a dataframe from whichever variable name was given and converts it to type StackedArea.
 StackedArea is the type of struct that signals the plot() function to use the StackedArea plot recipe method.
 
 # Arguments
-- `res::PSI.Results`: simulation or operations results
+- `res::IS.Results`: simulation or operations results
 - `variable::String`: the variable to be plotted
 
 #Example
@@ -42,7 +42,7 @@ plot(ThermalStandard)
 - `sort::Array`: the array of generators to be plotted, in the order to be plotted
 """
 
-function get_stacked_plot_data(res::PSI.Results, variable::String; kwargs...)
+function get_stacked_plot_data(res::IS.Results, variable::String; kwargs...)
 
     sort = get(kwargs, :sort, nothing)
     time_range = res.time_stamp[!, :Range]
@@ -67,13 +67,13 @@ function get_stacked_plot_data(res::PSI.Results, variable::String; kwargs...)
 end
 
 """
-    variable = get_bar_plot_data(res::PSI.Results, variable::String)
+    variable = get_bar_plot_data(res::IS.Results, variable::String)
 
 This function takes in results and uses a dataframe from whichever variable name was given and converts it to type BarPlot.
 StackedGeneration is the type of struct that signals the plot() function to use the StackedGeneration plot recipe method.
 
 # Arguments
-- `res::PSI.Results`: simulation or operations results
+- `res::IS.Results`: simulation or operations results
 - `variable::String`: the variable to be plotted
 
 #Example
@@ -86,7 +86,7 @@ plot(ThermalStandard)
 - `sort::Array`: the array of generators to be plotted, in the order to be plotted
 """
 
-function get_bar_plot_data(res::PSI.Results, variable::String; kwargs...)
+function get_bar_plot_data(res::IS.Results, variable::String; kwargs...)
 
     sort = get(kwargs, :sort, nothing)
     time_range = res.time_stamp[!, :Range]
@@ -111,13 +111,13 @@ function get_bar_plot_data(res::PSI.Results, variable::String; kwargs...)
 end
 
 """
-    variable = get_stacked_gen_data(res::PSI.Results)
+    variable = get_stacked_gen_data(res::IS.Results)
 
 This function takes in results and stacks the variables given.
 StackedGeneration is the type of struct that signals the plot() function to use the StackedGeneration plot recipe method.
 
 # Arguments
-- `res::PSI.Results`: simulation or operations results
+- `res::IS.Results`: simulation or operations results
 
 #Example
 ```julia
@@ -129,7 +129,7 @@ plot(stack)
 - `sort::Array`: the array of generators to be plotted, in the order to be plotted
 """
 
-function get_stacked_generation_data(res::PSI.Results; kwargs...)
+function get_stacked_generation_data(res::IS.Results; kwargs...)
 
     sort = get(kwargs, :sort, nothing)
     time_range = res.time_stamp[!, :Range]
@@ -159,13 +159,13 @@ function get_stacked_generation_data(res::PSI.Results; kwargs...)
 end
 
 """
-    variable = get_bar_gen_data(res::PSI.Results)
+    variable = get_bar_gen_data(res::IS.Results)
 
 This function takes in results and stacks the variables given.
 StackedGeneration is the type of struct that signals the plot() function to use the StackedGeneration plot recipe method.
 
 # Arguments
-- `res::PSI.Results`: simulation or operations results
+- `res::IS.Results`: simulation or operations results
 
 #Example
 ```julia
@@ -177,7 +177,7 @@ plot(stack)
 - `sort::Array`: the array of generators to be plotted, in the order to be plotted
 """
 
-function get_bar_gen_data(res::PSI.Results)
+function get_bar_gen_data(res::IS.Results)
 
     time_range = res.time_stamp[!, :Range]
     key_name = collect(keys(res.variables))
@@ -197,7 +197,7 @@ function get_bar_gen_data(res::PSI.Results)
 end
 
 """
-    sort_data(results::PSI.Results)
+    sort_data(results::IS.Results)
 
 This function takes in struct Results, sorts the generators in each variable, and outputs the sorted
 results. The generic function sorts the generators alphabetically.
@@ -216,7 +216,7 @@ sorted_results = sort_data(res_UC; Variables = Variables)
 ***Note:*** only the generators included in key word 'Variables' will be in the
 results, and consequently, only these will be plotted. 
 """
-function sort_data(res::PSI.Results; kwargs...)
+function sort_data(res::IS.Results; kwargs...)
     order = get(kwargs, :Variables, Dict())
     if !isempty(order)
         labels = collect(keys(order))
@@ -236,7 +236,7 @@ function sort_data(res::PSI.Results; kwargs...)
         end
         sorted_variables[k] = variable
     end
-    return PSI.OperationsProblemResults(
+    return IS.OperationsProblemResults(
         sorted_variables,
         res.total_cost,
         res.optimizer_log,
