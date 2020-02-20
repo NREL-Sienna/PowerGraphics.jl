@@ -221,11 +221,7 @@ function plotly_bar_gen(bar_gen::BarGeneration, seriescolor::Array; kwargs...)
     end
 end
 
-function plotly_bar_gen(
-    bar_gen::Array{BarGeneration},
-    seriescolor::Array;
-    kwargs...,
-)
+function plotly_bar_gen(bar_gen::Array{BarGeneration}, seriescolor::Array; kwargs...)
     time_range = bar_gen[1].time_range
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
