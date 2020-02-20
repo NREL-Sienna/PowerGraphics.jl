@@ -77,6 +77,23 @@ function test_plots(file_path::String)
         ]
     end
 
+    @testset "testing multi-plot production" begin
+        ISP.bar_plot([res; res]; save = file_path, display = false)
+        ISP.stack_plot([res; res]; save = file_path, display = false)
+        ISP.fuel_plot([res; res], generators; save = file_path, display = false)
+        list = readdir(file_path)
+        @test list == [
+            "Bar_Generation.png",
+            "Fuel_Bar.png",
+            "Fuel_Stack.png",
+            "P_RenewableDispatch_Bar.png",
+            "P_RenewableDispatch_Stack.png",
+            "P_ThermalStandard_Bar.png",
+            "P_ThermalStandard_Stack.png",
+            "Stack_Generation.png",
+        ]
+    end
+
     @testset "testing report production" begin
         ISP.report(res, file_path)
         @test isfile(joinpath(file_path, "report_design.pdf"))

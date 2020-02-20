@@ -337,17 +337,16 @@ function bar_plot(results::Array{}; kwargs...)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     res = _filter_variables(results[1]; kwargs...)
-    bar_gen = get_bar_gen_data(results)
-    new_results = []
+    bar_gen = get_bar_gen_data(res)
     for i in 2:size(results, 1)
         filter = _filter_variables(results[i]; kwargs...)
-        new_results = hcat(new_results, filter)
-        bar_gen = hcat(bar_gen, get_bar_gen_data(results))
+        res = hcat(res, filter)
+        bar_gen = hcat(bar_gen, get_bar_gen_data(filter))
     end
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    _bar_plot_internal(new_results, bar_gen, backend, save_fig, set_display; kwargs...)
+    _bar_plot_internal(res, bar_gen, backend, save_fig, set_display; kwargs...)
 end
 
 function bar_plot(res::IS.Results, variables::Array; kwargs...)
