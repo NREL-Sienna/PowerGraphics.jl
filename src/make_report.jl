@@ -28,7 +28,7 @@ function report(res::IS.Results, out_path::String; kwargs...)
 
     doctype = get(kwargs, :doctype, "md2pdf")
     backend = get(kwargs, :backend, Plots.gr())
-    default_string = joinpath(pwd(), "src/report_design/report_design.jmd")
+    default_string = joinpath(pwd(), "examples/report_design/report_design.jmd")
     jmd = get(kwargs, :jmd, default_string)
     args = Dict("res" => res, "variables" => res.variables, "backend" => backend)
     Weave.weave(
@@ -74,7 +74,7 @@ function report(res::IS.Results, generators::Dict, out_path::String; kwargs...)
 
     doctype = get(kwargs, :doctype, "md2pdf")
     backend = get(kwargs, :backend, Plots.gr())
-    default_string = joinpath(pwd(), "src/report_design/report_design_fuel.jmd")
+    default_string = joinpath(pwd(), "examples/report_design/report_design_fuel.jmd")
     jmd = get(kwargs, :jmd, default_string)
     args = Dict(
         "res" => res,
@@ -124,7 +124,7 @@ function report(res::IS.Results, system::PSY.System, out_path::String; kwargs...
 
     doctype = get(kwargs, :doctype, "md2pdf")
     backend = get(kwargs, :backend, gr())
-    default_string = joinpath(pwd(), "src/report_design/report_design_fuel.jmd")
+    default_string = joinpath(pwd(), "examples/report_design/report_design_fuel.jmd")
     jmd = get(kwargs, :jmd, default_string)
     args = Dict(
         "res" => res,

@@ -9,6 +9,14 @@ const IS = InfrastructureSystems
 using PowerSystems
 import PowerSystems: PowerSystemTableData
 const PSY = PowerSystems
+const LOG_FILE = "infrastructure-systems-test.log"
+
+LOG_LEVELS = Dict(
+    "Debug" => Logging.Debug,
+    "Info" => Logging.Info,
+    "Warn" => Logging.Warn,
+    "Error" => Logging.Error,
+)
 
 macro includetests(testarg...)
     if length(testarg) == 0

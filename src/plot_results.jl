@@ -1,3 +1,15 @@
+mutable struct Results <: IS.Results
+    variables::Dict
+    total_cost::Dict
+    optimizer_log::Dict
+    time_stamp::DataFrames.DataFrame
+end
+
+get_variables(r::Results) = r.variables
+get_total_cost(r::Results) = r.total_cost
+get_optimizer_log(r::Results) = r.optimizer_log
+get_time_stamp(r::Results) = r.time_stamp
+
 struct StackedArea
     time_range::Array
     data_matrix::Matrix
@@ -29,7 +41,7 @@ This function takes in results and uses a dataframe from whichever variable name
 StackedArea is the type of struct that signals the plot() function to use the StackedArea plot recipe method.
 
 # Arguments
-- `res::IS.Results`: simulation or operations results
+- `res::IS.Results`: results
 - `variable::String`: the variable to be plotted
 
 #Example
@@ -73,7 +85,7 @@ This function takes in results and uses a dataframe from whichever variable name
 StackedGeneration is the type of struct that signals the plot() function to use the StackedGeneration plot recipe method.
 
 # Arguments
-- `res::IS.Results`: simulation or operations results
+- `res::IS.Results`: results
 - `variable::String`: the variable to be plotted
 
 #Example
@@ -117,7 +129,7 @@ This function takes in results and stacks the variables given.
 StackedGeneration is the type of struct that signals the plot() function to use the StackedGeneration plot recipe method.
 
 # Arguments
-- `res::IS.Results`: simulation or operations results
+- `res::IS.Results`: results
 
 #Example
 ```julia
@@ -165,7 +177,7 @@ This function takes in results and stacks the variables given.
 StackedGeneration is the type of struct that signals the plot() function to use the StackedGeneration plot recipe method.
 
 # Arguments
-- `res::IS.Results`: simulation or operations results
+- `res::IS.Results`: results
 
 #Example
 ```julia
@@ -236,10 +248,5 @@ function sort_data(res::IS.Results; kwargs...)
         end
         sorted_variables[k] = variable
     end
-    return IS.OperationsProblemResults(
-        sorted_variables,
-        res.total_cost,
-        res.optimizer_log,
-        res.time_stamp,
-    )
+    return Results(sorted_variables, res.total_cost, res.optimizer_log, res.time_stamp)
 end

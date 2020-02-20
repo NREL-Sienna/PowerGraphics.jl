@@ -13,9 +13,9 @@ order = ([
     "CSP",
     "curtailment",
 ])
-function _get_iterator(sys::PSY.System, res::IS.Results)
+function _get_iterator(sys::PSY.System, results::IS.Results)
     iterators = []
-    for (k, v) in res.variables
+    for (k, v) in results.variables
         if "$k"[1:2] == "P_"
             datatype = (split("$k", "P_")[2])
             if datatype == "ThermalStandard"
@@ -56,7 +56,7 @@ This function makes a dictionary of fuel type and the generators associated.
 
 # Arguments
 - `c_sys5_re::PSY.System`: the system that is used to create the results
-- `results::IS.Results`: simulation or operations results
+- `results::IS.Results`: results
 
 # Key Words
 - `categories::Dict{String, NamedTuple}`: if stacking by a different category is desired
@@ -119,9 +119,8 @@ function _aggregate_data(res::IS.Results, generators::Dict)
 
     return fuel_dataframes
 end
-
 """
-    stack = get_stacked_aggregation_data(res, generators::Dict)
+    stack = get_stacked_aggregation_data(res::IS.Results, generators::Dict)
 
 This function aggregates the data into a struct type StackedGeneration
 so that the results can be plotted using the StackedGeneration recipe.

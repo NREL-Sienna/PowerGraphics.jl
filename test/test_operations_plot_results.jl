@@ -2,7 +2,6 @@ using DataFrames
 using Dates
 using Plots
 using InfrastructureSystemsPlots
-using PowerSimulations
 using InfrastructureSystems
 using Test
 using TestSetExtensions
@@ -27,12 +26,8 @@ function test_plots(file_path::String)
     end
 
     @testset "testing bar plot" begin
-        results = IS.OperationsProblemResults(
-            res.variables,
-            res.total_cost,
-            res.optimizer_log,
-            res.time_stamp,
-        )
+        results =
+            ISP.Results(res.variables, res.total_cost, res.optimizer_log, res.time_stamp)
         for name in keys(results.variables)
             variable_bar = ISP.get_bar_plot_data(results, string(name))
             sort = sort!(names(results.variables[name]))
@@ -51,12 +46,8 @@ function test_plots(file_path::String)
     end
 
     @testset "testing size of stack plot data" begin
-        results = IS.OperationsProblemResults(
-            res.variables,
-            res.total_cost,
-            res.optimizer_log,
-            res.time_stamp,
-        )
+        results =
+            ISP.Results(res.variables, res.total_cost, res.optimizer_log, res.time_stamp)
         for name in keys(results.variables)
             variable_stack = ISP.get_stacked_plot_data(results, string(name))
             data = variable_stack.data_matrix
@@ -70,9 +61,9 @@ function test_plots(file_path::String)
     end
 
     @testset "testing plot production" begin
-        bar_plot(res; save = file_path, display = false)
-        stack_plot(res; save = file_path, display = false)
-        fuel_plot(res, generators; save = file_path, display = false)
+        ISP.bar_plot(res; save = file_path, display = false)
+        ISP.stack_plot(res; save = file_path, display = false)
+        ISP.fuel_plot(res, generators; save = file_path, display = false)
         list = readdir(file_path)
         @test list == [
             "Bar_Generation.png",
@@ -87,7 +78,7 @@ function test_plots(file_path::String)
     end
 
     @testset "testing report production" begin
-        report(res, file_path)
+        ISP.report(res, file_path)
         @test isfile(joinpath(file_path, "report_design.pdf"))
     end
 end

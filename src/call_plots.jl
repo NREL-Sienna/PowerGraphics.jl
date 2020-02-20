@@ -98,7 +98,7 @@ function _filter_variables(results::IS.Results; kwargs...)
             end
         end
     end
-    results = IS._make_results(
+    results = Results(
         filter_results,
         results.total_cost,
         results.optimizer_log,
@@ -224,13 +224,13 @@ end
 function fuel_plot(results::Array{}, generator_dict::Dict; kwargs...)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
-    res = _filter_variables(results[1]; kwargs...)
-    stack = get_stacked_aggregation_data(res, generator_dict)
-    bar = get_bar_aggregation_data(res, generator_dict)
+    new_res = _filter_variables(results[1]; kwargs...)
+    stack = get_stacked_aggregation_data(new_res, generator_dict)
+    bar = get_bar_aggregation_data(new_res, generator_dict)
     for i in 2:length(results)
-        res = _filter_variables(res; kwargs...)
-        stack = hcat(stack, get_stacked_aggregation_data(results[i], generator_dict))
-        bar = hcat(bar, get_bar_aggregation_data(results[i], generator_dict))
+        new_res = _filter_variables(results[i]; kwargs...)
+        stack = hcat(stack, get_stacked_aggregation_data(new_res, generator_dict))
+        bar = hcat(bar, get_bar_aggregation_data(new_res, generator_dict))
     end
     backend = Plots.backend()
     default_colors = match_fuel_colors(stack[1], bar[1], backend, FUEL_DEFAULT)
@@ -336,12 +336,13 @@ function bar_plot(results::Array{}; kwargs...)
     backend = Plots.backend()
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
-    new_results = _filter_variables(results[1]; kwargs...)
-    bar_gen = get_bar_gen_data(new_results)
+    res = _filter_variables(results[1]; kwargs...)
+    bar_gen = get_bar_gen_data(results)
+    new_results = []
     for i in 2:size(results, 1)
-        filtered = _filter_variables(results[i]; kwargs...)
-        new_results = hcat(new_results, filtered)
-        bar_gen = hcat(bar_gen, get_bar_gen_data(filtered))
+        filter = _filter_variables(results[i]; kwargs...)
+        new_results = hcat(new_results, filter)
+        bar_gen = hcat(bar_gen, get_bar_gen_data(results))
     end
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
@@ -354,12 +355,7 @@ function bar_plot(res::IS.Results, variables::Array; kwargs...)
     for variable in variables
         res_var[variable] = res.variables[variable]
     end
-    results = IS.OperationsProblemResults(
-        res_var,
-        res.total_cost,
-        res.optimizer_log,
-        res.time_stamp,
-    )
+    results = Results(res_var, res.total_cost, res.optimizer_log, res.time_stamp)
     bar_plot(results; kwargs...)
 end
 
@@ -370,12 +366,7 @@ function bar_plot(results::Array{IS.Results}, variables::Array; kwargs...)
         for variable in variables
             res_var[variable] = res.variables[variable]
         end
-        new_res = IS.OperationsProblemResults(
-            res_var,
-            res.total_cost,
-            res.optimizer_log,
-            res.time_stamp,
-        )
+        new_res = Results(res_var, res.total_cost, res.optimizer_log, res.time_stamp)
         new_results = vcat(new_results, new_res)
     end
     bar_plot(new_results; kwargs...)
@@ -485,7 +476,7 @@ function stack_plot(res::IS.Results; kwargs...)
     set_display = get(kwargs, :set_display, true)
     backend = Plots.backend()
     save_fig = get(kwargs, :save, nothing)
-    res = _filter_variables(res; kwargs...)
+    _filter_variables(res; kwargs...)
     stacked_gen = get_stacked_generation_data(res)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
@@ -571,12 +562,7 @@ function stack_plot(res::IS.Results, variables::Array; kwargs...)
     for variable in variables
         res_var[variable] = res.variables[variable]
     end
-    results = IS.OperationsProblemResults(
-        res_var,
-        res.total_cost,
-        res.optimizer_log,
-        res.time_stamp,
-    )
+    results = Results(res_var, res.total_cost, res.optimizer_log, res.time_stamp)
     stack_plot(results; kwargs...)
 end
 
@@ -587,12 +573,7 @@ function stack_plot(results::Array{IS.Results}, variables::Array; kwargs...)
         for variable in variables
             res_var[variable] = res.variables[variable]
         end
-        new_res = IS.OperationsProblemResults(
-            res_var,
-            res.total_cost,
-            res.optimizer_log,
-            res.time_stamp,
-        )
+        new_res = Results(res_var, res.total_cost, res.optimizer_log, res.time_stamp)
         new_results = vcat(new_results, new_res)
     end
     stack_plot(new_results; kwargs...)
