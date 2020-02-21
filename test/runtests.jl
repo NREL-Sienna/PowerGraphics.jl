@@ -9,10 +9,14 @@ const IS = InfrastructureSystems
 using PowerSystems
 import PowerSystems: PowerSystemTableData
 const PSY = PowerSystems
+const LOG_FILE = "infrastructure-systems-test.log"
 
-@test 1 = 1
-
-#= Enable once the tests are properly developed
+LOG_LEVELS = Dict(
+    "Debug" => Logging.Debug,
+    "Info" => Logging.Info,
+    "Warn" => Logging.Warn,
+    "Error" => Logging.Error,
+)
 
 macro includetests(testarg...)
     if length(testarg) == 0
@@ -88,4 +92,3 @@ finally
     global_logger(logger)
     nothing
 end
-=#

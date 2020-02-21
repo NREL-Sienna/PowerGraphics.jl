@@ -8,7 +8,6 @@ date : 1-14
 
 ```julia; echo = false
 using InfrastructureSystemsPlots
-using PowerSimulations
 using Plots
 
 if WEAVE_ARGS["backend"] == plotlyjs()

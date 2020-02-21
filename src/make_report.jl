@@ -1,5 +1,5 @@
 """
-    report(res::PSI.Results, out_path::String)
+    report(res::IS.Results, out_path::String)
 
 This function uses weave to either generate a LaTeX or HTML
 file based on the report_design.jmd (julia markdown) file
@@ -7,7 +7,7 @@ that it reads. Out_path in the weave function dictates
 where the created file gets exported.
 
 # Arguments
-- `results::PSI.Results`: The results to be plotted
+- `results::IS.Results`: The results to be plotted
 - `out_path::String`: folder path to the location the report should be generated
 
 # Example
@@ -24,11 +24,11 @@ report(results, out_path)
 is ".../pwd()/report_design/report_design.jmd". To change the report, use report_design.jmd as a template
 and add additional markdowns to the report_design folder.
 """
-function report(res::PSI.Results, out_path::String; kwargs...)
+function report(res::IS.Results, out_path::String; kwargs...)
 
     doctype = get(kwargs, :doctype, "md2pdf")
     backend = get(kwargs, :backend, Plots.gr())
-    default_string = joinpath(pwd(), "src/report_design/report_design.jmd")
+    default_string = joinpath(pwd(), "examples/report_design/report_design.jmd")
     jmd = get(kwargs, :jmd, default_string)
     args = Dict("res" => res, "variables" => res.variables, "backend" => backend)
     Weave.weave(
@@ -42,7 +42,7 @@ function report(res::PSI.Results, out_path::String; kwargs...)
 end
 
 """
-    report(res::PSI.Results, generators::Dict, out_path::String)
+    report(res::IS.Results, generators::Dict, out_path::String)
 
 This function uses weave to either generate a LaTeX or HTML
 file based on the report_design.jmd (julia markdown) file
@@ -50,7 +50,7 @@ that it reads. Out_path in the weave function dictates
 where the created file gets exported.
 
 # Arguments
-- `results::PSI.Results`: The results to be plotted
+- `results::IS.Results`: The results to be plotted
 - `generators::Dict`: the dictionary of generators and their fuel type made by make_fuel_dictionary
 - `out_path::String`: folder path to the location the report should be generated
 
@@ -70,11 +70,11 @@ is ".../pwd()/report_design/report_design_fuel.jmd". To change the report, use r
 and add additional markdowns to the report_design folder.
 """
 
-function report(res::PSI.Results, generators::Dict, out_path::String; kwargs...)
+function report(res::IS.Results, generators::Dict, out_path::String; kwargs...)
 
     doctype = get(kwargs, :doctype, "md2pdf")
     backend = get(kwargs, :backend, Plots.gr())
-    default_string = joinpath(pwd(), "src/report_design/report_design_fuel.jmd")
+    default_string = joinpath(pwd(), "examples/report_design/report_design_fuel.jmd")
     jmd = get(kwargs, :jmd, default_string)
     args = Dict(
         "res" => res,
@@ -93,7 +93,7 @@ function report(res::PSI.Results, generators::Dict, out_path::String; kwargs...)
 end
 
 """
-    report(res::PSI.Results, system::PSY.System, out_path::String)
+    report(res::IS.Results, system::PSY.System, out_path::String)
 
 This function uses weave to either generate a LaTeX or HTML
 file based on the report_design.jmd (julia markdown) file
@@ -101,7 +101,7 @@ that it reads. Out_path in the weave function dictates
 where the created file gets exported.
 
 # Arguments
-- `results::PSI.Results`: The results to be plotted
+- `results::IS.Results`: The results to be plotted
 - `system::PSY.System`: the system used to create the results for sorting by fuel type
 - `out_path::String`: folder path to the location the report should be generated
 
@@ -120,11 +120,11 @@ is ".../pwd()/report_design/report_design_fuel.jmd". To change the report, use r
 and add additional markdowns to the report_design folder.
 """
 
-function report(res::PSI.Results, system::PSY.System, out_path::String; kwargs...)
+function report(res::IS.Results, system::PSY.System, out_path::String; kwargs...)
 
     doctype = get(kwargs, :doctype, "md2pdf")
     backend = get(kwargs, :backend, gr())
-    default_string = joinpath(pwd(), "src/report_design/report_design_fuel.jmd")
+    default_string = joinpath(pwd(), "examples/report_design/report_design_fuel.jmd")
     jmd = get(kwargs, :jmd, default_string)
     args = Dict(
         "res" => res,

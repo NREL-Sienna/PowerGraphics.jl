@@ -13,9 +13,9 @@ order = ([
     "CSP",
     "curtailment",
 ])
-function _get_iterator(sys::PSY.System, res::PSI.Results)
+function _get_iterator(sys::PSY.System, results::IS.Results)
     iterators = []
-    for (k, v) in res.variables
+    for (k, v) in results.variables
         if "$k"[1:2] == "P_"
             datatype = (split("$k", "P_")[2])
             if datatype == "ThermalStandard"
@@ -50,13 +50,13 @@ function _get_iterator(sys::PSY.System, res::PSI.Results)
 end
 
 """
-    generators = make_fuel_dictionary(system::PSY.System, results::PSI.Results)
+    generators = make_fuel_dictionary(system::PSY.System, results::IS.Results)
 
 This function makes a dictionary of fuel type and the generators associated.
 
 # Arguments
 - `c_sys5_re::PSY.System`: the system that is used to create the results
-- `results::PSI.Results`: simulation or operations results
+- `results::IS.Results`: results
 
 # Key Words
 - `categories::Dict{String, NamedTuple}`: if stacking by a different category is desired
@@ -66,7 +66,7 @@ results = solve_op_model!(OpModel)
 generators = make_fuel_dictionary(c_sys5_re, results)
 
 """
-function make_fuel_dictionary(sys::PSY.System, res::PSI.Results; kwargs...)
+function make_fuel_dictionary(sys::PSY.System, res::IS.Results; kwargs...)
 
     categories = Dict()
     categories["Solar"] = NamedTuple{(:primemover, :fuel)}, (PSY.PVe, nothing)
@@ -101,7 +101,7 @@ function make_fuel_dictionary(sys::PSY.System, res::PSI.Results; kwargs...)
     return generators
 end
 
-function _aggregate_data(res::PSI.Results, generators::Dict)
+function _aggregate_data(res::IS.Results, generators::Dict)
     All_var = DataFrames.DataFrame()
     var_names = collect(keys(res.variables))
     for i in 1:length(var_names)
@@ -119,9 +119,8 @@ function _aggregate_data(res::PSI.Results, generators::Dict)
 
     return fuel_dataframes
 end
-
 """
-    stack = get_stacked_aggregation_data(res, generators::Dict)
+    stack = get_stacked_aggregation_data(res::IS.Results, generators::Dict)
 
 This function aggregates the data into a struct type StackedGeneration
 so that the results can be plotted using the StackedGeneration recipe.
@@ -141,7 +140,7 @@ gr()
 fuel_plot(res, system)
 ```
 """
-function get_stacked_aggregation_data(res::PSI.Results, generators::Dict)
+function get_stacked_aggregation_data(res::IS.Results, generators::Dict)
     # order at the top
     category_aggs = _aggregate_data(res, generators)
     time_range = res.time_stamp[!, :Range]
@@ -166,7 +165,7 @@ function get_stacked_aggregation_data(res::PSI.Results, generators::Dict)
     return StackedGeneration(time_range, data_matrix, legend)
 end
 """
-    bar = get_bar_aggregation_data(results::PSI.Results, generators::Dict)
+    bar = get_bar_aggregation_data(results::IS.Results, generators::Dict)
 
 This function aggregates the data into a struct type StackedGeneration
 so that the results can be plotted using the StackedGeneration recipe.
@@ -186,7 +185,7 @@ gr()
 fuel_plot(res, system)
 ```
 """
-function get_bar_aggregation_data(res::PSI.Results, generators::Dict)
+function get_bar_aggregation_data(res::IS.Results, generators::Dict)
     category_aggs = _aggregate_data(res, generators)
     time_range = res.time_stamp[!, :Range]
     labels = collect(keys(category_aggs))

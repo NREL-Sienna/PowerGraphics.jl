@@ -100,7 +100,7 @@ function _check_matching_variables(results::Array)
     end
 end
 
-function plotly_stack_plots(results::PSI.Results, seriescolor::Array; kwargs...)
+function plotly_stack_plots(results::IS.Results, seriescolor::Array; kwargs...)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     for (key, var) in results.variables
@@ -324,7 +324,7 @@ function plotly_bar_plots(results::Array, seriescolor::Array; kwargs...)
     end
 end
 
-function plotly_bar_plots(res::PSI.Results, seriescolor::Array; kwargs...)
+function plotly_bar_plots(res::IS.Results, seriescolor::Array; kwargs...)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     time_range = res.time_stamp
