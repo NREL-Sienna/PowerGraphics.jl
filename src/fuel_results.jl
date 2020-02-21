@@ -71,16 +71,20 @@ function make_fuel_dictionary(sys::PSY.System, res::IS.Results; kwargs...)
     categories = Dict()
     categories["Solar"] = NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.PVe, nothing)
     categories["Wind"] = NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.WT, nothing)
-    categories["Oil_CT"] =
-        NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.CT, PSY.ThermalFuels.DISTILLATE_FUEL_OIL)
-    categories["Oil_ST"] =
-        NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.ST, PSY.ThermalFuels.DISTILLATE_FUEL_OIL)
+    categories["Oil_CT"] = NamedTuple{(:primemover, :fuel)},
+    (PSY.PrimeMovers.CT, PSY.ThermalFuels.DISTILLATE_FUEL_OIL)
+    categories["Oil_ST"] = NamedTuple{(:primemover, :fuel)},
+    (PSY.PrimeMovers.ST, PSY.ThermalFuels.DISTILLATE_FUEL_OIL)
     categories["Storage"] = NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.BA, nothing)
-    categories["Gas_CT"] = NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.CT, PSY.ThermalFuels.NATURAL_GAS)
-    categories["Gas_CC"] = NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.CC, PSY.ThermalFuels.NATURAL_GAS)
+    categories["Gas_CT"] =
+        NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.CT, PSY.ThermalFuels.NATURAL_GAS)
+    categories["Gas_CC"] =
+        NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.CC, PSY.ThermalFuels.NATURAL_GAS)
     categories["Hydro"] = NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.HY, nothing)
-    categories["Coal"] = NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.ST, PSY.ThermalFuels.COAL)
-    categories["Nuclear"] = NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.ST, PSY.ThermalFuels.NUCLEAR)
+    categories["Coal"] =
+        NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.ST, PSY.ThermalFuels.COAL)
+    categories["Nuclear"] =
+        NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.ST, PSY.ThermalFuels.NUCLEAR)
     categories = get(kwargs, :categories, categories)
     iterators = _get_iterator(sys, res)
     generators = Dict()
