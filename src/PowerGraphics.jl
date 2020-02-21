@@ -1,4 +1,4 @@
-module InfrastructureSystemsPlots
+module PowerGraphics
 
 export get_stacked_plot_data
 export get_bar_plot_data
