@@ -1,13 +1,13 @@
 using DataFrames
 using Dates
 using Plots
-using InfrastructureSystemsPlots
+using PowerGraphics
 using InfrastructureSystems
 using Test
 using TestSetExtensions
 using Weave
 
-const ISP = InfrastructureSystemsPlots
+const ISP = PowerGraphics
 const IS = InfrastructureSystems
 path = joinpath(pwd(), "plots")
 !isdir(path) && mkdir(path)

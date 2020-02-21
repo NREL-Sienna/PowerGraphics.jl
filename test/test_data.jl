@@ -1,7 +1,7 @@
-using InfrastructureSystemsPlots
+using PowerGraphics
 using DataFrames
 using Dates
-const ISP = InfrastructureSystemsPlots
+const ISP = PowerGraphics
 
 variables = Dict()
 variables[:P_ThermalStandard] = DataFrames.DataFrame(

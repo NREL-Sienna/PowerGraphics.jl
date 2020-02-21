@@ -7,7 +7,7 @@ date : 1-14
 # Bar Plots
 
 ```julia; echo = false
-using InfrastructureSystemsPlots
+using PowerGraphics
 using Plots
 
 if WEAVE_ARGS["backend"] == plotlyjs()
