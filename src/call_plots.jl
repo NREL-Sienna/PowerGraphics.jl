@@ -275,7 +275,7 @@ end
 
 """
    bar_plot(results::IS.Results)
-  
+
 This function plots a bar plot for the generators in each variable within
 the results variables dictionary, and makes a bar plot for all of the variables.
 
@@ -310,7 +310,7 @@ end
 
 """
    bar_plot(results::Array{IS.Results})
-  
+
 This function plots a subplot for each result. Each subplot has a bar plot for the generators in each variable within
 the results variables dictionary, and makes a bar plot for all of the variables per result object.
 
@@ -565,7 +565,7 @@ function stack_plot(res::IS.Results, variables::Array; kwargs...)
     stack_plot(results; kwargs...)
 end
 
-function stack_plot(results::Array{IS.Results}, variables::Array; kwargs...)
+function stack_plot(results::Array{<:IS.Results}, variables::Array; kwargs...)
     new_results = []
     for res in results
         res_var = Dict()
