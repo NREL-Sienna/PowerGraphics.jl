@@ -92,7 +92,7 @@ function make_fuel_dictionary(sys::PSY.System, res::IS.Results; kwargs...)
     categories["Nuclear"] =
         NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.ST, PSY.ThermalFuels.NUCLEAR)
     categories = get(kwargs, :categories, categories)
-    @show iterators = _get_iterator(sys, res)
+    iterators = _get_iterator(sys, res)
     generators = Dict()
 
     for (category, fuel_type) in categories
@@ -122,7 +122,10 @@ function _aggregate_data(res::IS.Results, generators::Dict)
     for (k, v) in generators
         generator_df = DataFrames.DataFrame()
         for l in v
-            generator_df = hcat(generator_df, All_var[:, Symbol("$(l)")], makeunique = true)
+            colname = Symbol("$(l)")
+            if colname in names(All_var)
+                generator_df = hcat(generator_df, All_var[:, colname], makeunique = true)
+            end
         end
         fuel_dataframes[k] = generator_df
     end
