@@ -93,7 +93,7 @@ function make_fuel_dictionary(sys::PSY.System, res::IS.Results; kwargs...)
         generators["$category"] = []
         for (name, fuels) in iterators
             for fuel in fuels
-                if fuel == fuel_type
+                if isnothing(fuel_type) || fuel == fuel_type
                     generators["$category"] = vcat(generators["$category"], name)
                 end
             end
