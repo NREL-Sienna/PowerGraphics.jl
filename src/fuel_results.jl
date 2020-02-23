@@ -18,12 +18,18 @@ function _get_iterator(sys::PSY.System, results::IS.Results)
     for (k, v) in results.variables
         if "$k"[1:2] == "P_"
             datatype = (split("$k", "P_")[2])
-            if datatype == "ThermalStandard"
+            if occursin("Thermal", datatype)
                 iterators =
-                    vcat(iterators, collect(PSY.get_components(PSY.ThermalStandard, sys)))
-            elseif datatype == "RenewableDispatch"
+                    vcat(iterators, collect(PSY.get_components(PSY.ThermalGen, sys)))
+            elseif occursin("Renewable", datatype)
                 iterators =
-                    vcat(iterators, collect(PSY.get_components(PSY.RenewableDispatch, sys)))
+                    vcat(iterators, collect(PSY.get_components(PSY.RenewableGen, sys)))
+            elseif occursin("Hydro", datatype)
+                iterators =
+                    vcat(iterators, collect(PSY.get_components(PSY.HydroGen, sys)))
+            elseif occursin("Storage", datatype)
+                iterators =
+                    vcat(iterators, collect(PSY.get_components(PSY.Storage, sys)))
             end
         end
     end
@@ -86,7 +92,7 @@ function make_fuel_dictionary(sys::PSY.System, res::IS.Results; kwargs...)
     categories["Nuclear"] =
         NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.ST, PSY.ThermalFuels.NUCLEAR)
     categories = get(kwargs, :categories, categories)
-    iterators = _get_iterator(sys, res)
+    @show iterators = _get_iterator(sys, res)
     generators = Dict()
 
     for (category, fuel_type) in categories
