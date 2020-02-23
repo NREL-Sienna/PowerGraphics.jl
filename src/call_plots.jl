@@ -1,6 +1,5 @@
 # Color Definitions
 # to define or change the RGB based on a 288 scale, divide by 288 for each rgb and set A = 1
-import Plots
 NUCLEAR = Colors.RGBA(0.615, 0.108, 0.125, 1)
 COAL = Colors.RGBA(0.118, 0.118, 0.118, 1)
 HYDRO = Colors.RGBA(0.083, 0.441, 0.514, 1)
