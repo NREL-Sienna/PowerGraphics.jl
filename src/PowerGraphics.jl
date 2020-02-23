@@ -21,6 +21,7 @@ import Feather
 import Weave
 import PowerSystems
 import InfrastructureSystems
+import Plots
 
 const PSY = PowerSystems
 const IS = InfrastructureSystems
