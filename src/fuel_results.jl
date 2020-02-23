@@ -25,11 +25,9 @@ function _get_iterator(sys::PSY.System, results::IS.Results)
                 iterators =
                     vcat(iterators, collect(PSY.get_components(PSY.RenewableGen, sys)))
             elseif occursin("Hydro", datatype)
-                iterators =
-                    vcat(iterators, collect(PSY.get_components(PSY.HydroGen, sys)))
+                iterators = vcat(iterators, collect(PSY.get_components(PSY.HydroGen, sys)))
             elseif occursin("Storage", datatype)
-                iterators =
-                    vcat(iterators, collect(PSY.get_components(PSY.Storage, sys)))
+                iterators = vcat(iterators, collect(PSY.get_components(PSY.Storage, sys)))
             end
         end
     end
