@@ -95,8 +95,9 @@ function test_plots(file_path::String)
     end
 
     @testset "testing report production" begin
-        ISP.report(res, dirname(file_path))
-        @test isfile(joinpath(dirname(file_path), "report_design.pdf"))
+        report_path = joinpath(dirname(file_path), "report_design.pdf")
+        ISP.report(res, report_path)
+        @test isfile(report_path)
     end
 end
 try
