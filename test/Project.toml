@@ -19,4 +19,4 @@ WebIO = "0f1e0344-ec1d-5b48-a673-e5cf874b6c29"
 
 [compat]
 InfrastructureSystems = ">=0.5"
-PowerSystems = "~0.10"
+PowerSystems = ">=0.10"

@@ -18,10 +18,10 @@ import RecipesBase
 import Colors
 import DataFrames
 import Feather
+import Plots
 import Weave
 import PowerSystems
 import InfrastructureSystems
-import Plots
 
 const PSY = PowerSystems
 const IS = InfrastructureSystems
