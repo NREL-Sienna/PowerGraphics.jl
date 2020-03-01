@@ -2,6 +2,7 @@ using Test
 using Logging
 using Dates
 import InteractiveUtils
+using TestSetExtensions
 
 import InfrastructureSystems
 import InfrastructureSystems: Deterministic, Probabilistic, ScenarioBased, Forecast
@@ -9,7 +10,9 @@ const IS = InfrastructureSystems
 using PowerSystems
 import PowerSystems: PowerSystemTableData
 const PSY = PowerSystems
-const LOG_FILE = "infrastructure-systems-test.log"
+const LOG_FILE = "PowerGraphics-test.log"
+
+
 
 LOG_LEVELS = Dict(
     "Debug" => Logging.Debug,

@@ -7,7 +7,7 @@ using Test
 using TestSetExtensions
 using Weave
 
-const ISP = PowerGraphics
+const PSG = PowerGraphics
 const IS = InfrastructureSystems
 path = joinpath(pwd(), "plots")
 !isdir(path) && mkdir(path)
@@ -17,8 +17,8 @@ function test_plots(file_path::String)
 
     @testset "testing results sorting" begin
         Variables = Dict(:P_ThermalStandard => [:one, :two])
-        sorted = ISP.sort_data(res; Variables = Variables)
-        sorted_two = ISP.sort_data(res)
+        sorted = PSG.sort_data(res; Variables = Variables)
+        sorted_two = PSG.sort_data(res)
         sorted_names = [:one, :two]
         sorted_names_two = [:one, :three, :two]
         @test names(sorted.variables[:P_ThermalStandard]) == sorted_names
@@ -27,9 +27,9 @@ function test_plots(file_path::String)
 
     @testset "testing bar plot" begin
         results =
-            ISP.Results(res.variables, res.total_cost, res.optimizer_log, res.time_stamp)
+            PSG.Results(res.variables, res.total_cost, res.optimizer_log, res.time_stamp)
         for name in keys(results.variables)
-            variable_bar = ISP.get_bar_plot_data(results, string(name))
+            variable_bar = PSG.get_bar_plot_data(results, string(name))
             sort = sort!(names(results.variables[name]))
             sorted_results = res.variables[name][:, sort]
             for i in 1:length(sort)
@@ -39,31 +39,31 @@ function test_plots(file_path::String)
                     atol = 1.0e-4,
                 )
             end
-            @test typeof(variable_bar) == ISP.BarPlot
+            @test typeof(variable_bar) == PSG.BarPlot
         end
-        bar_gen = ISP.get_bar_gen_data(results)
-        @test typeof(bar_gen) == ISP.BarGeneration
+        bar_gen = PSG.get_bar_gen_data(results)
+        @test typeof(bar_gen) == PSG.BarGeneration
     end
 
     @testset "testing size of stack plot data" begin
         results =
-            ISP.Results(res.variables, res.total_cost, res.optimizer_log, res.time_stamp)
+            PSG.Results(res.variables, res.total_cost, res.optimizer_log, res.time_stamp)
         for name in keys(results.variables)
-            variable_stack = ISP.get_stacked_plot_data(results, string(name))
+            variable_stack = PSG.get_stacked_plot_data(results, string(name))
             data = variable_stack.data_matrix
             legend = variable_stack.labels
             @test size(data) == size(res.variables[name])
             @test length(legend) == size(data, 2)
-            @test typeof(variable_stack) == ISP.StackedArea
+            @test typeof(variable_stack) == PSG.StackedArea
         end
-        gen_stack = ISP.get_stacked_generation_data(results)
-        @test typeof(gen_stack) == ISP.StackedGeneration
+        gen_stack = PSG.get_stacked_generation_data(results)
+        @test typeof(gen_stack) == PSG.StackedGeneration
     end
 
     @testset "testing plot production" begin
-        ISP.bar_plot(res; save = file_path, display = false)
-        ISP.stack_plot(res; save = file_path, display = false)
-        ISP.fuel_plot(res, generators; save = file_path, display = false)
+        PSG.bar_plot(res; save = file_path, display = false)
+        PSG.stack_plot(res; save = file_path, display = false)
+        PSG.fuel_plot(res, generators; save = file_path, display = false)
         list = readdir(file_path)
         @test list == [
             "Bar_Generation.png",
@@ -78,9 +78,9 @@ function test_plots(file_path::String)
     end
 
     @testset "testing multi-plot production" begin
-        ISP.bar_plot([res; res]; save = file_path, display = false)
-        ISP.stack_plot([res; res]; save = file_path, display = false)
-        ISP.fuel_plot([res; res], generators; save = file_path, display = false)
+        PSG.bar_plot([res; res]; save = file_path, display = false)
+        PSG.stack_plot([res; res]; save = file_path, display = false)
+        PSG.fuel_plot([res; res], generators; save = file_path, display = false)
         list = readdir(file_path)
         @test list == [
             "Bar_Generation.png",
@@ -96,7 +96,7 @@ function test_plots(file_path::String)
 
     @testset "testing report production" begin
         report_path = joinpath(dirname(file_path), "report_design.pdf")
-        ISP.report(res, report_path)
+        PSG.report(res, report_path)
         @test isfile(report_path)
     end
 end
