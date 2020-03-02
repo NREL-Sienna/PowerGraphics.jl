@@ -1,6 +1,6 @@
 name = "PowerGraphics"
 uuid = "5f7eddb3-86b1-49e8-a95a-ddc0f45eea41"
-authors = ["Lily Hanig <lily.hanig@nrel.gov>"]
+authors = ["Lily Hanig", "Clayton Barrows", "Jose Daniel Lara"]
 version = "0.1.0"
 
 [deps]

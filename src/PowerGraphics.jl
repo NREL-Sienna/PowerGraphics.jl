@@ -24,7 +24,6 @@ import PowerSystems
 import InfrastructureSystems
 import GR
 
-
 const PSY = PowerSystems
 const IS = InfrastructureSystems
 include("plot_results.jl")
