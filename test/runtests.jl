@@ -3,16 +3,22 @@ using Logging
 using Dates
 import InteractiveUtils
 using TestSetExtensions
-
+using DataFrames
+using Dates
+using Plots
+using Weave
 import InfrastructureSystems
 import InfrastructureSystems: Deterministic, Probabilistic, ScenarioBased, Forecast
-const IS = InfrastructureSystems
 using PowerSystems
 import PowerSystems: PowerSystemTableData
+
+const PSG = PowerGraphics
+const IS = InfrastructureSystems
 const PSY = PowerSystems
 const LOG_FILE = "PowerGraphics-test.log"
 
-
+const generic_template = "../report_templates/generic_report_template.jmd"
+const fuel_template = "../report_templates/fuel_report_template.jmd"
 
 LOG_LEVELS = Dict(
     "Debug" => Logging.Debug,

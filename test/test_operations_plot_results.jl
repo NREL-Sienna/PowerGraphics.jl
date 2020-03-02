@@ -1,14 +1,3 @@
-using DataFrames
-using Dates
-using Plots
-using PowerGraphics
-using InfrastructureSystems
-using Test
-using TestSetExtensions
-using Weave
-
-const PSG = PowerGraphics
-const IS = InfrastructureSystems
 path = joinpath(pwd(), "plots")
 !isdir(path) && mkdir(path)
 
@@ -92,12 +81,6 @@ function test_plots(file_path::String)
             "P_ThermalStandard_Stack.png",
             "Stack_Generation.png",
         ]
-    end
-
-    @testset "testing report production" begin
-        report_path = joinpath(dirname(file_path), "report_design.pdf")
-        PSG.report(res, report_path)
-        @test isfile(report_path)
     end
 end
 try
