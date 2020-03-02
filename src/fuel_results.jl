@@ -31,7 +31,7 @@ function _get_iterator(sys::PSY.System, results::IS.Results)
             end
         end
     end
-    iterators_sorted = Dict{Any, Any}()
+    iterators_sorted = Dict{Any,Any}()
     for iterator in iterators
         name = iterator.name
         iterators_sorted[name] = []

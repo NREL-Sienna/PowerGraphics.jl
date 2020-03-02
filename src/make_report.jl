@@ -26,7 +26,8 @@ function report(res::IS.Results, out_path::String, design_template::String; kwar
 
     doctype = get(kwargs, :doctype, "md2pdf")
     backend = get(kwargs, :backend, Plots.gr())
-    !isfile(design_template) && throw(ArgumentError("The provided template file is invalid"))
+    !isfile(design_template) &&
+    throw(ArgumentError("The provided template file is invalid"))
     args = Dict("res" => res, "variables" => res.variables, "backend" => backend)
     Weave.weave(
         design_template,
@@ -67,11 +68,18 @@ report(results, generators, out_path)
 - `backend::Plots.backend() = plotlyjs()`: sets the plots backend, default is gr()
 """
 
-function report(res::IS.Results, generators::Dict, out_path::String, design_template::String; kwargs...)
+function report(
+    res::IS.Results,
+    generators::Dict,
+    out_path::String,
+    design_template::String;
+    kwargs...,
+)
 
     doctype = get(kwargs, :doctype, "md2pdf")
     backend = get(kwargs, :backend, Plots.gr())
-    !isfile(design_template) && throw(ArgumentError("The provided template file is invalid"))
+    !isfile(design_template) &&
+    throw(ArgumentError("The provided template file is invalid"))
     args = Dict(
         "res" => res,
         "variables" => res.variables,
@@ -117,11 +125,18 @@ report(results, PSY.system, out_path)
 
 """
 
-function report(res::IS.Results, system::PSY.System, out_path::String, design_template::String; kwargs...)
+function report(
+    res::IS.Results,
+    system::PSY.System,
+    out_path::String,
+    design_template::String;
+    kwargs...,
+)
 
     doctype = get(kwargs, :doctype, "md2pdf")
     backend = get(kwargs, :backend, gr())
-    !isfile(design_template) && throw(ArgumentError("The provided template file is invalid"))
+    !isfile(design_template) &&
+    throw(ArgumentError("The provided template file is invalid"))
     args = Dict(
         "res" => res,
         "variables" => res.variables,

@@ -11,6 +11,7 @@ import InfrastructureSystems
 import InfrastructureSystems: Deterministic, Probabilistic, ScenarioBased, Forecast
 using PowerSystems
 import PowerSystems: PowerSystemTableData
+using PowerGraphics
 
 const PSG = PowerGraphics
 const IS = InfrastructureSystems
@@ -43,8 +44,7 @@ macro includetests(testarg...)
             tests = readdir(dirname(rootfile))
             tests = filter(
                 f ->
-                        startswith(f, "test_") &&
-                        endswith(f, ".jl") && f != basename(rootfile),
+                    startswith(f, "test_") && endswith(f, ".jl") && f != basename(rootfile),
                 tests,
             )
         else

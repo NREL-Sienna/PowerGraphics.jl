@@ -19,7 +19,7 @@ end
 function plotly_stack_gen(stacked_gen::StackedGeneration, seriescolor::Array; kwargs...)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
-    traces = PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
+    traces = PlotlyJS.GenericTrace{Dict{Symbol,Any}}[]
     gens = stacked_gen.labels
     seriescolor = set_seriescolor(seriescolor, gens)
     for gen in 1:length(gens)
@@ -52,7 +52,7 @@ function plotly_stack_gen(stacks::Array{StackedGeneration}, seriescolor::Array; 
     save_fig = get(kwargs, :save, nothing)
     plots = []
     for stack in 1:length(stacks)
-        trace = PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
+        trace = PlotlyJS.GenericTrace{Dict{Symbol,Any}}[]
         gens = stacks[stack].labels
         seriescolor = set_seriescolor(seriescolor, gens)
         for gen in 1:length(gens)
@@ -104,7 +104,7 @@ function plotly_stack_plots(results::IS.Results, seriescolor::Array; kwargs...)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     for (key, var) in results.variables
-        traces = PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
+        traces = PlotlyJS.GenericTrace{Dict{Symbol,Any}}[]
         var = results.variables[key]
         gens = collect(names(var))
         seriescolor = set_seriescolor(seriescolor, gens)
@@ -141,7 +141,7 @@ function plotly_stack_plots(results::Array, seriescolor::Array; kwargs...)
     for key in collect(keys(results[1, 1].variables))
         plots = []
         for res in 1:size(results, 2)
-            traces = PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
+            traces = PlotlyJS.GenericTrace{Dict{Symbol,Any}}[]
             var = results[1, res].variables[key]
             gens = collect(names(var))
             seriescolor = set_seriescolor(seriescolor, gens)
@@ -191,7 +191,7 @@ function plotly_bar_gen(bar_gen::BarGeneration, seriescolor::Array; kwargs...)
     time_span = IS.convert_compound_period(
         convert(Dates.TimePeriod, time_range[2] - time_range[1]) * length(time_range),
     )
-    traces = PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
+    traces = PlotlyJS.GenericTrace{Dict{Symbol,Any}}[]
     gens = bar_gen.labels
     seriescolor = set_seriescolor(seriescolor, gens)
     for gen in 1:length(gens)
@@ -231,7 +231,7 @@ function plotly_bar_gen(bar_gen::Array{BarGeneration}, seriescolor::Array; kwarg
     seriescolor = set_seriescolor(seriescolor, bar_gen[1].labels)
     plots = []
     for bar in 1:length(bar_gen)
-        traces = PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
+        traces = PlotlyJS.GenericTrace{Dict{Symbol,Any}}[]
         gens = bar_gen[bar].labels
         for gen in 1:length(gens)
             if bar == 1
@@ -277,13 +277,13 @@ function plotly_bar_plots(results::Array, seriescolor::Array; kwargs...)
     time_range = results[1].time_stamp
     time_span = IS.convert_compound_period(
         convert(Dates.TimePeriod, time_range[2, 1] - time_range[1, 1]) *
-            size(time_range, 1),
+        size(time_range, 1),
     )
     for key in collect(keys(results[1].variables))
         plots = []
         for res in 1:length(results)
             var = results[res].variables[key]
-            traces = PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
+            traces = PlotlyJS.GenericTrace{Dict{Symbol,Any}}[]
             gens = collect(names(var))
             seriescolor = set_seriescolor(seriescolor, gens)
             for gen in 1:length(gens)
@@ -330,10 +330,10 @@ function plotly_bar_plots(res::IS.Results, seriescolor::Array; kwargs...)
     time_range = res.time_stamp
     time_span = IS.convert_compound_period(
         convert(Dates.TimePeriod, time_range[2, 1] - time_range[1, 1]) *
-            size(time_range, 1),
+        size(time_range, 1),
     )
     for (key, var) in res.variables
-        traces = PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
+        traces = PlotlyJS.GenericTrace{Dict{Symbol,Any}}[]
         gens = collect(names(var))
         seriescolor = set_seriescolor(seriescolor, gens)
         for gen in 1:length(gens)
@@ -393,7 +393,7 @@ RecipesBase.@recipe function StackedPlot(
     sx = [time[1:n]; reverse(time[1:n])]
     for c in 1:size(z, 2)
         if c !== 1
-            sy = hcat(sy, vcat(z[:, c], reverse(z[:, c - 1])))
+            sy = hcat(sy, vcat(z[:, c], reverse(z[:, c-1])))
         end
     end
     RecipesBase.@series begin
@@ -433,7 +433,7 @@ RecipesBase.@recipe function StackedPlot(
         sx = [time[1:n]; reverse(time[1:n])]
         for c in 1:size(z, 2)
             if c !== 1
-                sy = hcat(sy, vcat(z[:, c], reverse(z[:, c - 1])))
+                sy = hcat(sy, vcat(z[:, c], reverse(z[:, c-1])))
             end
         end
         RecipesBase.@series begin
@@ -470,7 +470,7 @@ RecipesBase.@recipe function StackedGeneration(res::StackedGeneration, seriescol
     sx = [time[1:n]; reverse(time[1:n])]
     for c in 2:size(z, 2)
         if c !== 1
-            sy = hcat(sy, vcat(z[:, c], reverse(z[:, c - 1])))
+            sy = hcat(sy, vcat(z[:, c], reverse(z[:, c-1])))
         end
     end
     RecipesBase.@series begin
@@ -510,7 +510,7 @@ RecipesBase.@recipe function StackedGeneration(
         sx = [time[1:n]; reverse(time[1:n])]
         for c in 2:size(z, 2)
             if c !== 1
-                sy = hcat(sy, vcat(z[:, c], reverse(z[:, c - 1])))
+                sy = hcat(sy, vcat(z[:, c], reverse(z[:, c-1])))
             end
         end
         RecipesBase.@series begin
@@ -550,7 +550,7 @@ RecipesBase.@recipe function BarPlot(res::BarPlot, variable::String, seriescolor
     # Create filled polygon
     for c in 1:size(z, 2)
         sx = [[4, 5]; [5, 4]]
-        sy = vcat(z[:, c], c == 1 ? zeros(n) : reverse(z[:, c - 1]))
+        sy = vcat(z[:, c], c == 1 ? zeros(n) : reverse(z[:, c-1]))
         RecipesBase.@series sx, sy
     end
 
@@ -592,7 +592,7 @@ RecipesBase.@recipe function BarPlot(
         for c in 1:size(z, 2)
             subplot := i
             sx = [[4, 5]; [5, 4]]
-            sy = vcat(z[:, c], c == 1 ? zeros(n) : reverse(z[:, c - 1]))
+            sy = vcat(z[:, c], c == 1 ? zeros(n) : reverse(z[:, c-1]))
             RecipesBase.@series sx, sy
         end
     end
@@ -624,7 +624,7 @@ RecipesBase.@recipe function BarGen(res::BarGeneration, seriescolor::Array)
     xticks := false
     for c in 1:size(z, 2)
         sx = [[4, 5]; [5, 4]]
-        sy = vcat(z[:, c], c == 1 ? zeros(n) : reverse(z[:, c - 1]))
+        sy = vcat(z[:, c], c == 1 ? zeros(n) : reverse(z[:, c-1]))
         RecipesBase.@series sx, sy
     end
 end
@@ -660,7 +660,7 @@ RecipesBase.@recipe function BarGen(results::Array{BarGeneration}, seriescolor::
         for c in 1:size(z, 2)
             subplot := i
             sx = [[4, 5]; [5, 4]]
-            sy = vcat(z[:, c], c == 1 ? zeros(n) : reverse(z[:, c - 1]))
+            sy = vcat(z[:, c], c == 1 ? zeros(n) : reverse(z[:, c-1]))
             RecipesBase.@series sx, sy
         end
     end

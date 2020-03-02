@@ -226,7 +226,7 @@ Variables = Dict(:ON_ThermalStandard => [:Brighton, :Solitude])
 sorted_results = sort_data(res_UC; Variables = Variables)
 ```
 ***Note:*** only the generators included in key word 'Variables' will be in the
-results, and consequently, only these will be plotted. 
+results, and consequently, only these will be plotted.
 """
 function sort_data(res::IS.Results; kwargs...)
     order = get(kwargs, :Variables, Dict())
