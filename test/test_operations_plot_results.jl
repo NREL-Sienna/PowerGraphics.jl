@@ -15,8 +15,12 @@ function test_plots(file_path::String)
     end
 
     @testset "testing bar plot" begin
-        results =
-            PG.Results(get_variables(res), res.total_cost, res.optimizer_log, res.time_stamp)
+        results = PG.Results(
+            get_variables(res),
+            res.total_cost,
+            res.optimizer_log,
+            res.time_stamp,
+        )
         for name in keys(get_variables(results))
             variable_bar = PG.get_bar_plot_data(results, string(name))
             sort = sort!(names(get_variables(results)[name]))
@@ -35,8 +39,12 @@ function test_plots(file_path::String)
     end
 
     @testset "testing size of stack plot data" begin
-        results =
-            PG.Results(get_variables(res), res.total_cost, res.optimizer_log, res.time_stamp)
+        results = PG.Results(
+            get_variables(res),
+            res.total_cost,
+            res.optimizer_log,
+            res.time_stamp,
+        )
         for name in keys(get_variables(results))
             variable_stack = PG.get_stacked_plot_data(results, string(name))
             data = variable_stack.data_matrix
