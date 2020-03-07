@@ -9,7 +9,7 @@ PowerGraphics.jl is a Julia package for plotting results from [PowerSimulations.
 
 ```julia
 julia> ]
-(v1.3) pkg> add https://github.com/nrel-siip/PowerGraphics.jl
+(v1.3) pkg> add PowerGraphics
 ```
 ## Usage
 

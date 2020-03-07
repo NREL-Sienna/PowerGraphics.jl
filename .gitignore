@@ -17,3 +17,6 @@ data
 *.vscode
 /docs/Manifest.toml
 Manifest.toml
+*.pdf
+*.out
+*.aux

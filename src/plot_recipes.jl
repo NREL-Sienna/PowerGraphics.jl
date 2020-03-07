@@ -1,9 +1,4 @@
 ### PlotlyJS set up
-import PlotlyJS
-import WebIO
-
-# WebIO.install_jupyter_nbextension()
-
 function set_seriescolor(seriescolor::Array, gens::Array)
     colors = []
     for i in 1:length(gens)
@@ -277,7 +272,7 @@ function plotly_bar_plots(results::Array, seriescolor::Array; kwargs...)
     time_range = results[1].time_stamp
     time_span = IS.convert_compound_period(
         convert(Dates.TimePeriod, time_range[2, 1] - time_range[1, 1]) *
-            size(time_range, 1),
+        size(time_range, 1),
     )
     for key in collect(keys(results[1].variables))
         plots = []
@@ -330,7 +325,7 @@ function plotly_bar_plots(res::IS.Results, seriescolor::Array; kwargs...)
     time_range = res.time_stamp
     time_span = IS.convert_compound_period(
         convert(Dates.TimePeriod, time_range[2, 1] - time_range[1, 1]) *
-            size(time_range, 1),
+        size(time_range, 1),
     )
     for (key, var) in res.variables
         traces = PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
