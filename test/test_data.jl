@@ -1,7 +1,3 @@
-using PowerGraphics
-using DataFrames
-using Dates
-const PSG = PowerGraphics
 
 variables = Dict()
 variables[:P_ThermalStandard] = DataFrames.DataFrame(
@@ -19,6 +15,6 @@ objective_value = Dict()
 right_now = round(Dates.now(), Dates.Hour)
 time_stamp =
     DataFrames.DataFrame(:Range => right_now:Dates.Hour(1):(right_now + Dates.Hour(4)))
-res = PSG.Results(variables, optimizer_log, objective_value, time_stamp)
+res = PG.Results(variables, optimizer_log, objective_value, time_stamp)
 
 generators = Dict("Coal" => [:one; :two], "Wind" => [:three])

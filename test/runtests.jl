@@ -1,10 +1,9 @@
 using Test
+using TestSetExtensions
 using Logging
 using Dates
 import InteractiveUtils
-using TestSetExtensions
 using DataFrames
-using Dates
 using Plots
 using Weave
 import InfrastructureSystems
@@ -13,7 +12,7 @@ using PowerSystems
 import PowerSystems: PowerSystemTableData
 using PowerGraphics
 
-const PSG = PowerGraphics
+const PG = PowerGraphics
 const IS = InfrastructureSystems
 const PSY = PowerSystems
 const LOG_FILE = "PowerGraphics-test.log"
