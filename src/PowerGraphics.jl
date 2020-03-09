@@ -9,10 +9,6 @@ export stack_plot
 export report
 export make_fuel_dictionary
 export fuel_plot
-export get_variables
-export get_total_cost
-export get_optimizer_log
-export get_time_stamp
 
 import Dates
 import RecipesBase
