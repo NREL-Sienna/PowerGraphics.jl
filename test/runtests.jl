@@ -1,10 +1,9 @@
 using Test
+using TestSetExtensions
 using Logging
 using Dates
 import InteractiveUtils
-using TestSetExtensions
 using DataFrames
-using Dates
 using Plots
 using Weave
 import InfrastructureSystems
@@ -13,13 +12,15 @@ using PowerSystems
 import PowerSystems: PowerSystemTableData
 using PowerGraphics
 
-const PSG = PowerGraphics
+const PG = PowerGraphics
 const IS = InfrastructureSystems
 const PSY = PowerSystems
 const LOG_FILE = "PowerGraphics-test.log"
 
-const generic_template = "../report_templates/generic_report_template.jmd"
-const fuel_template = "../report_templates/fuel_report_template.jmd"
+base_dir = dirname(dirname(pathof(PowerGraphics)))
+template_dir = joinpath(base_dir, "report_templates")
+const generic_template = joinpath(template_dir, "generic_report_template.jmd")
+const fuel_template = joinpath(template_dir, "fuel_report_template.jmd")
 
 LOG_LEVELS = Dict(
     "Debug" => Logging.Debug,

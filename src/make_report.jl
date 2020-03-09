@@ -28,7 +28,7 @@ function report(res::IS.Results, out_path::String, design_template::String; kwar
     backend = get(kwargs, :backend, Plots.gr())
     !isfile(design_template) &&
     throw(ArgumentError("The provided template file is invalid"))
-    args = Dict("res" => res, "variables" => res.variables, "backend" => backend)
+    args = Dict("res" => res, "variables" => get_variables(res), "backend" => backend)
     Weave.weave(
         design_template,
         out_path = out_path,
@@ -82,7 +82,7 @@ function report(
     throw(ArgumentError("The provided template file is invalid"))
     args = Dict(
         "res" => res,
-        "variables" => res.variables,
+        "variables" => get_variables(res),
         "gen" => generators,
         "backend" => backend,
     )
@@ -139,7 +139,7 @@ function report(
     throw(ArgumentError("The provided template file is invalid"))
     args = Dict(
         "res" => res,
-        "variables" => res.variables,
+        "variables" => get_variables(res),
         "gen" => system,
         "backend" => backend,
     )
