@@ -5,10 +5,10 @@ mutable struct Results <: IS.Results
     time_stamp::DataFrames.DataFrame
 end
 
-get_variables(r::Results) = r.variables
-get_total_cost(r::Results) = r.total_cost
-get_optimizer_log(r::Results) = r.optimizer_log
-get_time_stamp(r::Results) = r.time_stamp
+IS.get_variables(r::Results) = r.variables
+IS.get_total_cost(r::Results) = r.total_cost
+IS.get_optimizer_log(r::Results) = r.optimizer_log
+IS.get_time_stamp(r::Results) = r.time_stamp
 
 struct StackedArea
     time_range::Array
@@ -58,7 +58,7 @@ function get_stacked_plot_data(res::IS.Results, variable::String; kwargs...)
 
     sort = get(kwargs, :sort, nothing)
     time_range = res.time_stamp[!, :Range]
-    variable = get_variables(res)[Symbol(variable)]
+    variable = IS.get_variables(res)[Symbol(variable)]
     alphabetical = sort!(names(variable))
 
     if isnothing(sort)
@@ -102,7 +102,7 @@ function get_bar_plot_data(res::IS.Results, variable::String; kwargs...)
 
     sort = get(kwargs, :sort, nothing)
     time_range = res.time_stamp[!, :Range]
-    variable = get_variables(res)[Symbol(variable)]
+    variable = IS.get_variables(res)[Symbol(variable)]
     alphabetical = sort!(names(variable))
 
     if isnothing(sort)
@@ -145,7 +145,7 @@ function get_stacked_generation_data(res::IS.Results; kwargs...)
 
     sort = get(kwargs, :sort, nothing)
     time_range = res.time_stamp[!, :Range]
-    key_name = collect(keys(get_variables(res)))
+    key_name = collect(keys(IS.get_variables(res)))
     alphabetical = sort!(key_name)
 
     if !isnothing(sort)
@@ -154,13 +154,13 @@ function get_stacked_generation_data(res::IS.Results; kwargs...)
         labels = alphabetical
     end
 
-    variable = get_variables(res)[Symbol(labels[1])]
+    variable = IS.get_variables(res)[Symbol(labels[1])]
     data_matrix = sum(convert(Matrix, variable), dims = 2)
     legend = [key_name[1]]
 
     for i in 1:length(labels)
         if i !== 1
-            variable = get_variables(res)[Symbol(labels[i])]
+            variable = IS.get_variables(res)[Symbol(labels[i])]
             legend = hcat(legend, string.(key_name[i]))
             data_matrix = hcat(data_matrix, sum(convert(Matrix, variable), dims = 2))
         end
@@ -192,13 +192,13 @@ plot(stack)
 function get_bar_gen_data(res::IS.Results)
 
     time_range = res.time_stamp[!, :Range]
-    key_name = collect(keys(get_variables(res)))
-    variable = get_variables(res)[Symbol(key_name[1])]
+    key_name = collect(keys(IS.get_variables(res)))
+    variable = IS.get_variables(res)[Symbol(key_name[1])]
     data_matrix = sum(convert(Matrix, variable), dims = 2)
     legend = [key_name[1]]
     for i in 1:length(key_name)
         if i !== 1
-            variable = get_variables(res)[Symbol(key_name[i])]
+            variable = IS.get_variables(res)[Symbol(key_name[i])]
             legend = hcat(legend, string.(key_name[i]))
             data_matrix = hcat(data_matrix, sum(convert(Matrix, variable), dims = 2))
         end
@@ -233,11 +233,11 @@ function sort_data(res::IS.Results; kwargs...)
     if !isempty(order)
         labels = collect(keys(order))
     else
-        labels = sort!(collect(keys(get_variables(res))))
+        labels = sort!(collect(keys(IS.get_variables(res))))
     end
     sorted_variables = Dict()
     for label in labels
-        sorted_variables[label] = get_variables(res)[label]
+        sorted_variables[label] = IS.get_variables(res)[label]
     end
     for (k, variable) in sorted_variables
         if !isempty(order)

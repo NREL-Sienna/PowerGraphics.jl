@@ -86,9 +86,9 @@ end
 
 function _check_matching_variables(results::Array)
     variables = DataFrames.DataFrame()
-    first_keys = collect(keys(get_variables(results[1])))
+    first_keys = collect(keys(IS.get_variables(results[1])))
     for res in 2:length(results)
-        var = collect(keys(get_variables(results[res])))
+        var = collect(keys(IS.get_variables(results[res])))
         if var != first_keys
             throw(IS.ConflictingInputsError("The given results do not have matching variable lists."))
         end
@@ -98,9 +98,9 @@ end
 function plotly_stack_plots(results::IS.Results, seriescolor::Array; kwargs...)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
-    for (key, var) in get_variables(results)
+    for (key, var) in IS.get_variables(results)
         traces = PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
-        var = get_variables(results)[key]
+        var = IS.get_variables(results)[key]
         gens = collect(names(var))
         seriescolor = set_seriescolor(seriescolor, gens)
         for gen in 1:length(gens)
@@ -133,11 +133,11 @@ function plotly_stack_plots(results::Array, seriescolor::Array; kwargs...)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     _check_matching_variables(results)
-    for key in collect(keys(get_variables(results[1, 1])))
+    for key in collect(keys(IS.get_variables(results[1, 1])))
         plots = []
         for res in 1:size(results, 2)
             traces = PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
-            var = get_variables(results[1, res])[key]
+            var = IS.get_variables(results[1, res])[key]
             gens = collect(names(var))
             seriescolor = set_seriescolor(seriescolor, gens)
             for gen in 1:length(gens)
@@ -274,10 +274,10 @@ function plotly_bar_plots(results::Array, seriescolor::Array; kwargs...)
         convert(Dates.TimePeriod, time_range[2, 1] - time_range[1, 1]) *
         size(time_range, 1),
     )
-    for key in collect(keys(get_variables(results[1])))
+    for key in collect(keys(IS.get_variables(results[1])))
         plots = []
         for res in 1:length(results)
-            var = get_variables(results[res])[key]
+            var = IS.get_variables(results[res])[key]
             traces = PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
             gens = collect(names(var))
             seriescolor = set_seriescolor(seriescolor, gens)
@@ -327,7 +327,7 @@ function plotly_bar_plots(res::IS.Results, seriescolor::Array; kwargs...)
         convert(Dates.TimePeriod, time_range[2, 1] - time_range[1, 1]) *
         size(time_range, 1),
     )
-    for (key, var) in get_variables(res)
+    for (key, var) in IS.get_variables(res)
         traces = PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
         gens = collect(names(var))
         seriescolor = set_seriescolor(seriescolor, gens)

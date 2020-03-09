@@ -83,14 +83,14 @@ function _filter_variables(results::IS.Results; kwargs...)
     filter_results = Dict()
     reserves = get(kwargs, :reserves, false)
     if reserves
-        for (key, var) in get_variables(results)
+        for (key, var) in IS.get_variables(results)
             start = split("$key", "_")[1]
             if in(start, VARIABLE_TYPES)
                 filter_results[key] = var
             end
         end
     else
-        for (key, var) in get_variables(results)
+        for (key, var) in IS.get_variables(results)
             start = split("$key", "_")[1]
             if start == "P"
                 filter_results[key] = var
@@ -351,7 +351,7 @@ end
 function bar_plot(res::IS.Results, variables::Array; kwargs...)
     res_var = Dict()
     for variable in variables
-        res_var[variable] = get_variables(res)[variable]
+        res_var[variable] = IS.get_variables(res)[variable]
     end
     results = Results(res_var, res.total_cost, res.optimizer_log, res.time_stamp)
     bar_plot(results; kwargs...)
@@ -362,7 +362,7 @@ function bar_plot(results::Array{IS.Results}, variables::Array; kwargs...)
     for res in results
         res_var = Dict()
         for variable in variables
-            res_var[variable] = get_variables(res)[variable]
+            res_var[variable] = IS.get_variables(res)[variable]
         end
         new_res = Results(res_var, res.total_cost, res.optimizer_log, res.time_stamp)
         new_results = vcat(new_results, new_res)
@@ -405,7 +405,7 @@ function _bar_plot_internal(
     kwargs...,
 )
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
-    for name in string.(keys(get_variables(res)))
+    for name in string.(keys(IS.get_variables(res)))
         variable_bar = get_bar_plot_data(res, name)
         p = RecipesBase.plot(variable_bar, name, seriescolor)
         set_display && display(p)
@@ -429,7 +429,7 @@ function _bar_plot_internal(
     kwargs...,
 )
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
-    for name in string.(keys(get_variables(results[1, 1])))
+    for name in string.(keys(IS.get_variables(results[1, 1])))
         variable_bar = get_bar_plot_data(results[1, 1], name)
         for i in 2:length(results)
             variable_bar = hcat(variable_bar, get_bar_plot_data(results[i], name))
@@ -558,7 +558,7 @@ stack_plot(results, variables)
 function stack_plot(res::IS.Results, variables::Array; kwargs...)
     res_var = Dict()
     for variable in variables
-        res_var[variable] = get_variables(res)[variable]
+        res_var[variable] = IS.get_variables(res)[variable]
     end
     results = Results(res_var, res.total_cost, res.optimizer_log, res.time_stamp)
     stack_plot(results; kwargs...)
@@ -569,7 +569,7 @@ function stack_plot(results::Array{<:IS.Results}, variables::Array; kwargs...)
     for res in results
         res_var = Dict()
         for variable in variables
-            res_var[variable] = get_variables(res)[variable]
+            res_var[variable] = IS.get_variables(res)[variable]
         end
         new_res = Results(res_var, res.total_cost, res.optimizer_log, res.time_stamp)
         new_results = vcat(new_results, new_res)
@@ -612,7 +612,7 @@ function _stack_plot_internal(
     kwargs...,
 )
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
-    for name in string.(keys(get_variables(res)))
+    for name in string.(keys(IS.get_variables(res)))
         variable_stack = get_stacked_plot_data(res, name)
         p = RecipesBase.plot(variable_stack, name, seriescolor)
         set_display && display(p)
@@ -637,7 +637,7 @@ function _stack_plot_internal(
 )
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
 
-    for name in string.(keys(get_variables(results[1])))
+    for name in string.(keys(IS.get_variables(results[1])))
         variable_stack = get_stacked_plot_data(results[1], name)
         for res in 2:length(results)
             variable_stack = hcat(variable_stack, get_stacked_plot_data(results[res], name))
