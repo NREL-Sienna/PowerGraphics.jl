@@ -15,6 +15,7 @@ import RecipesBase
 
 #I/O Imports
 using Reexport
+import PlotlyJS
 import Colors
 import DataFrames
 @reexport using Plots
