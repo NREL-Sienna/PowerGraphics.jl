@@ -17,4 +17,5 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Weave = "44d3d7a6-8a23-5bf8-98c5-b353f8df5ec9"
 
 [compat]
+PlotlyJS = "0.13"
 julia = "1"
