@@ -2,10 +2,7 @@ using Test
 using TestSetExtensions
 using Logging
 using Dates
-import InteractiveUtils
 using DataFrames
-using Plots
-using Weave
 import InfrastructureSystems
 import InfrastructureSystems: Deterministic, Probabilistic, ScenarioBased, Forecast
 using PowerSystems

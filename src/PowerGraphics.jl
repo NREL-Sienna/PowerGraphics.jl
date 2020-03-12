@@ -14,12 +14,10 @@ import Dates
 import RecipesBase
 
 #I/O Imports
-import PlotlyJS
-import ORCA
-import WebIO
+using Reexport
 import Colors
 import DataFrames
-import Plots
+@reexport using Plots
 import Weave
 import PowerSystems
 import InfrastructureSystems
