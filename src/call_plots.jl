@@ -2,28 +2,21 @@ function _filter_variables(results::IS.Results; kwargs...)
     filter_results = Dict()
     reserves = get(kwargs, :reserves, false)
     if reserves
-        for (key, var) in results.variable_values
+        for (key, var) in IS.get_variables(results)
             start = split("$key", "_")[1]
             if in(start, VARIABLE_TYPES)
                 filter_results[key] = var
             end
         end
     else
-        for (key, var) in results.variable_values
+        for (key, var) in IS.get_variables(results)
             start = split("$key", "_")[1]
             if start == "P"
                 filter_results[key] = var
             end
         end
     end
-    results = Results(
-        results.base_power,
-        filter_results,
-        results.total_cost,
-        results.optimizer_log,
-        results.time_stamp,
-        results.parameters
-    )
+    results.variable_values = filter_results
     return results
 end
 
@@ -103,7 +96,17 @@ function fuel_plot(res::IS.Results, generator_dict::Dict; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    _fuel_plot_internal(stack, bar, seriescolor, backend, save_fig, set_display, title, ylabel; kwargs...)
+    _fuel_plot_internal(
+        stack,
+        bar,
+        seriescolor,
+        backend,
+        save_fig,
+        set_display,
+        title,
+        ylabel;
+        kwargs...,
+    )
 end
 
 function fuel_plot(results::Array{}, generator_dict::Dict; kwargs...)
@@ -125,7 +128,17 @@ function fuel_plot(results::Array{}, generator_dict::Dict; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    _fuel_plot_internal(stack, bar, seriescolor, backend, save_fig, set_display, title, ylabel; kwargs...)
+    _fuel_plot_internal(
+        stack,
+        bar,
+        seriescolor,
+        backend,
+        save_fig,
+        set_display,
+        title,
+        ylabel;
+        kwargs...,
+    )
 end
 
 function _fuel_plot_internal(
@@ -246,10 +259,10 @@ end
 function bar_plot(res::IS.Results, variables::Array; kwargs...)
     res_var = Dict()
     for variable in variables
-        res_var[variable] = res.variable_values[variable]
+        res_var[variable] = IS.get_variables(res)[variable]
     end
-    results = Results(res.base_power, res_var, res.total_cost, res.optimizer_log, res.time_stamp, res.parameters)
-    bar_plot(results; kwargs...)
+    res.variable_values = res_var
+    bar_plot(res; kwargs...)
 end
 
 function bar_plot(results::Array{IS.Results}, variables::Array; kwargs...)
@@ -257,10 +270,10 @@ function bar_plot(results::Array{IS.Results}, variables::Array; kwargs...)
     for res in results
         res_var = Dict()
         for variable in variables
-            res_var[variable] = res.variable_values[variable]
+            res_var[variable] = IS.get_variables(res)[variable]
         end
-        new_res = Results(res.base_power, res_var, res.total_cost, res.optimizer_log, res.time_stamp, res.parameters)
-        new_results = vcat(new_results, new_res)
+        res.variable_values = res_var
+        new_results = vcat(new_results, res)
     end
     bar_plot(new_results; kwargs...)
 end
@@ -306,7 +319,7 @@ function _bar_plot_internal(
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
     ylabel = _make_ylabel(get_base_power(res))
     title = get(kwargs, :title, " ")
-    for name in string.(keys(res.variable_values))
+    for name in string.(keys(IS.get_variables(res)))
         variable_bar = get_bar_plot_data(res, name)
         p = RecipesBase.plot(variable_bar, name, seriescolor; ylabel = ylabel)
         set_display && display(p)
@@ -332,7 +345,7 @@ function _bar_plot_internal(
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
     title = get(kwargs, :title, " ")
     ylabel = _make_ylabel(get_base_power(results[1]))
-    for name in string.(keys(results[1, 1].variable_values))
+    for name in string.(keys(IS.get_variables(results[1, 1])))
         variable_bar = get_bar_plot_data(results[1, 1], name)
         for i in 2:length(results)
             variable_bar = hcat(variable_bar, get_bar_plot_data(results[i], name))
@@ -464,10 +477,10 @@ stack_plot(results, variables)
 function stack_plot(res::IS.Results, variables::Array; kwargs...)
     res_var = Dict()
     for variable in variables
-        res_var[variable] = res.variable_values[variable]
+        res_var[variable] = IS.get_variables(res)[variable]
     end
-    results = Results(res.base_power, res_var, res.total_cost, res.optimizer_log, res.time_stamp, res.parameters)
-    stack_plot(results; kwargs...)
+    res.variable_values = res_var
+    stack_plot(res; kwargs...)
 end
 
 function stack_plot(results::Array{<:IS.Results}, variables::Array; kwargs...)
@@ -475,10 +488,10 @@ function stack_plot(results::Array{<:IS.Results}, variables::Array; kwargs...)
     for res in results
         res_var = Dict()
         for variable in variables
-            res_var[variable] = res.variable_values[variable]
+            res_var[variable] = IS.get_variables(res)[variable]
         end
-        new_res = Results(res.base_power, res_var, res.total_cost, res.optimizer_log, res.time_stamp, res.parameters)
-        new_results = vcat(new_results, new_res)
+        res.variable_values = res_var
+        new_results = vcat(new_results, res)
     end
     stack_plot(new_results; kwargs...)
 end
@@ -524,7 +537,7 @@ function _stack_plot_internal(
     title = get(kwargs, :title, " ")
     ylabel = _make_ylabel(get_base_power(res))
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
-    for name in string.(keys(res.variable_values))
+    for name in string.(keys(IS.get_variables(res)))
         variable_stack = get_stacked_plot_data(res, name)
         p = RecipesBase.plot(variable_stack, name, seriescolor; ylabel = ylabel)
         set_display && display(p)
@@ -550,7 +563,7 @@ function _stack_plot_internal(
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
     title = get(kwargs, :title, " ")
     ylabel = _make_ylabel(get_base_power(results[1]))
-    for name in string.(keys(results[1].variable_values))
+    for name in string.(keys(IS.get_variables(results[1])))
         variable_stack = get_stacked_plot_data(results[1], name)
         for res in 2:length(results)
             variable_stack = hcat(variable_stack, get_stacked_plot_data(results[res], name))

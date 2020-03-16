@@ -9,7 +9,7 @@ PowerGraphics.jl is a Julia package for plotting results from [PowerSimulations.
 
 ```julia
 julia> ]
-(v1.3) pkg> add https://github.com/nrel-siip/PowerGraphics.jl
+(v1.3) pkg> add PowerGraphics
 ```
 ## Usage
 
@@ -29,11 +29,17 @@ Pkg.add("PlotlyJS")
 Pkg.add("ORCA")
 ```
 
+When using `PowerGraphics.jl` within a jupyter notebook, `WebIO.jl` is also required (*and depending on the local configuration of nbextensions, some [additional steps](https://juliagizmos.github.io/WebIO.jl/latest/troubleshooting/not-detected/) may be required):
+
+```julia
+Pkg.add("WebIO")
+```
+
 An additional command (`plotlyjs()`) to startup the `PlotlyJS` backend from `Plots` is required:
 
 ```julia
 using PowerGraphics
-PowerGraphics.Plots.plotlyjs()
+plotlyjs()
 # where "res" is a PowerSimulations.SimulationResults object,
 # and "sys" is a PowerSystems.System object
 fuel_plot(res, sys)

@@ -1,9 +1,4 @@
-using PowerGraphics
-using DataFrames
-using Dates
-const PSG = PowerGraphics
-
-variables = Dict()
+variables = Dict{Symbol, DataFrames.DataFrame}()
 variables[:P_ThermalStandard] = DataFrames.DataFrame(
     :one => [1, 2, 3, 2, 1],
     :two => [3, 2, 1, 2, 3],
@@ -15,7 +10,7 @@ variables[:P_RenewableDispatch] = DataFrames.DataFrame(
     :three => [3, 2, 3, 2, 3],
 )
 
-parameters = Dict()
+parameters = Dict{Symbol, DataFrames.DataFrame}()
 parameters[:parameter_P_FixedGeneration] = DataFrames.DataFrame(
     :one => [2, 2, 1, 2, 2],
     :two => [3, 4, 1, 2, 2],
@@ -29,9 +24,19 @@ parameters[:parameter_P_PowerLoad] = DataFrames.DataFrame(
 )
 optimizer_log = Dict()
 objective_value = Dict()
+dual_values = Dict{Symbol, Any}()
+base_power = 100.0
 right_now = round(Dates.now(), Dates.Hour)
 time_stamp =
     DataFrames.DataFrame(:Range => right_now:Dates.Hour(1):(right_now + Dates.Hour(4)))
-res = PSG.Results(variables, optimizer_log, objective_value, time_stamp, parameters)
+res = PG.Results(
+    base_power,
+    variables,
+    optimizer_log,
+    objective_value,
+    time_stamp,
+    dual_values,
+    parameters,
+)
 
 generators = Dict("Coal" => [:one; :two], "Wind" => [:three])

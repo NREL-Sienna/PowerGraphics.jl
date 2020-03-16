@@ -11,7 +11,13 @@ function set_seriescolor(seriescolor::Array, gens::Array)
     return colors
 end
 
-function plotly_stack_gen(stacked_gen::StackedGeneration, seriescolor::Array, title::String, ylabel::String; kwargs...)
+function plotly_stack_gen(
+    stacked_gen::StackedGeneration,
+    seriescolor::Array,
+    title::String,
+    ylabel::String;
+    kwargs...,
+)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     traces = PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
@@ -32,17 +38,20 @@ function plotly_stack_gen(stacked_gen::StackedGeneration, seriescolor::Array, ti
             ),
         )
     end
-    p = PlotlyJS.plot(
-        traces,
-        PlotlyJS.Layout(title = title, yaxis_title = ylabel),
-    )
+    p = PlotlyJS.plot(traces, PlotlyJS.Layout(title = title, yaxis_title = ylabel))
     set_display && PlotlyJS.display(p)
     if !isnothing(save_fig)
         PlotlyJS.savefig(p, joinpath(save_fig, "Stack_Generation.png"))
     end
 end
 
-function plotly_stack_gen(stacks::Array{StackedGeneration}, seriescolor::Array, title::String, ylabel::String; kwargs...)
+function plotly_stack_gen(
+    stacks::Array{StackedGeneration},
+    seriescolor::Array,
+    title::String,
+    ylabel::String;
+    kwargs...,
+)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     plots = []
@@ -71,10 +80,7 @@ function plotly_stack_gen(stacks::Array{StackedGeneration}, seriescolor::Array, 
                 ),
             )
         end
-        p = PlotlyJS.plot(
-            trace,
-            PlotlyJS.Layout(title = title, yaxis_title = ylabel),
-        )
+        p = PlotlyJS.plot(trace, PlotlyJS.Layout(title = title, yaxis_title = ylabel))
         plots = vcat(plots, p)
     end
     plots = vcat(plots...)
@@ -86,21 +92,26 @@ end
 
 function _check_matching_variables(results::Array)
     variables = DataFrames.DataFrame()
-    first_keys = collect(keys(results[1].variable_values))
+    first_keys = collect(keys(IS.get_variables(results[1])))
     for res in 2:length(results)
-        var = collect(keys(results[res].variable_values))
+        var = collect(keys(IS.get_variables(results[res])))
         if var != first_keys
             throw(IS.ConflictingInputsError("The given results do not have matching variable lists."))
         end
     end
 end
 
-function plotly_stack_plots(results::IS.Results, seriescolor::Array, ylabel::String; kwargs...)
+function plotly_stack_plots(
+    results::IS.Results,
+    seriescolor::Array,
+    ylabel::String;
+    kwargs...,
+)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
-    for (key, var) in results.variable_values
+    for (key, var) in IS.get_variables(results)
         traces = PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
-        var = results.variable_values[key]
+        var = IS.get_variables(results)[key]
         gens = collect(names(var))
         seriescolor = set_seriescolor(seriescolor, gens)
         for gen in 1:length(gens)
@@ -118,10 +129,7 @@ function plotly_stack_plots(results::IS.Results, seriescolor::Array, ylabel::Str
                 ),
             )
         end
-        p = PlotlyJS.plot(
-            traces,
-            PlotlyJS.Layout(title = "$key", yaxis_title = ylabel),
-        )
+        p = PlotlyJS.plot(traces, PlotlyJS.Layout(title = "$key", yaxis_title = ylabel))
         set_display && PlotlyJS.display(p)
         if !isnothing(save_fig)
             Plots.savefig(p, joinpath(save_fig, "$(key)_Stack.png"))
@@ -133,11 +141,11 @@ function plotly_stack_plots(results::Array, seriescolor::Array, ylabel::String; 
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     _check_matching_variables(results)
-    for key in collect(keys(results[1, 1].variable_values))
+    for key in collect(keys(IS.get_variables(results[1, 1])))
         plots = []
         for res in 1:size(results, 2)
             traces = PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
-            var = results[1, res].variable_values[key]
+            var = IS.get_variables(results[1, res])[key]
             gens = collect(names(var))
             seriescolor = set_seriescolor(seriescolor, gens)
             for gen in 1:length(gens)
@@ -216,7 +224,13 @@ function plotly_bar_gen(bar_gen::BarGeneration, seriescolor::Array)
     end
 end
 
-function plotly_bar_gen(bar_gen::Array{BarGeneration}, seriescolor::Array, title::String, ylabel::String; kwargs...)
+function plotly_bar_gen(
+    bar_gen::Array{BarGeneration},
+    seriescolor::Array,
+    title::String,
+    ylabel::String;
+    kwargs...,
+)
     time_range = bar_gen[1].time_range
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
@@ -274,10 +288,10 @@ function plotly_bar_plots(results::Array, seriescolor::Array, ylabel::String; kw
         convert(Dates.TimePeriod, time_range[2, 1] - time_range[1, 1]) *
         size(time_range, 1),
     )
-    for key in collect(keys(results[1].variable_values))
+    for key in collect(keys(IS.get_variables(results[1])))
         plots = []
         for res in 1:length(results)
-            var = results[res].variable_values[key]
+            var = IS.get_variables(results[res])[key]
             traces = PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
             gens = collect(names(var))
             seriescolor = set_seriescolor(seriescolor, gens)
@@ -303,11 +317,7 @@ function plotly_bar_plots(results::Array, seriescolor::Array, ylabel::String; kw
             end
             p = PlotlyJS.plot(
                 traces,
-                PlotlyJS.Layout(
-                    title = "$key",
-                    yaxis_title = ylabel,
-                    barmode = "stack",
-                ),
+                PlotlyJS.Layout(title = "$key", yaxis_title = ylabel, barmode = "stack"),
             )
             plots = vcat(plots, p)
         end
@@ -327,7 +337,7 @@ function plotly_bar_plots(res::IS.Results, seriescolor::Array, ylabel::String; k
         convert(Dates.TimePeriod, time_range[2, 1] - time_range[1, 1]) *
         size(time_range, 1),
     )
-    for (key, var) in res.variable_values
+    for (key, var) in IS.get_variables(res)
         traces = PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
         gens = collect(names(var))
         seriescolor = set_seriescolor(seriescolor, gens)
@@ -346,11 +356,7 @@ function plotly_bar_plots(res::IS.Results, seriescolor::Array, ylabel::String; k
         end
         p = PlotlyJS.plot(
             traces,
-            PlotlyJS.Layout(
-                barmode = "stack",
-                title = "$key",
-                yaxis_title = ylabel,
-            ),
+            PlotlyJS.Layout(barmode = "stack", title = "$key", yaxis_title = ylabel),
         )
         set_display && PlotlyJS.display(p)
         if !isnothing(save_fig)
@@ -585,7 +591,7 @@ RecipesBase.@recipe function BarPlot(
     end
 end
 
-RecipesBase.@recipe function BarGen(res::BarGeneration, seriescolor::Array, title::String)
+RecipesBase.@recipe function BarGen(res::BarGeneration, seriescolor::Array)
     seriescolor := seriescolor
     time = convert.(Dates.DateTime, res.time_range)
     n = 2
@@ -594,7 +600,6 @@ RecipesBase.@recipe function BarGen(res::BarGeneration, seriescolor::Array, titl
     z = cumsum(data, dims = 2)
     # Plot Attributes
     grid := false
-    title := title
     start_time = time[1]
     interval = time[2] - time[1]
     time_interval = convert(Dates.Hour, interval * length(time))
