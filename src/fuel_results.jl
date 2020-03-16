@@ -15,7 +15,7 @@ order = ([
 ])
 function _get_iterator(sys::PSY.System, results::IS.Results)
     iterators = []
-    for (k, v) in results.variables
+    for (k, v) in results.variable_values
         if "$k"[1:2] == "P_"
             datatype = (split("$k", "P_")[2])
             if occursin("Thermal", datatype)
@@ -111,9 +111,9 @@ end
 
 function _aggregate_data(res::IS.Results, generators::Dict)
     All_var = DataFrames.DataFrame()
-    var_names = collect(keys(res.variables))
+    var_names = collect(keys(res.variable_values))
     for i in 1:length(var_names)
-        All_var = hcat(All_var, res.variables[var_names[i]], makeunique = true)
+        All_var = hcat(All_var, res.variable_values[var_names[i]], makeunique = true)
     end
     fuel_dataframes = Dict()
 

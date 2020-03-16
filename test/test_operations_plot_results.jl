@@ -4,23 +4,23 @@ path = joinpath(pwd(), "plots")
 function test_plots(file_path::String)
     include("test_data.jl")
 
-    @testset "testing results sorting" begin
+    @testset "test results sorting" begin
         Variables = Dict(:P_ThermalStandard => [:one, :two])
         sorted = PSG.sort_data(res; Variables = Variables)
         sorted_two = PSG.sort_data(res)
         sorted_names = [:one, :two]
         sorted_names_two = [:one, :three, :two]
-        @test names(sorted.variables[:P_ThermalStandard]) == sorted_names
-        @test names(sorted_two.variables[:P_ThermalStandard]) == sorted_names_two
+        @test names(sorted.variable_values[:P_ThermalStandard]) == sorted_names
+        @test names(sorted_two.variable_values[:P_ThermalStandard]) == sorted_names_two
     end
 
-    @testset "testing bar plot" begin
+    @testset "test bar plot" begin
         results =
-            PSG.Results(res.variables, res.total_cost, res.optimizer_log, res.time_stamp)
-        for name in keys(results.variables)
+            PSG.Results(res.variable_values, res.total_cost, res.optimizer_log, res.time_stamp)
+        for name in keys(results.variable_values)
             variable_bar = PSG.get_bar_plot_data(results, string(name))
-            sort = sort!(names(results.variables[name]))
-            sorted_results = res.variables[name][:, sort]
+            sort = sort!(names(results.variable_values[name]))
+            sorted_results = res.variable_values[name][:, sort]
             for i in 1:length(sort)
                 @test isapprox(
                     variable_bar.bar_data[i],
@@ -36,12 +36,12 @@ function test_plots(file_path::String)
 
     @testset "testing size of stack plot data" begin
         results =
-            PSG.Results(res.variables, res.total_cost, res.optimizer_log, res.time_stamp)
-        for name in keys(results.variables)
+            PSG.Results(res.variable_values, res.total_cost, res.optimizer_log, res.time_stamp)
+        for name in keys(results.variable_values)
             variable_stack = PSG.get_stacked_plot_data(results, string(name))
             data = variable_stack.data_matrix
             legend = variable_stack.labels
-            @test size(data) == size(res.variables[name])
+            @test size(data) == size(res.variable_values[name])
             @test length(legend) == size(data, 2)
             @test typeof(variable_stack) == PSG.StackedArea
         end
