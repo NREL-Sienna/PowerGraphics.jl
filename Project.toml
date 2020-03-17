@@ -17,9 +17,9 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Weave = "44d3d7a6-8a23-5bf8-98c5-b353f8df5ec9"
 
 [compat]
-Colors = "0.11, 0.12"
+Colors = "0.11"
 DataFrames = "0.20"
-GR = "0.47"
+GR = "0.47, 0.48"
 InfrastructureSystems = "0.5"
 PlotlyJS = "0.13"
 Plots = "0.29"
