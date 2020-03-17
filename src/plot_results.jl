@@ -61,7 +61,7 @@ plot(ThermalStandard)
 function get_stacked_plot_data(res::IS.Results, variable::String; kwargs...)
 
     sort = get(kwargs, :sort, nothing)
-    time_range = res.time_stamp[!, :Range]
+    time_range = IS.get_time_stamp(res)[!, :Range]
     variable = IS.get_variables(res)[Symbol(variable)]
     alphabetical = sort!(names(variable))
 
@@ -105,7 +105,7 @@ plot(ThermalStandard)
 function get_bar_plot_data(res::IS.Results, variable::String; kwargs...)
 
     sort = get(kwargs, :sort, nothing)
-    time_range = res.time_stamp[!, :Range]
+    time_range = IS.get_time_stamp(res)[!, :Range]
     variable = IS.get_variables(res)[Symbol(variable)]
     alphabetical = sort!(names(variable))
 
@@ -148,7 +148,7 @@ plot(stack)
 function get_stacked_generation_data(res::IS.Results; kwargs...)
 
     sort = get(kwargs, :sort, nothing)
-    time_range = res.time_stamp[!, :Range]
+    time_range = IS.get_time_stamp(res)[!, :Range]
     key_name = collect(keys(IS.get_variables(res)))
     alphabetical = sort!(key_name)
 
@@ -195,7 +195,7 @@ plot(stack)
 
 function get_bar_gen_data(res::IS.Results)
 
-    time_range = res.time_stamp[!, :Range]
+    time_range = IS.get_time_stamp(res)[!, :Range]
     key_name = collect(keys(IS.get_variables(res)))
     variable = IS.get_variables(res)[Symbol(key_name[1])]
     data_matrix = sum(convert(Matrix, variable), dims = 2)
@@ -253,11 +253,11 @@ function sort_data(res::IS.Results; kwargs...)
         sorted_variables[k] = variable
     end
     return Results(
-        res.base_power,
+        get_base_power(res),
         sorted_variables,
-        res.optimizer_log,
-        res.total_cost,
-        res.time_stamp,
+        IS.get_optimizer_log(res),
+        IS.get_total_cost(res),
+        IS.get_time_stamp(res),
         res.dual_values,
         res.parameter_values,
     )

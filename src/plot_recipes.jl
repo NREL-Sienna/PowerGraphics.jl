@@ -41,7 +41,10 @@ function plotly_stack_gen(
     p = PlotlyJS.plot(traces, PlotlyJS.Layout(title = title, yaxis_title = ylabel))
     set_display && PlotlyJS.display(p)
     if !isnothing(save_fig)
-        PlotlyJS.savefig(p, joinpath(save_fig, "Stack_Generation.png"))
+        if title == " "
+            title = "Stack_Generation"
+        end
+        Plots.savefig(joinpath(save_fig, "$title.png"))
     end
 end
 
@@ -86,7 +89,10 @@ function plotly_stack_gen(
     plots = vcat(plots...)
     set_display && PlotlyJS.display(plots)
     if !isnothing(save_fig)
-        PlotlyJS.savefig(plots, joinpath(save_fig, "Bar_Generation.png"))
+        if title == " "
+            title = "Stack_Generation"
+        end
+        Plots.savefig(joinpath(save_fig, "$title.png"))
     end
 end
 
@@ -132,7 +138,7 @@ function plotly_stack_plots(
         p = PlotlyJS.plot(traces, PlotlyJS.Layout(title = "$key", yaxis_title = ylabel))
         set_display && PlotlyJS.display(p)
         if !isnothing(save_fig)
-            Plots.savefig(p, joinpath(save_fig, "$(key)_Stack.png"))
+            Plots.savefig(joinpath(save_fig, "$(key)_Stack.png"))
         end
     end
 end
@@ -182,12 +188,18 @@ function plotly_stack_plots(results::Array, seriescolor::Array, ylabel::String; 
         plots = vcat(plots...)
         set_display && PlotlyJS.display(plots)
         if !isnothing(save_fig)
-            PlotlyJS.savefig(plots, joinpath(save_fig, "Bar_Generation.png"))
+            Plots.savefig(joinpath(save_fig, "$(key)_Stack.png"))
         end
     end
 end
 
-function plotly_bar_gen(bar_gen::BarGeneration, seriescolor::Array)
+function plotly_bar_gen(
+    bar_gen::BarGeneration,
+    seriescolor::Array,
+    title::String,
+    ylabel::String;
+    kwargs...,
+)
     time_range = bar_gen.time_range
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
@@ -220,7 +232,10 @@ function plotly_bar_gen(bar_gen::BarGeneration, seriescolor::Array)
     )
     set_display && PlotlyJS.display(p)
     if !isnothing(save_fig)
-        PlotlyJS.savefig(p, joinpath(save_fig, "Bar_Generation.png"))
+        if title == " "
+            title = "Bar_Generation"
+        end
+        Plots.savefig(joinpath(save_fig, "$title.png"))
     end
 end
 
@@ -276,7 +291,10 @@ function plotly_bar_gen(
     plots = vcat(plots...)
     set_display && PlotlyJS.display(plots)
     if !isnothing(save_fig)
-        PlotlyJS.savefig(plots, joinpath(save_fig, "Bar_Generation.png"))
+        if title == " "
+            title = "Bar_Generation"
+        end
+        Plots.savefig(joinpath(save_fig, "$title.png"))
     end
 end
 
@@ -324,7 +342,7 @@ function plotly_bar_plots(results::Array, seriescolor::Array, ylabel::String; kw
         plots = vcat(plots...)
         set_display && PlotlyJS.display(plots)
         if !isnothing(save_fig)
-            PlotlyJS.savefig(plots, joinpath(save_fig, "$(key)_Bar.png"))
+            Plots.savefig(joinpath(save_fig, "$(key)_Bar.png"))
         end
     end
 end
@@ -332,7 +350,7 @@ end
 function plotly_bar_plots(res::IS.Results, seriescolor::Array, ylabel::String; kwargs...)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
-    time_range = res.time_stamp
+    time_range = IS.get_time_stamp(res)
     time_span = IS.convert_compound_period(
         convert(Dates.TimePeriod, time_range[2, 1] - time_range[1, 1]) *
         size(time_range, 1),
@@ -360,7 +378,7 @@ function plotly_bar_plots(res::IS.Results, seriescolor::Array, ylabel::String; k
         )
         set_display && PlotlyJS.display(p)
         if !isnothing(save_fig)
-            PlotlyJS.savefig(p, joinpath(save_fig, "$(key)_Bar.png"))
+            Plots.savefig(joinpath(save_fig, "$(key)_Bar.png"))
         end
     end
 end

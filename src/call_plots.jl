@@ -20,6 +20,81 @@ function _filter_variables(results::IS.Results; kwargs...)
     return results
 end
 
+function fuel_plot(res::IS.Results, variables::Array, generator_dict::Dict; kwargs...)
+    res_var = Dict()
+    for variable in variables
+        res_var[variable] = IS.get_variables(res)[variable]
+    end
+    results = Results(
+        get_base_power(res),
+        res_var,
+        IS.get_optimizer_log(res),
+        IS.get_total_cost(res),
+        IS.get_time_stamp(res),
+        res.dual_values,
+        res.parameter_values,
+    )
+    fuel_plot(results, generator_dict; kwargs...)
+end
+
+function fuel_plot(res::IS.Results, variables::Array, system::PSY.System; kwargs...)
+    res_var = Dict()
+    for variable in variables
+        res_var[variable] = IS.get_variables(res)[variable]
+    end
+    results = Results(
+        get_base_power(res),
+        res_var,
+        IS.get_optimizer_log(res),
+        IS.get_total_cost(res),
+        IS.get_time_stamp(res),
+        res.dual_values,
+        res.parameter_values,
+    )
+    fuel_plot(results, system; kwargs...)
+end
+
+function fuel_plot(results::Array, variables::Array, system::PSY.System; kwargs...)
+    new_results = []
+    for res in results
+        res_var = Dict()
+        for variable in variables
+            res_var[variable] = IS.get_variables(res)[variable]
+        end
+        results = Results(
+            get_base_power(res),
+            res_var,
+            IS.get_optimizer_log(res),
+            IS.get_total_cost(res),
+            IS.get_time_stamp(res),
+            res.dual_values,
+            res.parameter_values,
+        )
+        new_results = vcat(new_results, results)
+    end
+    fuel_plot(new_results, system; kwargs...)
+end
+
+function fuel_plot(results::Array, variables::Array, generator_dict::Dict; kwargs...)
+    new_results = []
+    for res in results
+        res_var = Dict()
+        for variable in variables
+            res_var[variable] = IS.get_variables(res)[variable]
+        end
+        results = Results(
+            get_base_power(res),
+            res_var,
+            IS.get_optimizer_log(res),
+            IS.get_total_cost(res),
+            IS.get_time_stamp(res),
+            res.dual_values,
+            res.parameter_values,
+        )
+        new_results = vcat(new_results, results)
+    end
+    fuel_plot(new_results, generator_dict; kwargs...)
+end
 """
     fuel_plot(results, system)
 
@@ -50,7 +125,7 @@ function fuel_plot(res::IS.Results, sys::PSY.System; kwargs...)
     fuel_plot(res, ref; kwargs...)
 end
 
-function fuel_plot(res::Array{IS.Results}, sys::PSY.System; kwargs...)
+function fuel_plot(res::Array, sys::PSY.System; kwargs...)
     ref = make_fuel_dictionary(sys, res)
     fuel_plot(res, ref; kwargs...)
 end
@@ -109,7 +184,7 @@ function fuel_plot(res::IS.Results, generator_dict::Dict; kwargs...)
     )
 end
 
-function fuel_plot(results::Array{}, generator_dict::Dict; kwargs...)
+function fuel_plot(results::Array, generator_dict::Dict; kwargs...)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     new_res = _filter_variables(results[1]; kwargs...)
@@ -173,8 +248,11 @@ function _fuel_plot_internal(
     set_display && display(p1)
     set_display && display(p2)
     if !isnothing(save_fig)
-        Plots.savefig(p1, joinpath(save_fig, "Fuel_Stack.png"))
-        Plots.savefig(p2, joinpath(save_fig, "Fuel_Bar.png"))
+        if title == " "
+            title = "Bar_Generation"
+        end
+        Plots.savefig(p1, joinpath(save_fig, "$title.png"))
+        Plots.savefig(p2, joinpath(save_fig, "$title.png"))
     end
 end
 
@@ -239,7 +317,7 @@ bar_plot([results1; results2])
 - `title::String = "Title"`: Set a title for the plots
 """
 
-function bar_plot(results::Array{}; kwargs...)
+function bar_plot(results::Array; kwargs...)
     backend = Plots.backend()
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
@@ -261,19 +339,35 @@ function bar_plot(res::IS.Results, variables::Array; kwargs...)
     for variable in variables
         res_var[variable] = IS.get_variables(res)[variable]
     end
-    res.variable_values = res_var
-    bar_plot(res; kwargs...)
+    results = Results(
+        get_base_power(res),
+        res_var,
+        IS.get_optimizer_log(res),
+        IS.get_total_cost(res),
+        IS.get_time_stamp(res),
+        res.dual_values,
+        res.parameter_values,
+    )
+    bar_plot(results; kwargs...)
 end
 
-function bar_plot(results::Array{IS.Results}, variables::Array; kwargs...)
+function bar_plot(results::Array, variables::Array; kwargs...)
     new_results = []
     for res in results
         res_var = Dict()
         for variable in variables
             res_var[variable] = IS.get_variables(res)[variable]
         end
-        res.variable_values = res_var
-        new_results = vcat(new_results, res)
+        results = Results(
+            get_base_power(res),
+            res_var,
+            IS.get_optimizer_log(res),
+            IS.get_total_cost(res),
+            IS.get_time_stamp(res),
+            res.dual_values,
+            res.parameter_values,
+        )
+        new_results = vcat(new_results, results)
     end
     bar_plot(new_results; kwargs...)
 end
@@ -330,7 +424,10 @@ function _bar_plot_internal(
     p2 = RecipesBase.plot(bar_gen, seriescolor; title = title, ylabel = ylabel)
     set_display && display(p2)
     if !isnothing(save_fig)
-        Plots.savefig(p2, joinpath(save_fig, "Bar_Generation.png"))
+        if title == " "
+            title = "Bar_Generation"
+        end
+        Plots.savefig(p2, joinpath(save_fig, "$title.png"))
     end
 end
 
@@ -359,7 +456,10 @@ function _bar_plot_internal(
     p2 = RecipesBase.plot(bar_gen, seriescolor; title = title, ylabel = ylabel)
     set_display && display(p2)
     if !isnothing(save_fig)
-        Plots.savefig(p2, joinpath(save_fig, "Bar_Generation.png"))
+        if title == " "
+            title = "Bar_Generation"
+        end
+        Plots.savefig(p2, joinpath(save_fig, "$title.png"))
     end
 end
 
@@ -479,19 +579,35 @@ function stack_plot(res::IS.Results, variables::Array; kwargs...)
     for variable in variables
         res_var[variable] = IS.get_variables(res)[variable]
     end
-    res.variable_values = res_var
-    stack_plot(res; kwargs...)
+    results = Results(
+        get_base_power(res),
+        res_var,
+        IS.get_optimizer_log(res),
+        IS.get_total_cost(res),
+        IS.get_time_stamp(res),
+        res.dual_values,
+        res.parameter_values,
+    )
+    stack_plot(results; kwargs...)
 end
 
-function stack_plot(results::Array{<:IS.Results}, variables::Array; kwargs...)
+function stack_plot(results::Array, variables::Array; kwargs...)
     new_results = []
     for res in results
         res_var = Dict()
         for variable in variables
             res_var[variable] = IS.get_variables(res)[variable]
         end
-        res.variable_values = res_var
-        new_results = vcat(new_results, res)
+        results = Results(
+            get_base_power(res),
+            res_var,
+            IS.get_optimizer_log(res),
+            IS.get_total_cost(res),
+            IS.get_time_stamp(res),
+            res.dual_values,
+            res.parameter_values,
+        )
+        new_results = vcat(new_results, results)
     end
     stack_plot(new_results; kwargs...)
 end
@@ -548,7 +664,10 @@ function _stack_plot_internal(
     p2 = RecipesBase.plot(stack, seriescolor; title = title, ylabel = ylabel)
     set_display && display(p2)
     if !isnothing(save_fig)
-        Plots.savefig(p2, joinpath(save_fig, "Stack_Generation.png"))
+        if title == " "
+            title = "Stack_Generation"
+        end
+        Plots.savefig(p2, joinpath(save_fig, "$title.png"))
     end
 end
 
@@ -577,7 +696,10 @@ function _stack_plot_internal(
     p2 = RecipesBase.plot(stack, seriescolor; title = title, ylabel = ylabel)
     set_display && display(p2)
     if !isnothing(save_fig)
-        Plots.savefig(p2, joinpath(save_fig, "Stack_Generation.png"))
+        if title == " "
+            title = "Stack_Generation"
+        end
+        Plots.savefig(p2, joinpath(save_fig, "$title.png"))
     end
 end
 

@@ -154,7 +154,7 @@ fuel_plot(res, system)
 function get_stacked_aggregation_data(res::IS.Results, generators::Dict)
     # order at the top
     category_aggs = _aggregate_data(res, generators)
-    time_range = res.time_stamp[!, :Range]
+    time_range = IS.get_time_stamp(res)[!, :Range]
     labels = collect(keys(category_aggs))
     new_labels = []
 
@@ -198,7 +198,7 @@ fuel_plot(res, system)
 """
 function get_bar_aggregation_data(res::IS.Results, generators::Dict)
     category_aggs = _aggregate_data(res, generators)
-    time_range = res.time_stamp[!, :Range]
+    time_range = IS.get_time_stamp(res)[!, :Range]
     labels = collect(keys(category_aggs))
     new_labels = []
     for fuel in order
