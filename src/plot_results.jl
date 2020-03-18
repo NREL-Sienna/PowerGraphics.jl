@@ -1,14 +1,18 @@
 mutable struct Results <: IS.Results
-    variables::Dict
+    base_power::Float64
+    variable_values::Dict{Symbol, DataFrames.DataFrame}
     total_cost::Dict
     optimizer_log::Dict
     time_stamp::DataFrames.DataFrame
+    dual_values::Dict{Symbol, Any}
+    parameter_values::Dict{Symbol, DataFrames.DataFrame}
 end
 
-IS.get_variables(r::Results) = r.variables
+IS.get_variables(r::Results) = r.variable_values
 IS.get_total_cost(r::Results) = r.total_cost
 IS.get_optimizer_log(r::Results) = r.optimizer_log
 IS.get_time_stamp(r::Results) = r.time_stamp
+get_base_power(r::Results) = r.base_power
 
 struct StackedArea
     time_range::Array
@@ -57,7 +61,7 @@ plot(ThermalStandard)
 function get_stacked_plot_data(res::IS.Results, variable::String; kwargs...)
 
     sort = get(kwargs, :sort, nothing)
-    time_range = res.time_stamp[!, :Range]
+    time_range = IS.get_time_stamp(res)[!, :Range]
     variable = IS.get_variables(res)[Symbol(variable)]
     alphabetical = sort!(names(variable))
 
@@ -101,7 +105,7 @@ plot(ThermalStandard)
 function get_bar_plot_data(res::IS.Results, variable::String; kwargs...)
 
     sort = get(kwargs, :sort, nothing)
-    time_range = res.time_stamp[!, :Range]
+    time_range = IS.get_time_stamp(res)[!, :Range]
     variable = IS.get_variables(res)[Symbol(variable)]
     alphabetical = sort!(names(variable))
 
@@ -144,7 +148,7 @@ plot(stack)
 function get_stacked_generation_data(res::IS.Results; kwargs...)
 
     sort = get(kwargs, :sort, nothing)
-    time_range = res.time_stamp[!, :Range]
+    time_range = IS.get_time_stamp(res)[!, :Range]
     key_name = collect(keys(IS.get_variables(res)))
     alphabetical = sort!(key_name)
 
@@ -191,7 +195,7 @@ plot(stack)
 
 function get_bar_gen_data(res::IS.Results)
 
-    time_range = res.time_stamp[!, :Range]
+    time_range = IS.get_time_stamp(res)[!, :Range]
     key_name = collect(keys(IS.get_variables(res)))
     variable = IS.get_variables(res)[Symbol(key_name[1])]
     data_matrix = sum(convert(Matrix, variable), dims = 2)
@@ -248,5 +252,13 @@ function sort_data(res::IS.Results; kwargs...)
         end
         sorted_variables[k] = variable
     end
-    return Results(sorted_variables, res.total_cost, res.optimizer_log, res.time_stamp)
+    return Results(
+        get_base_power(res),
+        sorted_variables,
+        IS.get_optimizer_log(res),
+        IS.get_total_cost(res),
+        IS.get_time_stamp(res),
+        res.dual_values,
+        res.parameter_values,
+    )
 end
