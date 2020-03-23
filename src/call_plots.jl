@@ -129,12 +129,12 @@ fuel_plot(res, sys)
 - `title::String = "Title"`: Set a title for the plots
 """
 function fuel_plot(res::IS.Results, sys::PSY.System; kwargs...)
-    ref = make_fuel_dictionary(sys, res)
+    ref = make_fuel_dictionary(res, sys)
     fuel_plot(res, ref; kwargs...)
 end
 
 function fuel_plot(res::Array, sys::PSY.System; kwargs...)
-    ref = make_fuel_dictionary(sys, res[1])
+    ref = make_fuel_dictionary(res[1], sys)
     fuel_plot(res, ref; kwargs...)
 end
 """
@@ -153,7 +153,7 @@ and assigns each fuel type a specific color.
 
 ```julia
 res = solve_op_problem!(OpProblem)
-generator_dict = make_fuel_dictionary(sys, res)
+generator_dict = make_fuel_dictionary(res, sys)
 fuel_plot(res, generator_dict)
 ```
 
