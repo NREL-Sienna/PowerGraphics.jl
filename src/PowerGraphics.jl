@@ -10,6 +10,7 @@ export report
 export make_fuel_dictionary
 export fuel_plot
 export match_fuel_colors
+export sort_data
 
 import Dates
 import RecipesBase

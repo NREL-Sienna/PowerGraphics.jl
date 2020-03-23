@@ -12,7 +12,7 @@ IS.get_variables(r::Results) = r.variable_values
 IS.get_total_cost(r::Results) = r.total_cost
 IS.get_optimizer_log(r::Results) = r.optimizer_log
 IS.get_time_stamp(r::Results) = r.time_stamp
-get_base_power(r::Results) = r.base_power
+IS.get_base_power(r::Results) = r.base_power
 
 struct StackedArea
     time_range::Array
@@ -253,7 +253,7 @@ function sort_data(res::IS.Results; kwargs...)
         sorted_variables[k] = variable
     end
     return Results(
-        get_base_power(res),
+        IS.get_base_power(res),
         sorted_variables,
         IS.get_optimizer_log(res),
         IS.get_total_cost(res),

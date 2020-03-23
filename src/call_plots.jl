@@ -16,7 +16,15 @@ function _filter_variables(results::IS.Results; kwargs...)
             end
         end
     end
-    results.variable_values = filter_results
+    results = Results(
+        IS.get_base_power(results),
+        filter_results,
+        IS.get_optimizer_log(results),
+        IS.get_total_cost(results),
+        IS.get_time_stamp(results),
+        results.dual_values,
+        results.parameter_values,
+    )
     return results
 end
 
@@ -26,7 +34,7 @@ function fuel_plot(res::IS.Results, variables::Array, generator_dict::Dict; kwar
         res_var[variable] = IS.get_variables(res)[variable]
     end
     results = Results(
-        get_base_power(res),
+        IS.get_base_power(res),
         res_var,
         IS.get_optimizer_log(res),
         IS.get_total_cost(res),
@@ -43,7 +51,7 @@ function fuel_plot(res::IS.Results, variables::Array, system::PSY.System; kwargs
         res_var[variable] = IS.get_variables(res)[variable]
     end
     results = Results(
-        get_base_power(res),
+        IS.get_base_power(res),
         res_var,
         IS.get_optimizer_log(res),
         IS.get_total_cost(res),
@@ -62,7 +70,7 @@ function fuel_plot(results::Array, variables::Array, system::PSY.System; kwargs.
             res_var[variable] = IS.get_variables(res)[variable]
         end
         results = Results(
-            get_base_power(res),
+            IS.get_base_power(res),
             res_var,
             IS.get_optimizer_log(res),
             IS.get_total_cost(res),
@@ -83,7 +91,7 @@ function fuel_plot(results::Array, variables::Array, generator_dict::Dict; kwarg
             res_var[variable] = IS.get_variables(res)[variable]
         end
         results = Results(
-            get_base_power(res),
+            IS.get_base_power(res),
             res_var,
             IS.get_optimizer_log(res),
             IS.get_total_cost(res),
@@ -121,12 +129,12 @@ fuel_plot(res, sys)
 - `title::String = "Title"`: Set a title for the plots
 """
 function fuel_plot(res::IS.Results, sys::PSY.System; kwargs...)
-    ref = make_fuel_dictionary(sys, res)
+    ref = make_fuel_dictionary(res, sys)
     fuel_plot(res, ref; kwargs...)
 end
 
 function fuel_plot(res::Array, sys::PSY.System; kwargs...)
-    ref = make_fuel_dictionary(sys, res)
+    ref = make_fuel_dictionary(res[1], sys)
     fuel_plot(res, ref; kwargs...)
 end
 """
@@ -145,7 +153,7 @@ and assigns each fuel type a specific color.
 
 ```julia
 res = solve_op_problem!(OpProblem)
-generator_dict = make_fuel_dictionary(sys, res)
+generator_dict = make_fuel_dictionary(res, sys)
 fuel_plot(res, generator_dict)
 ```
 
@@ -166,7 +174,7 @@ function fuel_plot(res::IS.Results, generator_dict::Dict; kwargs...)
     backend = Plots.backend()
     default_colors = match_fuel_colors(stack, bar, backend, FUEL_DEFAULT)
     seriescolor = get(kwargs, :seriescolor, default_colors)
-    ylabel = _make_ylabel(get_base_power(res))
+    ylabel = _make_ylabel(IS.get_base_power(res))
     title = get(kwargs, :title, " ")
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
@@ -199,7 +207,7 @@ function fuel_plot(results::Array, generator_dict::Dict; kwargs...)
     default_colors = match_fuel_colors(stack[1], bar[1], backend, FUEL_DEFAULT)
     seriescolor = get(kwargs, :seriescolor, default_colors)
     title = get(kwargs, :title, " ")
-    ylabel = _make_ylabel(get_base_power(results[1]))
+    ylabel = _make_ylabel(IS.get_base_power(results[1]))
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
@@ -340,7 +348,7 @@ function bar_plot(res::IS.Results, variables::Array; kwargs...)
         res_var[variable] = IS.get_variables(res)[variable]
     end
     results = Results(
-        get_base_power(res),
+        IS.get_base_power(res),
         res_var,
         IS.get_optimizer_log(res),
         IS.get_total_cost(res),
@@ -359,7 +367,7 @@ function bar_plot(results::Array, variables::Array; kwargs...)
             res_var[variable] = IS.get_variables(res)[variable]
         end
         results = Results(
-            get_base_power(res),
+            IS.get_base_power(res),
             res_var,
             IS.get_optimizer_log(res),
             IS.get_total_cost(res),
@@ -382,7 +390,7 @@ function _bar_plot_internal(
 )
     seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
     title = get(kwargs, :title, " ")
-    ylabel = _make_ylabel(get_base_power(res))
+    ylabel = _make_ylabel(IS.get_base_power(res))
     plotly_bar_plots(res, seriescolor, ylabel; kwargs...)
     plotly_bar_gen(bar_gen, seriescolor, title, ylabel; kwargs...)
 end
@@ -397,7 +405,7 @@ function _bar_plot_internal(
 )
     seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
     title = get(kwargs, :title, " ")
-    ylabel = _make_ylabel(get_base_power(res[1]))
+    ylabel = _make_ylabel(IS.get_base_power(res[1]))
     plotly_bar_plots(res, seriescolor, ylabel; kwargs...)
     plotly_bar_gen(bar_gen, seriescolor, title, ylabel; kwargs...)
 end
@@ -411,7 +419,7 @@ function _bar_plot_internal(
     kwargs...,
 )
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
-    ylabel = _make_ylabel(get_base_power(res))
+    ylabel = _make_ylabel(IS.get_base_power(res))
     title = get(kwargs, :title, " ")
     for name in string.(keys(IS.get_variables(res)))
         variable_bar = get_bar_plot_data(res, name)
@@ -441,7 +449,7 @@ function _bar_plot_internal(
 )
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
     title = get(kwargs, :title, " ")
-    ylabel = _make_ylabel(get_base_power(results[1]))
+    ylabel = _make_ylabel(IS.get_base_power(results[1]))
     for name in string.(keys(IS.get_variables(results[1, 1])))
         variable_bar = get_bar_plot_data(results[1, 1], name)
         for i in 2:length(results)
@@ -580,7 +588,7 @@ function stack_plot(res::IS.Results, variables::Array; kwargs...)
         res_var[variable] = IS.get_variables(res)[variable]
     end
     results = Results(
-        get_base_power(res),
+        IS.get_base_power(res),
         res_var,
         IS.get_optimizer_log(res),
         IS.get_total_cost(res),
@@ -599,7 +607,7 @@ function stack_plot(results::Array, variables::Array; kwargs...)
             res_var[variable] = IS.get_variables(res)[variable]
         end
         results = Results(
-            get_base_power(res),
+            IS.get_base_power(res),
             res_var,
             IS.get_optimizer_log(res),
             IS.get_total_cost(res),
@@ -622,7 +630,7 @@ function _stack_plot_internal(
 )
     seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
     title = get(kwargs, :title, " ")
-    ylabel = _make_ylabel(get_base_power(res))
+    ylabel = _make_ylabel(IS.get_base_power(res))
     plotly_stack_plots(res, seriescolor, ylabel; kwargs...)
     plotly_stack_gen(stack, seriescolor, title, ylabel; kwargs...)
 end
@@ -637,7 +645,7 @@ function _stack_plot_internal(
 )
     seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
     title = get(kwargs, :title, " ")
-    ylabel = _make_ylabel(get_base_power(res[1]))
+    ylabel = _make_ylabel(IS.get_base_power(res[1]))
     plotly_stack_plots(res, seriescolor, ylabel; kwargs...)
     plotly_stack_gen(stack, seriescolor, title, ylabel; kwargs...)
 end
@@ -651,7 +659,7 @@ function _stack_plot_internal(
     kwargs...,
 )
     title = get(kwargs, :title, " ")
-    ylabel = _make_ylabel(get_base_power(res))
+    ylabel = _make_ylabel(IS.get_base_power(res))
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
     for name in string.(keys(IS.get_variables(res)))
         variable_stack = get_stacked_plot_data(res, name)
@@ -681,7 +689,7 @@ function _stack_plot_internal(
 )
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
     title = get(kwargs, :title, " ")
-    ylabel = _make_ylabel(get_base_power(results[1]))
+    ylabel = _make_ylabel(IS.get_base_power(results[1]))
     for name in string.(keys(IS.get_variables(results[1])))
         variable_stack = get_stacked_plot_data(results[1], name)
         for res in 2:length(results)
