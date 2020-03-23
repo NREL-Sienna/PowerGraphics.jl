@@ -54,7 +54,7 @@ function _get_iterator(sys::PSY.System, results::IS.Results)
 end
 
 """
-    generators = make_fuel_dictionary(system::PSY.System, results::IS.Results)
+    generators = make_fuel_dictionary(results::IS.Results, system::PSY.System)
 
 This function makes a dictionary of fuel type and the generators associated.
 
@@ -67,10 +67,10 @@ This function makes a dictionary of fuel type and the generators associated.
 
 # Example
 results = solve_op_model!(OpModel)
-generators = make_fuel_dictionary(c_sys5_re, results)
+generators = make_fuel_dictionary(results, c_sys5_re)
 
 """
-function make_fuel_dictionary(sys::PSY.System, res::IS.Results; kwargs...)
+function make_fuel_dictionary(res::IS.Results, sys::PSY.System; kwargs...)
 
     categories = Dict()
     categories["Solar"] = NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.PVe, nothing)
