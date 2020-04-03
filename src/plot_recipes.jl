@@ -39,12 +39,14 @@ function plotly_stack_gen(
         )
     end
     p = PlotlyJS.plot(traces, PlotlyJS.Layout(title = title, yaxis_title = ylabel))
-    set_display && PlotlyJS.display(p)
+    set_display && Plots.display(p)
     if !isnothing(save_fig)
         if title == " "
             title = "Stack_Generation"
         end
-        Plots.savefig(joinpath(save_fig, "$title.png"))
+        format = get(kwargs, :format, "html")
+        title = replace(title, " " => "_")
+        PlotlyJS.savefig(p, joinpath(save_fig, "$title.$format"); width = 630, height = 630)
     end
 end
 
@@ -87,12 +89,19 @@ function plotly_stack_gen(
         plots = vcat(plots, p)
     end
     plots = vcat(plots...)
-    set_display && PlotlyJS.display(plots)
+    set_display && Plots.display(plots)
     if !isnothing(save_fig)
         if title == " "
             title = "Stack_Generation"
         end
-        Plots.savefig(joinpath(save_fig, "$title.png"))
+        format = get(kwargs, :format, "html")
+        title = replace(title, " " => "_")
+        PlotlyJS.savefig(
+            plots,
+            joinpath(save_fig, "$title.$format");
+            width = 630,
+            height = 630,
+        )
     end
 end
 
@@ -136,9 +145,15 @@ function plotly_stack_plots(
             )
         end
         p = PlotlyJS.plot(traces, PlotlyJS.Layout(title = "$key", yaxis_title = ylabel))
-        set_display && PlotlyJS.display(p)
+        set_display && Plots.display(p)
         if !isnothing(save_fig)
-            Plots.savefig(joinpath(save_fig, "$(key)_Stack.png"))
+            format = get(kwargs, :format, "html")
+            PlotlyJS.savefig(
+                p,
+                joinpath(save_fig, "$(key)_Stack.$format");
+                width = 630,
+                height = 630,
+            )
         end
     end
 end
@@ -186,9 +201,15 @@ function plotly_stack_plots(results::Array, seriescolor::Array, ylabel::String; 
             plots = vcat(plots, p)
         end
         plots = vcat(plots...)
-        set_display && PlotlyJS.display(plots)
+        set_display && Plots.display(plots)
         if !isnothing(save_fig)
-            Plots.savefig(joinpath(save_fig, "$(key)_Stack.png"))
+            format = get(kwargs, :format, "html")
+            PlotlyJS.savefig(
+                plots,
+                joinpath(save_fig, "$(key)_Stack.$format");
+                width = 630,
+                height = 630,
+            )
         end
     end
 end
@@ -230,12 +251,14 @@ function plotly_bar_gen(
             barmode = "stack",
         ),
     )
-    set_display && PlotlyJS.display(p)
+    set_display && Plots.display(p)
     if !isnothing(save_fig)
         if title == " "
             title = "Bar_Generation"
         end
-        Plots.savefig(joinpath(save_fig, "$title.png"))
+        format = get(kwargs, :format, "html")
+        title = replace(title, " " => "_")
+        PlotlyJS.savefig(p, joinpath(save_fig, "$title.$format"); width = 630, height = 630)
     end
 end
 
@@ -289,12 +312,19 @@ function plotly_bar_gen(
         plots = vcat(plots, p)
     end
     plots = vcat(plots...)
-    set_display && PlotlyJS.display(plots)
+    set_display && Plots.display(plots)
     if !isnothing(save_fig)
         if title == " "
             title = "Bar_Generation"
         end
-        Plots.savefig(joinpath(save_fig, "$title.png"))
+        format = get(kwargs, :format, "html")
+        title = replace(title, " " => "_")
+        PlotlyJS.savefig(
+            plots,
+            joinpath(save_fig, "$title.$format");
+            width = 630,
+            height = 630,
+        )
     end
 end
 
@@ -340,9 +370,15 @@ function plotly_bar_plots(results::Array, seriescolor::Array, ylabel::String; kw
             plots = vcat(plots, p)
         end
         plots = vcat(plots...)
-        set_display && PlotlyJS.display(plots)
+        set_display && Plots.display(plots)
         if !isnothing(save_fig)
-            Plots.savefig(joinpath(save_fig, "$(key)_Bar.png"))
+            format = get(kwargs, :format, "html")
+            PlotlyJS.savefig(
+                plots,
+                joinpath(save_fig, "$(key)_Bar.$format");
+                width = 630,
+                height = 630,
+            )
         end
     end
 end
@@ -376,9 +412,15 @@ function plotly_bar_plots(res::IS.Results, seriescolor::Array, ylabel::String; k
             traces,
             PlotlyJS.Layout(barmode = "stack", title = "$key", yaxis_title = ylabel),
         )
-        set_display && PlotlyJS.display(p)
+        set_display && Plots.display(p)
         if !isnothing(save_fig)
-            Plots.savefig(joinpath(save_fig, "$(key)_Bar.png"))
+            format = get(kwargs, :format, "html")
+            PlotlyJS.savefig(
+                p,
+                joinpath(save_fig, "$(key)_Bar.$format");
+                width = 630,
+                height = 630,
+            )
         end
     end
 end

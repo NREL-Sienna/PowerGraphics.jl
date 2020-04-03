@@ -235,6 +235,7 @@ function _fuel_plot_internal(
     ylabel::String;
     kwargs...,
 )
+    title = get(kwargs, :title, "Fuel")
     plotly_stack_gen(stack, seriescolor, title, ylabel; kwargs...)
     plotly_bar_gen(bar, seriescolor, title, ylabel; kwargs...)
 end
@@ -250,17 +251,15 @@ function _fuel_plot_internal(
     ylabel::String;
     kwargs...,
 )
-    title = get(kwargs, :title, " ")
+    title = get(kwargs, :title, "Fuel")
     p1 = RecipesBase.plot(stack, seriescolor; title = title, ylabel = ylabel)
     p2 = RecipesBase.plot(bar, seriescolor; title = title, ylabel = ylabel)
     set_display && display(p1)
     set_display && display(p2)
     if !isnothing(save_fig)
-        if title == " "
-            title = "Bar_Generation"
-        end
-        Plots.savefig(p1, joinpath(save_fig, "$title.png"))
-        Plots.savefig(p2, joinpath(save_fig, "$title.png"))
+        title = replace(title, " " => "_")
+        Plots.savefig(p1, joinpath(save_fig, "$(title)_Stack.png"))
+        Plots.savefig(p2, joinpath(save_fig, "$(title)_Bar.png"))
     end
 end
 
@@ -435,6 +434,7 @@ function _bar_plot_internal(
         if title == " "
             title = "Bar_Generation"
         end
+        title = replace(title, " " => "_")
         Plots.savefig(p2, joinpath(save_fig, "$title.png"))
     end
 end
@@ -467,6 +467,7 @@ function _bar_plot_internal(
         if title == " "
             title = "Bar_Generation"
         end
+        title = replace(title, " " => "_")
         Plots.savefig(p2, joinpath(save_fig, "$title.png"))
     end
 end
@@ -675,6 +676,7 @@ function _stack_plot_internal(
         if title == " "
             title = "Stack_Generation"
         end
+        title = replace(title, " " => "_")
         Plots.savefig(p2, joinpath(save_fig, "$title.png"))
     end
 end
@@ -707,6 +709,7 @@ function _stack_plot_internal(
         if title == " "
             title = "Stack_Generation"
         end
+        title = replace(title, " " => "_")
         Plots.savefig(p2, joinpath(save_fig, "$title.png"))
     end
 end

@@ -50,7 +50,7 @@ function test_plots(file_path::String)
         path = mkdir(joinpath(file_path, "plots"))
         PG.bar_plot(res; save = path, display = false, title = "Title_bar")
         PG.stack_plot(res; save = path, display = false, title = "Title_stack")
-        @show PG.fuel_plot(res, generators; save = path, display = false)
+        PG.fuel_plot(res, generators; save = path, display = false)
         list = readdir(path)
         @test list == [
             "Bar_Generation.png",
@@ -149,7 +149,7 @@ function test_plots(file_path::String)
         path = mkdir(joinpath(file_path, "jsplots"))
         PG.bar_plot(res; save = path, display = false, title = "Title_bar")
         PG.stack_plot(res; save = path, display = false, title = "Title_stack")
-        @show PG.fuel_plot(res, generators; save = path, display = false)
+        PG.fuel_plot(res, generators; save = path, display = false)
         list = readdir(path)
         @test list == [
             "Bar_Generation.png",
