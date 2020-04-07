@@ -236,8 +236,8 @@ function _fuel_plot_internal(
     kwargs...,
 )
     title = get(kwargs, :title, "Fuel")
-    plotly_stack_gen(stack, seriescolor, title, ylabel; kwargs...)
-    plotly_bar_gen(bar, seriescolor, title, ylabel; kwargs...)
+    plotly_stack_gen(stack, seriescolor, "$(title)_Stack", ylabel; kwargs...)
+    plotly_bar_gen(bar, seriescolor, "$(title)_Bar", ylabel; kwargs...)
 end
 
 function _fuel_plot_internal(
