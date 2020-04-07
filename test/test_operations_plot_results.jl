@@ -152,7 +152,13 @@ function test_plots(file_path::String)
     @testset "test plotlyjs production" begin
         path = mkdir(joinpath(file_path, "jsplots"))
         PG.bar_plot(res; save = path, display = false, title = "Title_Bar", format = "png")
-        PG.stack_plot(res; save = path, display = false, title = "Title_Stack", format = "png")
+        PG.stack_plot(
+            res;
+            save = path,
+            display = false,
+            title = "Title_Stack",
+            format = "png",
+        )
         PG.fuel_plot(res, generators; save = path, display = false, format = "png")
         list = readdir(path)
         @test list == [
@@ -170,8 +176,22 @@ function test_plots(file_path::String)
     @testset "test fewer variable plotlyjs production" begin
         path = mkdir(joinpath(file_path, "variables_plotlyjs"))
         variables = [:P_ThermalStandard]
-        PG.bar_plot(res, variables; save = path, display = false, title = "Title_Bar", format = "png")
-        PG.stack_plot(res, variables; save = path, display = false, title = "Title_Stack", format = "png")
+        PG.bar_plot(
+            res,
+            variables;
+            save = path,
+            display = false,
+            title = "Title_Bar",
+            format = "png",
+        )
+        PG.stack_plot(
+            res,
+            variables;
+            save = path,
+            display = false,
+            title = "Title_Stack",
+            format = "png",
+        )
         PG.fuel_plot(
             res,
             variables,
@@ -194,8 +214,20 @@ function test_plots(file_path::String)
 
     @testset "test multi-plotlyjs production" begin
         path = mkdir(joinpath(file_path, "multi-plotlyjs"))
-        PG.bar_plot([res; res]; save = path, display = false, title = "Title_Stack", format = "png")
-        PG.stack_plot([res; res]; save = path, display = false, title = "Title_Bar", format = "png")
+        PG.bar_plot(
+            [res; res];
+            save = path,
+            display = false,
+            title = "Title_Stack",
+            format = "png",
+        )
+        PG.stack_plot(
+            [res; res];
+            save = path,
+            display = false,
+            title = "Title_Bar",
+            format = "png",
+        )
         PG.fuel_plot(
             [res; res],
             generators;
