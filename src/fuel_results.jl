@@ -35,18 +35,18 @@ function _get_iterator(sys::PSY.System, results::IS.Results)
     for iterator in iterators
         name = iterator.name
         iterators_sorted[name] = []
-        if isdefined(iterator.tech, :fuel)
+        if isdefined(iterator, :fuel)
             iterators_sorted[name] = vcat(
                 iterators_sorted[name],
                 (
                     NamedTuple{(:primemover, :fuel)},
-                    ((iterator.tech.primemover), (iterator.tech.fuel)),
+                    ((iterator.primemover), (iterator.fuel)),
                 ),
             )
         else
             iterators_sorted[name] = vcat(
                 iterators_sorted[name],
-                (NamedTuple{(:primemover, :fuel)}, (iterator.tech.primemover, nothing)),
+                (NamedTuple{(:primemover, :fuel)}, (iterator.primemover, nothing)),
             )
         end
     end
