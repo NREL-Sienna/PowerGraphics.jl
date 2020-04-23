@@ -13,6 +13,7 @@ IS.get_total_cost(r::Results) = r.total_cost
 IS.get_optimizer_log(r::Results) = r.optimizer_log
 IS.get_time_stamp(r::Results) = r.time_stamp
 IS.get_base_power(r::Results) = r.base_power
+#IS.get_parameters(r::Results) = r.parameter_values
 
 struct StackedArea
     time_range::Array
@@ -29,15 +30,19 @@ end
 struct StackedGeneration
     time_range::Array
     data_matrix::Matrix
+    parameters::Union{Matrix, Nothing}
     labels::Array
+    p_labels::Array
 end
 
 struct BarGeneration
     time_range::Array
     bar_data::Matrix
+    parameters::Union{Matrix, Nothing}
     labels::Array
+    p_labels::Array
 end
-
+#=
 """
     variable = get_stacked_plot_data(res::IS.Results, variable::String)
 
@@ -52,28 +57,16 @@ StackedArea is the type of struct that signals the plot() function to use the St
 ```julia
 ThermalStandard = get_stacked_plot_data(res, "P_ThermalStandard")
 plot(ThermalStandard)
-```
 
-# Accepted Key Words
-- `sort::Array`: the array of generators to be plotted, in the order to be plotted
 """
 
 function get_stacked_plot_data(res::IS.Results, variable::String; kwargs...)
 
-    sort = get(kwargs, :sort, nothing)
     time_range = IS.get_time_stamp(res)[!, :Range]
     variable = IS.get_variables(res)[Symbol(variable)]
-    alphabetical = sort!(names(variable))
-
-    if isnothing(sort)
-        variable = variable[:, alphabetical]
-    else
-        variable = variable[:, sort]
-    end
-
     data_matrix = convert(Matrix, variable)
     labels = collect(names(variable))
-    legend = [names(variable)[1]]
+    legend = [string.(names(variable)[1])]
     for name in 2:length(labels)
         legend = hcat(legend, string.(labels[name]))
     end
@@ -104,21 +97,13 @@ plot(ThermalStandard)
 
 function get_bar_plot_data(res::IS.Results, variable::String; kwargs...)
 
-    sort = get(kwargs, :sort, nothing)
     time_range = IS.get_time_stamp(res)[!, :Range]
     variable = IS.get_variables(res)[Symbol(variable)]
     alphabetical = sort!(names(variable))
-
-    if isnothing(sort)
-        variable = variable[:, alphabetical]
-    else
-        variable = variable[:, sort]
-    end
-
     data = convert(Matrix, variable)
     bar_data = sum(data, dims = 1)
     labels = collect(names(variable))
-    legend = [names(variable)[1]]
+    legend = [string.(names(variable)[1])]
     for name in 2:length(labels)
         legend = hcat(legend, string.(labels[name]))
     end
@@ -147,30 +132,36 @@ plot(stack)
 
 function get_stacked_generation_data(res::IS.Results; kwargs...)
 
-    sort = get(kwargs, :sort, nothing)
     time_range = IS.get_time_stamp(res)[!, :Range]
-    key_name = collect(keys(IS.get_variables(res)))
-    alphabetical = sort!(key_name)
-
-    if !isnothing(sort)
-        labels = sort
-    else
-        labels = alphabetical
-    end
-
+    labels = collect(keys(IS.get_variables(res)))
     variable = IS.get_variables(res)[Symbol(labels[1])]
     data_matrix = sum(convert(Matrix, variable), dims = 2)
-    legend = [key_name[1]]
+    legend = [string.(labels[1])]
 
-    for i in 1:length(labels)
-        if i !== 1
-            variable = IS.get_variables(res)[Symbol(labels[i])]
-            legend = hcat(legend, string.(key_name[i]))
-            data_matrix = hcat(data_matrix, sum(convert(Matrix, variable), dims = 2))
+    for i in 2:length(labels)
+        variable = IS.get_variables(res)[Symbol(labels[i])]
+        legend = hcat(legend, string.(labels[i]))
+        data_matrix = hcat(data_matrix, sum(convert(Matrix, variable), dims = 2))
+    end
+    p_labels = collect(keys(res.parameter_values))
+    if !isempty(p_labels)
+        parameter = res.parameter_values[Symbol(p_labels[1])]
+        parameters = abs.(sum(convert(Matrix, parameter), dims = 2))
+        p_legend = [string.(p_labels[1])]
+
+        for i in 1:length(p_labels)
+            if i !== 1
+                parameter = res.parameter_values[Symbol(p_labels[i])]
+                p_legend = hcat(p_legend, string.(p_labels[i]))
+                parameters = hcat(parameters, abs.(sum(convert(Matrix, parameter), dims = 2)))
+            end
         end
+    else
+        p_legend = []
+        parameters = nothing
     end
 
-    return StackedGeneration(time_range, data_matrix, legend)
+    return StackedGeneration(time_range, data_matrix, parameters, legend, p_legend)
 
 end
 
@@ -196,22 +187,36 @@ plot(stack)
 function get_bar_gen_data(res::IS.Results)
 
     time_range = IS.get_time_stamp(res)[!, :Range]
-    key_name = collect(keys(IS.get_variables(res)))
-    variable = IS.get_variables(res)[Symbol(key_name[1])]
+    labels = collect(keys(IS.get_variables(res)))
+    variable = IS.get_variables(res)[Symbol(labels[1])]
     data_matrix = sum(convert(Matrix, variable), dims = 2)
-    legend = [key_name[1]]
-    for i in 1:length(key_name)
-        if i !== 1
-            variable = IS.get_variables(res)[Symbol(key_name[i])]
-            legend = hcat(legend, string.(key_name[i]))
-            data_matrix = hcat(data_matrix, sum(convert(Matrix, variable), dims = 2))
-        end
+    legend = [string.(labels[1])]
+    for i in 2:length(labels)
+        variable = IS.get_variables(res)[Symbol(labels[i])]
+        legend = vcat(legend, string.(labels[i]))
+        data_matrix = hcat(data_matrix, sum(convert(Matrix, variable), dims = 2))
     end
     bar_data = sum(data_matrix, dims = 1)
-    return BarGeneration(time_range, bar_data, legend)
+
+    p_labels = collect(keys(res.parameter_values))
+    if !isempty(p_labels)
+        parameter = res.parameter_values[p_labels[1]]
+        parameters = sum(convert(Matrix, parameter), dims = 2)
+        p_legend = [string.(p_labels[1])]
+        for i in 2:length(p_labels)
+            parameter = res.parameter_values[Symbol(p_labels[i])]
+            p_legend = vcat(p_legend, string.(p_labels[i]))
+            parameters = hcat(parameters, sum(convert(Matrix, parameter), dims = 2))
+        end
+        p_bar_data = abs.(sum(parameters, dims = 1))
+    else
+        p_bar_data = nothing
+        p_legend = []
+    end
+    return BarGeneration(time_range, bar_data, p_bar_data, legend, p_legend)
 
 end
-
+=#
 """
     sort_data(results::IS.Results)
 

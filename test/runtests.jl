@@ -8,6 +8,9 @@ import InfrastructureSystems: Deterministic, Probabilistic, ScenarioBased, Forec
 using PowerSystems
 import PowerSystems: PowerSystemTableData
 using PowerGraphics
+using Plots
+using PlotlyJS
+using ORCA
 
 const PG = PowerGraphics
 const IS = InfrastructureSystems

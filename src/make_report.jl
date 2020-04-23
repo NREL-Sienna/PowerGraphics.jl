@@ -27,7 +27,7 @@ function report(res::IS.Results, out_path::String, design_template::String; kwar
     doctype = get(kwargs, :doctype, "md2pdf")
     backend = get(kwargs, :backend, Plots.gr())
     !isfile(design_template) &&
-    throw(ArgumentError("The provided template file is invalid"))
+        throw(ArgumentError("The provided template file is invalid"))
     args = Dict("res" => res, "variables" => IS.get_variables(res), "backend" => backend)
     Weave.weave(
         design_template,
@@ -58,7 +58,7 @@ and add additional markdowns to the report_design folder.
 # Example
 ```julia
 results = solve_op_problem!(OpModel)
-generators = make_fuel_dictionary(PSY.system, results)
+generators = make_fuel_dictionary(results, PSY.System)
 out_path = "/Users/downloads"
 report(results, generators, out_path)
 ```
@@ -79,7 +79,7 @@ function report(
     doctype = get(kwargs, :doctype, "md2pdf")
     backend = get(kwargs, :backend, Plots.gr())
     !isfile(design_template) &&
-    throw(ArgumentError("The provided template file is invalid"))
+        throw(ArgumentError("The provided template file is invalid"))
     args = Dict(
         "res" => res,
         "variables" => IS.get_variables(res),
@@ -136,7 +136,7 @@ function report(
     doctype = get(kwargs, :doctype, "md2pdf")
     backend = get(kwargs, :backend, gr())
     !isfile(design_template) &&
-    throw(ArgumentError("The provided template file is invalid"))
+        throw(ArgumentError("The provided template file is invalid"))
     args = Dict(
         "res" => res,
         "variables" => IS.get_variables(res),
