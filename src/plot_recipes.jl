@@ -1,13 +1,13 @@
 struct PlotList
-    plots::Vector
+    plots::Dict
 end
 function PlotList()
-    PlotList(Vector())
+    PlotList(Dict())
 end
 Base.show(io::IO, mm::MIME"text/html", p::PlotList) =
-    show(io, mm, "$(typeof(p)) with $(length(p.plots)) plots")
+    show(io, mm, "$(Plots.backend()) with $(length(p.plots)) plots, named $(keys(p.plots))")
 Base.show(io::IO, mm::MIME"text/plain", p::PlotList) =
-    show(io, mm, "$(typeof(p)) with $(length(p.plots)) plots")
+    show(io, mm, "$(Plots.backend()) with $(length(p.plots)) plots, named $(keys(p.plots))")
 
 ### PlotlyJS set up
 function set_seriescolor(seriescolor::Array, gens::Array)
@@ -45,8 +45,13 @@ function _stack_plot_internal(
     title = get(kwargs, :title, " ")
     ylabel = _make_ylabel(IS.get_base_power(res))
     stack = plotly_stack_plots(res, seriescolor, ylabel; kwargs...)
-    bar = plotly_stack_gen(res, seriescolor, title, ylabel; kwargs...)
-    return PlotList([stack, bar])
+    if title == " "
+        plot_title = :Stack_Generation
+    else
+        plot_title = Symbol(title)
+    end
+    stack[plot_title] = plotly_stack_gen(res, seriescolor, title, ylabel; kwargs...)
+    return PlotList(stack)
 end
 
 function _stack_plot_internal(
@@ -60,8 +65,13 @@ function _stack_plot_internal(
     title = get(kwargs, :title, " ")
     ylabel = _make_ylabel(IS.get_base_power(res[1]))
     stack = plotly_stack_plots(res, seriescolor, ylabel; kwargs...)
-    bar = plotly_stack_gen(res, seriescolor, title, ylabel; kwargs...)
-    return PlotList([stack, bar])
+    if title == " "
+        plot_title = :Stack_Generation
+    else
+        plot_title = Symbol(title)
+    end
+    stack[plot_title] = plotly_stack_gen(res, seriescolor, title, ylabel; kwargs...)
+    return PlotList(stack)
 end
 
 function plotly_stack_gen(
@@ -159,16 +169,16 @@ function plotly_stack_gen(
     line_shape = get(kwargs, :stairs, "linear")
     save_fig = get(kwargs, :save, nothing)
     plots = []
-    for res in results
-        gens = collect(keys(IS.get_variables(res)))
-        params = collect(keys(res.parameter_values))
-        time_range = IS.get_time_stamp(res)[:, 1]
+    for i in 1:length(results)
+        gens = collect(keys(IS.get_variables(results[i])))
+        params = collect(keys(results[i].parameter_values))
+        time_range = IS.get_time_stamp(results[i])[:, 1]
         stack = []
-        for (k, v) in IS.get_variables(res)
+        for (k, v) in IS.get_variables(results[i])
             stack = vcat(stack, [sum(convert(Matrix, v), dims = 2)])
         end
         parameters = []
-        for (p, v) in res.parameter_values
+        for (p, v) in results[i].parameter_values
             parameters = vcat(stack, [sum(convert(Matrix, v), dims = 2)])
         end
         stack = hcat(stack...)
@@ -176,7 +186,7 @@ function plotly_stack_gen(
         trace = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
         seriescolor = set_seriescolor(seriescolor, gens)
         line_shape = get(kwargs, :stairs, "linear")
-        if stack == 1
+        if i == 1
             leg = true
         else
             leg = false
@@ -254,7 +264,7 @@ function plotly_stack_plots(
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     line_shape = get(kwargs, :stairs, "linear")
-    plot_list = []
+    plot_list = Dict()
     for (key, var) in IS.get_variables(results)
         traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
         var = IS.get_variables(results)[key]
@@ -295,7 +305,7 @@ function plotly_stack_plots(
                 height = 630,
             )
         end
-        plot_list = vcat(plot_list, p)
+        plot_list[key] = p
     end
     return plot_list
 end
@@ -305,7 +315,7 @@ function plotly_stack_plots(results::Array, seriescolor::Array, ylabel::String; 
     save_fig = get(kwargs, :save, nothing)
     line_shape = get(kwargs, :stairs, "linear")
     _check_matching_variables(results)
-    plot_list = []
+    plot_list = Dict()
     for key in collect(keys(IS.get_variables(results[1, 1])))
         plots = []
         for res in 1:size(results, 2)
@@ -361,7 +371,7 @@ function plotly_stack_plots(results::Array, seriescolor::Array, ylabel::String; 
                 height = 630,
             )
         end
-        plot_list = vcat(plot_list, plots)
+        plot_list[key] = plots
     end
     return plot_list
 end
@@ -493,9 +503,13 @@ function _bar_plot_internal(
     title = get(kwargs, :title, " ")
     ylabel = _make_ylabel(IS.get_base_power(res))
     plots = plotly_bar_plots(res, seriescolor, ylabel; kwargs...)
-    plot_gen = plotly_bar_gen(res, seriescolor, title, ylabel; kwargs...)
-    plot_list = PlotList([plots; plot_gen])
-    return plot_list
+    if title == " "
+        plot_title = :Bar_Generation
+    else
+        plot_title = Symbol(title)
+    end
+    plots[plot_title] = plotly_bar_gen(res, seriescolor, title, ylabel; kwargs...)
+    return PlotList(plots)
 end
 
 function _bar_plot_internal(
@@ -509,8 +523,13 @@ function _bar_plot_internal(
     title = get(kwargs, :title, " ")
     ylabel = _make_ylabel(IS.get_base_power(res[1]))
     plots = plotly_bar_plots(res, seriescolor, ylabel; kwargs...)
-    plot_gen = plotly_bar_gen(res, seriescolor, title, ylabel; kwargs...)
-    return PlotList([plots; plot_gen])
+    if title == " "
+        plot_title = :Bar_Generation
+    else
+        plot_title = Symbol(title)
+    end
+    plots[plot_title] = plotly_bar_gen(res, seriescolor, title, ylabel; kwargs...)
+    return PlotList(plots)
 end
 
 function plotly_fuel_bar_gen(
@@ -855,7 +874,7 @@ function plotly_bar_plots(results::Array, seriescolor::Array, ylabel::String; kw
         convert(Dates.TimePeriod, time_range[2, 1] - time_range[1, 1]) *
         size(time_range, 1),
     )
-    plot_list = []
+    plot_list = Dict()
     for key in collect(keys(IS.get_variables(results[1])))
         plots = []
         for res in 1:length(results)
@@ -904,7 +923,7 @@ function plotly_bar_plots(results::Array, seriescolor::Array, ylabel::String; kw
                 height = 630,
             )
         end
-        plot_list = vcat(plot_list, plots)
+        plot_list[key] = plots
     end
     return plot_list
 end
@@ -917,7 +936,7 @@ function plotly_bar_plots(res::IS.Results, seriescolor::Array, ylabel::String; k
         convert(Dates.TimePeriod, time_range[2, 1] - time_range[1, 1]) *
         size(time_range, 1),
     )
-    plot_list = []
+    plot_list = Dict()
     for (key, var) in IS.get_variables(res)
         traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
         gens = collect(names(var))
@@ -949,7 +968,7 @@ function plotly_bar_plots(res::IS.Results, seriescolor::Array, ylabel::String; k
                 height = 630,
             )
         end
-        plot_list = vcat(plot_list, p)
+        plot_list[key] = p
     end
     return plot_list
 end
@@ -1082,7 +1101,7 @@ function _fuel_plot_internal(
         end
         Plots.savefig(p2, joinpath(save_fig, "$(title)_Bar.png"))
     end
-    return PlotList([p1, p2])
+    return [p1, p2]
 end
 
 function _fuel_plot_internal(
@@ -1177,7 +1196,7 @@ function _fuel_plot_internal(
         end
         Plots.savefig(p2, joinpath(save_fig, "$(title)_Bar.png"))
     end
-    return PlotList([p1, p2])
+    return [p1, p2]
 end
 
 ############################# BAR ##########################################
@@ -1197,7 +1216,7 @@ function _bar_plot_internal(
     time_interval =
         IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
     bar_data = []
-    plot_list = []
+    plot_list = Dict()
     for (name, variable) in variables
         data = convert(Matrix, variable)
         plot_data = sum(cumsum(data, dims = 2), dims = 1)
@@ -1222,7 +1241,7 @@ function _bar_plot_internal(
             Plots.savefig(p, joinpath(save_fig, "$(name)_Bar.png"))
         end
         bar_data = vcat(bar_data, [sum(data, dims = 2)])
-        plot_list = vcat(plot_list, p)
+        plot_list[name] = p
     end
     bar_data = sum(cumsum(hcat(bar_data...), dims = 2), dims = 1)
     base_data = hcat(0, bar_data)
@@ -1253,14 +1272,14 @@ function _bar_plot_internal(
         )
     end
     set_display && display(p2)
+    if title == " "
+        title = "Bar_Generation"
+    end
     if !isnothing(save_fig)
-        if title == " "
-            title = "Stack_Generation"
-        end
         title = replace(title, " " => "_")
         Plots.savefig(p2, joinpath(save_fig, "$title.png"))
     end
-    plot_list = vcat(plot_list, p2)
+    plot_list[Symbol(title)] = p2
     return PlotList(plot_list)
 end
 
@@ -1280,7 +1299,7 @@ function _bar_plot_internal(
         IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
     bars = []
     plots = []
-    plot_list = []
+    plot_list = Dict()
     for (name, variable) in variables
         plots = []
         bar_data = []
@@ -1311,7 +1330,7 @@ function _bar_plot_internal(
         if !isnothing(save_fig)
             Plots.savefig(plot, joinpath(save_fig, "$(name)_Bar.png"))
         end
-        plot_list = vcat(plot_list, plot)
+        plot_list[name] = plot
     end
     bar_plots = []
     for res in results
@@ -1351,14 +1370,14 @@ function _bar_plot_internal(
     end
     bar_plot = Plots.plot(bar_plots...; layout = (length(results), 1))
     set_display && display(bar_plot)
+    if title == " "
+        title = "Bar_Generation"
+    end
     if !isnothing(save_fig)
-        if title == " "
-            title = "Stack_Generation"
-        end
         title = replace(title, " " => "_")
         Plots.savefig(bar_plot, joinpath(save_fig, "$title.png"))
     end
-    plot_list = vcat(plot_list, bar_plot)
+    plot_list[Symbol(title)] = bar_plot
     return PlotList(plot_list)
 end
 
@@ -1380,7 +1399,7 @@ function _stack_plot_internal(
     time_interval =
         IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
     stack_data = []
-    plot_list = []
+    plot_list = Dict()
     for (name, variable) in variables
         data = convert(Matrix, variable)
         plot_data = cumsum(data, dims = 2)
@@ -1409,7 +1428,7 @@ function _stack_plot_internal(
             end
         end
         stack_data = vcat(stack_data, [sum(data, dims = 2)])
-        plot_list = vcat(plot_list, p)
+        plot_list[name] = p
     end
     stack_data = cumsum(hcat(stack_data...), dims = 2)
     base_data = hcat(zeros(length(time_range)), stack_data)
@@ -1442,18 +1461,18 @@ function _stack_plot_internal(
         )
     end
     set_display && display(p2)
-    if !isnothing(save_fig)
-        if title == " "
-            if linetype == :line
-                title = "Stack_Generation"
-            else
-                title = "Stair_Generation"
-            end
+    if title == " "
+        if linetype == :line
+            title = "Stack_Generation"
+        else
+            title = "Stair_Generation"
         end
+    end
+    if !isnothing(save_fig)
         title = replace(title, " " => "_")
         Plots.savefig(p2, joinpath(save_fig, "$title.png"))
     end
-    plot_list = vcat(plot_list, p2)
+    plot_list[Symbol(title)] = p2
     return PlotList(plot_list)
 end
 
@@ -1474,7 +1493,7 @@ function _stack_plot_internal(
         IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
     stacks = []
     plots = []
-    plot_list = []
+    plot_list = Dict()
     for (name, variable) in variables
         plots = []
         stack_data = []
@@ -1509,7 +1528,7 @@ function _stack_plot_internal(
                 Plots.savefig(plot, joinpath(save_fig, "$(name)_Stair.png"))
             end
         end
-        plot_list = vcat(plot_list, plot)
+        plot_list[name] = plot
     end
     stack_plots = []
     for res in results
@@ -1554,18 +1573,18 @@ function _stack_plot_internal(
     end
     stack_plot = Plots.plot(stack_plots...; layout = (length(results), 1))
     set_display && display(stack_plot)
-    if !isnothing(save_fig)
-        if title == " "
-            if linetype == :line
-                title = "Stack_Generation"
-            else
-                title = "Stair_Generation"
-            end
+    if title == " "
+        if linetype == :line
+            title = "Stack_Generation"
+        else
+            title = "Stair_Generation"
         end
+    end
+    if !isnothing(save_fig)
         title = replace(title, " " => "_")
         Plots.savefig(stack_plot, joinpath(save_fig, "$title.png"))
     end
-    plot_list = vcat(plot_list, stack_plot)
+    plot_list[Symbol(title)] = stack_plot
     return PlotList(plot_list)
 end
 
@@ -1582,7 +1601,7 @@ function _demand_plot_internal(res::IS.Results, backend::Plots.PlotlyJSBackend; 
     save_fig = get(kwargs, :save, nothing)
     set_display = get(kwargs, :display, true)
     ylabel = _make_ylabel(IS.get_base_power(res))
-    plot_list = []
+    plot_list = Dict()
     for (key, parameters) in res.parameter_values
         traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
         param_names = names(parameters)
@@ -1592,7 +1611,7 @@ function _demand_plot_internal(res::IS.Results, backend::Plots.PlotlyJSBackend; 
                 traces,
                 Plots.PlotlyJS.scatter(;
                     name = param_names[i],
-                    x = res.time_stamp,
+                    x = res.time_stamp[:, 1],
                     y = abs.(parameters[:, param_names[i]]),
                     stackgroup = "one",
                     mode = "lines",
@@ -1616,7 +1635,7 @@ function _demand_plot_internal(res::IS.Results, backend::Plots.PlotlyJSBackend; 
                 height = 630,
             )
         end
-        plot_list = vcat(plot_list, p)
+        plot_list[key] = p
     end
     return PlotList(plot_list)
 end
@@ -1632,19 +1651,25 @@ function _demand_plot_internal(results::Array, backend::Plots.PlotlyJSBackend; k
     else
         line_shape = "linear"
     end
-    traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
-    plot_list = []
+    plot_list = Dict()
     for (key, parameters) in results[1].parameter_values
         plots = []
         title = get(kwargs, :title, "$key")
-        for res in results
+        for n in 1:length(results)
+            traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
+            parameters = results[n].parameter_values[key]
             p_names = collect(names(parameters))
+            if n == 1
+                leg = true
+            else
+                leg = false
+            end
             for i in 1:length(p_names)
                 push!(
                     traces,
                     Plots.PlotlyJS.scatter(;
                         name = p_names[i],
-                        x = res.time_stamp,
+                        x = results[n].time_stamp[:, 1],
                         y = abs.(parameters[:, p_names[i]]),
                         stackgroup = "one",
                         mode = "lines",
@@ -1671,7 +1696,7 @@ function _demand_plot_internal(results::Array, backend::Plots.PlotlyJSBackend; k
                 height = 630,
             )
         end
-        plot_list = vcat(plot_list, plots)
+        plot_list[key] = plots
     end
     return PlotList(plot_list)
 end
@@ -1690,7 +1715,7 @@ function _demand_plot_internal(res::IS.Results, backend::Any; kwargs...)
     interval = time_range[2] - time_range[1]
     time_interval = IS.convert_compound_period(interval * length(time_range))
     ylabel = _make_ylabel(IS.get_base_power(res))
-    plot_list = []
+    plot_list = Dict()
     for (key, parameters) in res.parameter_values
         title = get(kwargs, :title, "$key")
         data = abs.(cumsum(convert(Matrix, parameters), dims = 2))
@@ -1716,7 +1741,7 @@ function _demand_plot_internal(res::IS.Results, backend::Any; kwargs...)
             title = replace(title, " " => "_")
             Plots.savefig(p, joinpath(save_fig, "$(title).png"))
         end
-        plot_list = vcat(plot_list, p)
+        plot_list[key] = p
     end
     return PlotList(plot_list)
 end
@@ -1735,7 +1760,7 @@ function _demand_plot_internal(results::Array{}, backend::Any; kwargs...)
     interval = time_range[2] - time_range[1]
     time_interval = IS.convert_compound_period(interval * length(time_range))
     ylabel = _make_ylabel(IS.get_base_power(results[1]))
-    plot_list = []
+    plot_list = Dict()
     for (key, parameters) in results[1].parameter_values
         labels = string.(names(parameters))
         plots = []
@@ -1763,7 +1788,7 @@ function _demand_plot_internal(results::Array{}, backend::Any; kwargs...)
         if !isnothing(save_fig)
             Plots.savefig(p, joinpath(save_fig, "$title.png"))
         end
-        plot_list = vcat(plot_list, p)
+        plot_list[key] = p
     end
     return PlotList(plot_list)
 end
@@ -1786,7 +1811,7 @@ function _demand_plot_internal(
     save_fig = get(kwargs, :save, nothing)
     set_display = get(kwargs, :display, true)
     ylabel = _make_ylabel(basepower)
-    plot_list = []
+    plot_list = Dict()
     traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
     data = DataFrames.select(parameters, DataFrames.Not(:timestamp))
     param_names = names(data)
@@ -1820,7 +1845,7 @@ function _demand_plot_internal(
             height = 630,
         )
     end
-    plot_list = vcat(plot_list, p)
+    plot_list[Symbol(title)] = p
     return PlotList(plot_list)
 end
 
@@ -1839,7 +1864,7 @@ function _demand_plot_internal(
     else
         line_shape = "linear"
     end
-    plot_list = []
+    plot_list = Dict()
     plots = []
     title = get(kwargs, :title, "PowerLoad")
     for i in 1:length(parameters)
@@ -1848,6 +1873,11 @@ function _demand_plot_internal(
         ylabel = _make_ylabel(basepower[i])
         traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
         for n in 1:length(p_names)
+            if n == 1
+                leg = true
+            else
+                leg = false
+            end
             push!(
                 traces,
                 Plots.PlotlyJS.scatter(;
@@ -1858,6 +1888,7 @@ function _demand_plot_internal(
                     mode = "lines",
                     fill = "tonexty",
                     line_color = seriescolor[n],
+                    showlegend = leg,
                 ),
             )
         end
@@ -1878,7 +1909,7 @@ function _demand_plot_internal(
             height = 630,
         )
     end
-    plot_list = vcat(plot_list, plots)
+    plot_list[Symbol(title)] = plots
     return PlotList(plot_list)
 end
 
@@ -1901,7 +1932,7 @@ function _demand_plot_internal(
     interval = time_range[2] - time_range[1]
     time_interval = IS.convert_compound_period(interval * length(time_range))
     ylabel = _make_ylabel(basepower)
-    plot_list = []
+    plot_list = Dict()
     title = get(kwargs, :title, "PowerLoad")
     DataFrames.select!(parameters, DataFrames.Not(:timestamp))
     data = abs.(cumsum(convert(Matrix, parameters), dims = 2))
@@ -1927,7 +1958,7 @@ function _demand_plot_internal(
         title = replace(title, " " => "_")
         Plots.savefig(p, joinpath(save_fig, "$(title).png"))
     end
-    plot_list = vcat(plot_list, p)
+    plot_list[Symbol(title)] = p
     return PlotList(plot_list)
 end
 
@@ -1949,7 +1980,7 @@ function _demand_plot_internal(
     time_range = parameter_list[1][:, 1]
     interval = time_range[2] - time_range[1]
     time_interval = IS.convert_compound_period(interval * length(time_range))
-    plot_list = []
+    plot_list = Dict()
     plots = []
     title = get(kwargs, :title, "PowerLoad")
     for i in 1:length(parameter_list)
@@ -1977,6 +2008,6 @@ function _demand_plot_internal(
     if !isnothing(save_fig)
         Plots.savefig(p, joinpath(save_fig, "$title.png"))
     end
-    plot_list = vcat(plot_list, p)
+    plot_list[Symbol(title)] = p
     return PlotList(plot_list)
 end

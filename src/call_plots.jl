@@ -70,7 +70,8 @@ function fuel_plot(res::IS.Results, variables::Array, generator_dict::Dict; kwar
         res.dual_values,
         res.parameter_values,
     )
-    fuel_plot(results, generator_dict; kwargs...)
+    plots = fuel_plot(results, generator_dict; kwargs...)
+    return plots
 end
 
 function fuel_plot(res::IS.Results, variables::Array, system::PSY.System; kwargs...)
@@ -87,7 +88,8 @@ function fuel_plot(res::IS.Results, variables::Array, system::PSY.System; kwargs
         res.dual_values,
         res.parameter_values,
     )
-    fuel_plot(results, system; kwargs...)
+    plots = fuel_plot(results, system; kwargs...)
+    return plots
 end
 
 function fuel_plot(results::Array, variables::Array, system::PSY.System; kwargs...)
@@ -108,7 +110,8 @@ function fuel_plot(results::Array, variables::Array, system::PSY.System; kwargs.
         )
         new_results = vcat(new_results, results)
     end
-    fuel_plot(new_results, system; kwargs...)
+    plots = fuel_plot(new_results, system; kwargs...)
+    return plots
 end
 
 function fuel_plot(results::Array, variables::Array, generator_dict::Dict; kwargs...)
@@ -129,7 +132,8 @@ function fuel_plot(results::Array, variables::Array, generator_dict::Dict; kwarg
         )
         new_results = vcat(new_results, results)
     end
-    fuel_plot(new_results, generator_dict; kwargs...)
+    plots = fuel_plot(new_results, generator_dict; kwargs...)
+    return plots
 end
 """
     fuel_plot(results, system)
@@ -158,12 +162,12 @@ fuel_plot(res, sys)
 """
 function fuel_plot(res::IS.Results, sys::PSY.System; kwargs...)
     ref = make_fuel_dictionary(res, sys)
-    fuel_plot(res, ref; kwargs...)
+    return fuel_plot(res, ref; kwargs...)
 end
 
 function fuel_plot(res::Array, sys::PSY.System; kwargs...)
     ref = make_fuel_dictionary(res[1], sys)
-    fuel_plot(res, ref; kwargs...)
+    return fuel_plot(res, ref; kwargs...)
 end
 """
     fuel_plot(results::IS.Results, generators)
@@ -207,7 +211,7 @@ function fuel_plot(res::IS.Results, generator_dict::Dict; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    _fuel_plot_internal(
+    return _fuel_plot_internal(
         stack,
         bar,
         seriescolor,
@@ -239,7 +243,7 @@ function fuel_plot(results::Array, generator_dict::Dict; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    _fuel_plot_internal(
+    return _fuel_plot_internal(
         stack,
         bar,
         seriescolor,
@@ -284,7 +288,7 @@ function bar_plot(res::IS.Results; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    _bar_plot_internal(res, backend, save_fig, set_display; kwargs...)
+    return _bar_plot_internal(res, backend, save_fig, set_display; kwargs...)
 end
 
 """
@@ -324,7 +328,7 @@ function bar_plot(results::Array; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    _bar_plot_internal(res, backend, save_fig, set_display; kwargs...)
+    return _bar_plot_internal(res, backend, save_fig, set_display; kwargs...)
 end
 
 function bar_plot(res::IS.Results, variables::Array; kwargs...)
@@ -341,7 +345,7 @@ function bar_plot(res::IS.Results, variables::Array; kwargs...)
         res.dual_values,
         res.parameter_values,
     )
-    bar_plot(results; kwargs...)
+    return bar_plot(results; kwargs...)
 end
 
 function bar_plot(results::Array, variables::Array; kwargs...)
@@ -362,7 +366,7 @@ function bar_plot(results::Array, variables::Array; kwargs...)
         )
         new_results = vcat(new_results, results)
     end
-    bar_plot(new_results; kwargs...)
+    return bar_plot(new_results; kwargs...)
 end
 
 """
@@ -397,7 +401,7 @@ function stack_plot(res::IS.Results; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    _stack_plot_internal(res, backend, save_fig, set_display; kwargs...)
+    return _stack_plot_internal(res, backend, save_fig, set_display; kwargs...)
 end
 
 """
@@ -437,7 +441,7 @@ function stack_plot(results::Array{}; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    _stack_plot_internal(new_results, backend, save_fig, set_display; kwargs...)
+    return _stack_plot_internal(new_results, backend, save_fig, set_display; kwargs...)
 end
 
 """
@@ -480,7 +484,7 @@ function stack_plot(res::IS.Results, variables::Array; kwargs...)
         res.dual_values,
         res.parameter_values,
     )
-    stack_plot(results; kwargs...)
+    return stack_plot(results; kwargs...)
 end
 
 function stack_plot(results::Array, variables::Array; kwargs...)
@@ -501,7 +505,7 @@ function stack_plot(results::Array, variables::Array; kwargs...)
         )
         new_results = vcat(new_results, results)
     end
-    stack_plot(new_results; kwargs...)
+    return stack_plot(new_results; kwargs...)
 end
 
 function _make_ylabel(base_power::Float64)
@@ -523,7 +527,7 @@ function stair_plot(res::IS.Results; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    _stack_plot_internal(
+    return _stack_plot_internal(
         res,
         backend,
         save_fig,
@@ -546,7 +550,7 @@ function stair_plot(results::Array; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    _stack_plot_internal(
+    return _stack_plot_internal(
         new_results,
         backend,
         save_fig,
@@ -571,7 +575,7 @@ function stair_plot(res::IS.Results, variables::Array; kwargs...)
         res.dual_values,
         res.parameter_values,
     )
-    stair_plot(results; kwargs...)
+    return stair_plot(results; kwargs...)
 end
 
 function stair_plot(results::Array, variables::Array; kwargs...)
@@ -592,7 +596,7 @@ function stair_plot(results::Array, variables::Array; kwargs...)
         )
         new_results = vcat(new_results, results)
     end
-    stair_plot(new_results; kwargs...)
+    return stair_plot(new_results; kwargs...)
 end
 ################################### DEMAND #################################
 function demand_plot(res::IS.Results; kwargs...)
@@ -601,7 +605,7 @@ function demand_plot(res::IS.Results; kwargs...)
     _demand_plot_internal(results, backend; kwargs...)
 end
 
-function demand_plot(results::Array{IS.Results}; kwargs...)
+function demand_plot(results::Array; kwargs...)
     new_results = []
     for res in results
         new_res = _filter_parameters(res)
@@ -609,7 +613,7 @@ function demand_plot(results::Array{IS.Results}; kwargs...)
     end
     backend = Plots.backend()
     save_fig = get(kwargs, :save, nothing)
-    _demand_plot_internal(new_results.parameter_values, backend; kwargs...)
+    _demand_plot_internal(new_results, backend; kwargs...)
 end
 # TODO make this function
 
@@ -639,11 +643,10 @@ function demand_plot(system::PSY.System; kwargs...)
         df = DataFrames.DataFrame(PSY.get_forecast_values(component, f))
         parameters[!, Symbol(names[i])] = df[:, 2]
     end
-    @show parameters
     backend = Plots.backend()
     save_fig = get(kwargs, :save, nothing)
     basepower = system.basepower
-    _demand_plot_internal(parameters, basepower, backend; kwargs...)
+    return _demand_plot_internal(parameters, basepower, backend; kwargs...)
 end
 
 function demand_plot(systems::Array{PSY.System}; kwargs...)
@@ -680,5 +683,5 @@ function demand_plot(systems::Array{PSY.System}; kwargs...)
     end
     backend = Plots.backend()
     save_fig = get(kwargs, :save, nothing)
-    _demand_plot_internal(parameter_list, basepowers, backend; kwargs...)
+    return _demand_plot_internal(parameter_list, basepowers, backend; kwargs...)
 end
