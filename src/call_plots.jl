@@ -1,5 +1,6 @@
 function _filter_variables(results::IS.Results; kwargs...)
     filter_results = Dict()
+    filter_parameters = Dict()
     reserves = get(kwargs, :reserves, false)
     if reserves
         for (key, var) in IS.get_variables(results)
@@ -16,16 +17,43 @@ function _filter_variables(results::IS.Results; kwargs...)
             end
         end
     end
-    results = Results(
+    load = get(kwargs, :load, false)
+    if load
+        for (key, parameter) in results.parameter_values
+            param = split("$key", "_")[3]
+            if param == "PowerLoad"
+                filter_parameters[Symbol(param)] = parameter
+            end
+        end
+    end
+    new_results = Results(
         IS.get_base_power(results),
         filter_results,
         IS.get_optimizer_log(results),
         IS.get_total_cost(results),
         IS.get_time_stamp(results),
         results.dual_values,
-        results.parameter_values,
+        filter_parameters,
     )
-    return results
+    return new_results
+end
+
+function _filter_parameters(results::IS.Results)
+    filter_parameters = Dict()
+    for (k, v) in results.parameter_values
+        param = split("$k", "_")[3]
+        filter_parameters[Symbol(param)] = v
+    end
+    new_results = Results(
+        IS.get_base_power(results),
+        IS.get_variables(results),
+        IS.get_optimizer_log(results),
+        IS.get_total_cost(results),
+        IS.get_time_stamp(results),
+        results.dual_values,
+        filter_parameters,
+    )
+    return new_results
 end
 
 function fuel_plot(res::IS.Results, variables::Array, generator_dict::Dict; kwargs...)
@@ -42,7 +70,8 @@ function fuel_plot(res::IS.Results, variables::Array, generator_dict::Dict; kwar
         res.dual_values,
         res.parameter_values,
     )
-    fuel_plot(results, generator_dict; kwargs...)
+    plots = fuel_plot(results, generator_dict; kwargs...)
+    return plots
 end
 
 function fuel_plot(res::IS.Results, variables::Array, system::PSY.System; kwargs...)
@@ -59,7 +88,8 @@ function fuel_plot(res::IS.Results, variables::Array, system::PSY.System; kwargs
         res.dual_values,
         res.parameter_values,
     )
-    fuel_plot(results, system; kwargs...)
+    plots = fuel_plot(results, system; kwargs...)
+    return plots
 end
 
 function fuel_plot(results::Array, variables::Array, system::PSY.System; kwargs...)
@@ -80,7 +110,8 @@ function fuel_plot(results::Array, variables::Array, system::PSY.System; kwargs.
         )
         new_results = vcat(new_results, results)
     end
-    fuel_plot(new_results, system; kwargs...)
+    plots = fuel_plot(new_results, system; kwargs...)
+    return plots
 end
 
 function fuel_plot(results::Array, variables::Array, generator_dict::Dict; kwargs...)
@@ -101,7 +132,8 @@ function fuel_plot(results::Array, variables::Array, generator_dict::Dict; kwarg
         )
         new_results = vcat(new_results, results)
     end
-    fuel_plot(new_results, generator_dict; kwargs...)
+    plots = fuel_plot(new_results, generator_dict; kwargs...)
+    return plots
 end
 """
     fuel_plot(results, system)
@@ -130,12 +162,12 @@ fuel_plot(res, sys)
 """
 function fuel_plot(res::IS.Results, sys::PSY.System; kwargs...)
     ref = make_fuel_dictionary(res, sys)
-    fuel_plot(res, ref; kwargs...)
+    return fuel_plot(res, ref; kwargs...)
 end
 
 function fuel_plot(res::Array, sys::PSY.System; kwargs...)
     ref = make_fuel_dictionary(res[1], sys)
-    fuel_plot(res, ref; kwargs...)
+    return fuel_plot(res, ref; kwargs...)
 end
 """
     fuel_plot(results::IS.Results, generators)
@@ -175,11 +207,11 @@ function fuel_plot(res::IS.Results, generator_dict::Dict; kwargs...)
     default_colors = match_fuel_colors(stack, bar, backend, FUEL_DEFAULT)
     seriescolor = get(kwargs, :seriescolor, default_colors)
     ylabel = _make_ylabel(IS.get_base_power(res))
-    title = get(kwargs, :title, " ")
+    title = get(kwargs, :title, "Fuel")
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    _fuel_plot_internal(
+    return _fuel_plot_internal(
         stack,
         bar,
         seriescolor,
@@ -206,12 +238,12 @@ function fuel_plot(results::Array, generator_dict::Dict; kwargs...)
     backend = Plots.backend()
     default_colors = match_fuel_colors(stack[1], bar[1], backend, FUEL_DEFAULT)
     seriescolor = get(kwargs, :seriescolor, default_colors)
-    title = get(kwargs, :title, " ")
+    title = get(kwargs, :title, "Fuel")
     ylabel = _make_ylabel(IS.get_base_power(results[1]))
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    _fuel_plot_internal(
+    return _fuel_plot_internal(
         stack,
         bar,
         seriescolor,
@@ -222,46 +254,6 @@ function fuel_plot(results::Array, generator_dict::Dict; kwargs...)
         ylabel;
         kwargs...,
     )
-end
-
-function _fuel_plot_internal(
-    stack::Any,
-    bar::Any,
-    seriescolor::Array,
-    backend::Plots.PlotlyJSBackend,
-    save_fig::Any,
-    set_display::Bool,
-    title::String,
-    ylabel::String;
-    kwargs...,
-)
-    plotly_stack_gen(stack, seriescolor, title, ylabel; kwargs...)
-    plotly_bar_gen(bar, seriescolor, title, ylabel; kwargs...)
-end
-
-function _fuel_plot_internal(
-    stack::Any,
-    bar::Any,
-    seriescolor::Array,
-    backend::Any,
-    save_fig::Any,
-    set_display::Bool,
-    title::String,
-    ylabel::String;
-    kwargs...,
-)
-    title = get(kwargs, :title, " ")
-    p1 = RecipesBase.plot(stack, seriescolor; title = title, ylabel = ylabel)
-    p2 = RecipesBase.plot(bar, seriescolor; title = title, ylabel = ylabel)
-    set_display && display(p1)
-    set_display && display(p2)
-    if !isnothing(save_fig)
-        if title == " "
-            title = "Bar_Generation"
-        end
-        Plots.savefig(p1, joinpath(save_fig, "$title.png"))
-        Plots.savefig(p2, joinpath(save_fig, "$title.png"))
-    end
 end
 
 """
@@ -293,11 +285,10 @@ function bar_plot(res::IS.Results; kwargs...)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     res = _filter_variables(res; kwargs...)
-    bar_gen = get_bar_gen_data(res)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    _bar_plot_internal(res, bar_gen, backend, save_fig, set_display; kwargs...)
+    return _bar_plot_internal(res, backend, save_fig, set_display; kwargs...)
 end
 
 """
@@ -330,16 +321,14 @@ function bar_plot(results::Array; kwargs...)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     res = _filter_variables(results[1]; kwargs...)
-    bar_gen = get_bar_gen_data(res)
     for i in 2:size(results, 1)
         filter = _filter_variables(results[i]; kwargs...)
         res = hcat(res, filter)
-        bar_gen = hcat(bar_gen, get_bar_gen_data(filter))
     end
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    _bar_plot_internal(res, bar_gen, backend, save_fig, set_display; kwargs...)
+    return _bar_plot_internal(res, backend, save_fig, set_display; kwargs...)
 end
 
 function bar_plot(res::IS.Results, variables::Array; kwargs...)
@@ -356,7 +345,7 @@ function bar_plot(res::IS.Results, variables::Array; kwargs...)
         res.dual_values,
         res.parameter_values,
     )
-    bar_plot(results; kwargs...)
+    return bar_plot(results; kwargs...)
 end
 
 function bar_plot(results::Array, variables::Array; kwargs...)
@@ -377,98 +366,7 @@ function bar_plot(results::Array, variables::Array; kwargs...)
         )
         new_results = vcat(new_results, results)
     end
-    bar_plot(new_results; kwargs...)
-end
-
-function _bar_plot_internal(
-    res::IS.Results,
-    bar_gen::BarGeneration,
-    backend::Plots.PlotlyJSBackend,
-    save_fig::Any,
-    set_display::Bool;
-    kwargs...,
-)
-    seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
-    title = get(kwargs, :title, " ")
-    ylabel = _make_ylabel(IS.get_base_power(res))
-    plotly_bar_plots(res, seriescolor, ylabel; kwargs...)
-    plotly_bar_gen(bar_gen, seriescolor, title, ylabel; kwargs...)
-end
-
-function _bar_plot_internal(
-    res::Array,
-    bar_gen::Array,
-    backend::Plots.PlotlyJSBackend,
-    save_fig::Any,
-    set_display::Bool;
-    kwargs...,
-)
-    seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
-    title = get(kwargs, :title, " ")
-    ylabel = _make_ylabel(IS.get_base_power(res[1]))
-    plotly_bar_plots(res, seriescolor, ylabel; kwargs...)
-    plotly_bar_gen(bar_gen, seriescolor, title, ylabel; kwargs...)
-end
-
-function _bar_plot_internal(
-    res::IS.Results,
-    bar_gen::BarGeneration,
-    backend::Any,
-    save_fig::Any,
-    set_display::Bool;
-    kwargs...,
-)
-    seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
-    ylabel = _make_ylabel(IS.get_base_power(res))
-    title = get(kwargs, :title, " ")
-    for name in string.(keys(IS.get_variables(res)))
-        variable_bar = get_bar_plot_data(res, name)
-        p = RecipesBase.plot(variable_bar, name, seriescolor; ylabel = ylabel)
-        set_display && display(p)
-        if !isnothing(save_fig)
-            Plots.savefig(p, joinpath(save_fig, "$(name)_Bar.png"))
-        end
-    end
-    p2 = RecipesBase.plot(bar_gen, seriescolor; title = title, ylabel = ylabel)
-    set_display && display(p2)
-    if !isnothing(save_fig)
-        if title == " "
-            title = "Bar_Generation"
-        end
-        Plots.savefig(p2, joinpath(save_fig, "$title.png"))
-    end
-end
-
-function _bar_plot_internal(
-    results::Array,
-    bar_gen::Array,
-    backend::Any,
-    save_fig::Any,
-    set_display::Bool;
-    kwargs...,
-)
-    seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
-    title = get(kwargs, :title, " ")
-    ylabel = _make_ylabel(IS.get_base_power(results[1]))
-    for name in string.(keys(IS.get_variables(results[1, 1])))
-        variable_bar = get_bar_plot_data(results[1, 1], name)
-        for i in 2:length(results)
-            variable_bar = hcat(variable_bar, get_bar_plot_data(results[i], name))
-        end
-        p = RecipesBase.plot(variable_bar, name, seriescolor; ylabel = ylabel)
-        set_display && display(p)
-        if !isnothing(save_fig)
-            Plots.savefig(p, joinpath(save_fig, "$(name)_Bar.png"))
-        end
-    end
-    p2 = RecipesBase.plot(bar_gen, seriescolor; title = title, ylabel = ylabel)
-    set_display && display(p2)
-    if !isnothing(save_fig)
-        if title == " "
-            title = "Bar_Generation"
-        end
-        Plots.savefig(p2, joinpath(save_fig, "$title.png"))
-    end
+    return bar_plot(new_results; kwargs...)
 end
 
 """
@@ -499,12 +397,11 @@ function stack_plot(res::IS.Results; kwargs...)
     set_display = get(kwargs, :set_display, true)
     backend = Plots.backend()
     save_fig = get(kwargs, :save, nothing)
-    _filter_variables(res; kwargs...)
-    stacked_gen = get_stacked_generation_data(res)
+    res = _filter_variables(res; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    _stack_plot_internal(res, stacked_gen, backend, save_fig, set_display; kwargs...)
+    return _stack_plot_internal(res, backend, save_fig, set_display; kwargs...)
 end
 
 """
@@ -537,23 +434,14 @@ function stack_plot(results::Array{}; kwargs...)
     backend = Plots.backend()
     save_fig = get(kwargs, :save, nothing)
     new_results = _filter_variables(results[1]; kwargs...)
-    stacked_gen = get_stacked_generation_data(new_results)
     for res in 2:length(results)
         filtered = _filter_variables(results[res]; kwargs...)
         new_results = hcat(new_results, filtered)
-        stacked_gen = hcat(stacked_gen, get_stacked_generation_data(filtered))
     end
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    _stack_plot_internal(
-        new_results,
-        stacked_gen,
-        backend,
-        save_fig,
-        set_display;
-        kwargs...,
-    )
+    return _stack_plot_internal(new_results, backend, save_fig, set_display; kwargs...)
 end
 
 """
@@ -596,7 +484,7 @@ function stack_plot(res::IS.Results, variables::Array; kwargs...)
         res.dual_values,
         res.parameter_values,
     )
-    stack_plot(results; kwargs...)
+    return stack_plot(results; kwargs...)
 end
 
 function stack_plot(results::Array, variables::Array; kwargs...)
@@ -617,98 +505,7 @@ function stack_plot(results::Array, variables::Array; kwargs...)
         )
         new_results = vcat(new_results, results)
     end
-    stack_plot(new_results; kwargs...)
-end
-
-function _stack_plot_internal(
-    res::IS.Results,
-    stack::StackedGeneration,
-    backend::Plots.PlotlyJSBackend,
-    save_fig::Any,
-    set_display::Bool;
-    kwargs...,
-)
-    seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
-    title = get(kwargs, :title, " ")
-    ylabel = _make_ylabel(IS.get_base_power(res))
-    plotly_stack_plots(res, seriescolor, ylabel; kwargs...)
-    plotly_stack_gen(stack, seriescolor, title, ylabel; kwargs...)
-end
-
-function _stack_plot_internal(
-    res::Array{},
-    stack::Array{},
-    backend::Plots.PlotlyJSBackend,
-    save_fig::Any,
-    set_display::Bool;
-    kwargs...,
-)
-    seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
-    title = get(kwargs, :title, " ")
-    ylabel = _make_ylabel(IS.get_base_power(res[1]))
-    plotly_stack_plots(res, seriescolor, ylabel; kwargs...)
-    plotly_stack_gen(stack, seriescolor, title, ylabel; kwargs...)
-end
-
-function _stack_plot_internal(
-    res::IS.Results,
-    stack::StackedGeneration,
-    backend::Any,
-    save_fig::Any,
-    set_display::Bool;
-    kwargs...,
-)
-    title = get(kwargs, :title, " ")
-    ylabel = _make_ylabel(IS.get_base_power(res))
-    seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
-    for name in string.(keys(IS.get_variables(res)))
-        variable_stack = get_stacked_plot_data(res, name)
-        p = RecipesBase.plot(variable_stack, name, seriescolor; ylabel = ylabel)
-        set_display && display(p)
-        if !isnothing(save_fig)
-            Plots.savefig(p, joinpath(save_fig, "$(name)_Stack.png"))
-        end
-    end
-    p2 = RecipesBase.plot(stack, seriescolor; title = title, ylabel = ylabel)
-    set_display && display(p2)
-    if !isnothing(save_fig)
-        if title == " "
-            title = "Stack_Generation"
-        end
-        Plots.savefig(p2, joinpath(save_fig, "$title.png"))
-    end
-end
-
-function _stack_plot_internal(
-    results::Any,
-    stack::Any,
-    backend::Any,
-    save_fig::Any,
-    set_display::Bool;
-    kwargs...,
-)
-    seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
-    title = get(kwargs, :title, " ")
-    ylabel = _make_ylabel(IS.get_base_power(results[1]))
-    for name in string.(keys(IS.get_variables(results[1])))
-        variable_stack = get_stacked_plot_data(results[1], name)
-        for res in 2:length(results)
-            variable_stack = hcat(variable_stack, get_stacked_plot_data(results[res], name))
-        end
-        p = RecipesBase.plot(variable_stack, name, seriescolor; ylabel = ylabel)
-        set_display && display(p)
-        if !isnothing(save_fig)
-            Plots.savefig(p, joinpath(save_fig, "$(name)_Stack.png"))
-        end
-    end
-    p2 = RecipesBase.plot(stack, seriescolor; title = title, ylabel = ylabel)
-    set_display && display(p2)
-    if !isnothing(save_fig)
-        if title == " "
-            title = "Stack_Generation"
-        end
-        Plots.savefig(p2, joinpath(save_fig, "$title.png"))
-    end
+    return stack_plot(new_results; kwargs...)
 end
 
 function _make_ylabel(base_power::Float64)
@@ -720,4 +517,171 @@ function _make_ylabel(base_power::Float64)
         ylabel = "Generation (MW x$base_power)"
     end
     return ylabel
+end
+
+function stair_plot(res::IS.Results; kwargs...)
+    set_display = get(kwargs, :set_display, true)
+    backend = Plots.backend()
+    save_fig = get(kwargs, :save, nothing)
+    res = _filter_variables(res; kwargs...)
+    if isnothing(backend)
+        throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
+    end
+    return _stack_plot_internal(
+        res,
+        backend,
+        save_fig,
+        set_display;
+        stairs = "hv",
+        linetype = :steppost,
+        kwargs...,
+    )
+end
+
+function stair_plot(results::Array; kwargs...)
+    set_display = get(kwargs, :set_display, true)
+    backend = Plots.backend()
+    save_fig = get(kwargs, :save, nothing)
+    new_results = _filter_variables(results[1]; kwargs...)
+    for res in 2:length(results)
+        filtered = _filter_variables(results[res]; kwargs...)
+        new_results = hcat(new_results, filtered)
+    end
+    if isnothing(backend)
+        throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
+    end
+    return _stack_plot_internal(
+        new_results,
+        backend,
+        save_fig,
+        set_display;
+        stairs = "hv",
+        linetype = :steppost,
+        kwargs...,
+    )
+end
+
+function stair_plot(res::IS.Results, variables::Array; kwargs...)
+    res_var = Dict()
+    for variable in variables
+        res_var[variable] = IS.get_variables(res)[variable]
+    end
+    results = Results(
+        IS.get_base_power(res),
+        res_var,
+        IS.get_optimizer_log(res),
+        IS.get_total_cost(res),
+        IS.get_time_stamp(res),
+        res.dual_values,
+        res.parameter_values,
+    )
+    return stair_plot(results; kwargs...)
+end
+
+function stair_plot(results::Array, variables::Array; kwargs...)
+    new_results = []
+    for res in results
+        res_var = Dict()
+        for variable in variables
+            res_var[variable] = IS.get_variables(res)[variable]
+        end
+        results = Results(
+            IS.get_base_power(res),
+            res_var,
+            IS.get_optimizer_log(res),
+            IS.get_total_cost(res),
+            IS.get_time_stamp(res),
+            res.dual_values,
+            res.parameter_values,
+        )
+        new_results = vcat(new_results, results)
+    end
+    return stair_plot(new_results; kwargs...)
+end
+################################### DEMAND #################################
+function demand_plot(res::IS.Results; kwargs...)
+    results = _filter_parameters(res)
+    backend = Plots.backend()
+    _demand_plot_internal(results, backend; kwargs...)
+end
+
+function demand_plot(results::Array; kwargs...)
+    new_results = []
+    for res in results
+        new_res = _filter_parameters(res)
+        new_results = vcat(new_results, new_res)
+    end
+    backend = Plots.backend()
+    save_fig = get(kwargs, :save, nothing)
+    _demand_plot_internal(new_results, backend; kwargs...)
+end
+# TODO make this function
+
+function demand_plot(system::PSY.System; kwargs...)
+    names = collect(PSY.get_name.(PSY.get_components(PSY.PowerLoad, system)))
+    component = PSY.get_component(PSY.PowerLoad, system, names[1])
+    forecast_key = collect(PSY.get_forecast_keys(component))[1]
+    f = PSY.get_forecast(
+        PSY.Deterministic,
+        component,
+        forecast_key.initial_time,
+        forecast_key.label,
+    )
+    parameters = DataFrames.rename(
+        DataFrames.DataFrame(PSY.get_forecast_values(component, f)),
+        :A => Symbol(names[1]),
+    )
+    for i in 2:length(names)
+        component = PSY.get_component(PSY.PowerLoad, system, names[i])
+        forecast_key = collect(PSY.get_forecast_keys(component))[1]
+        f = PSY.get_forecast(
+            PSY.Deterministic,
+            component,
+            forecast_key.initial_time,
+            forecast_key.label,
+        )
+        df = DataFrames.DataFrame(PSY.get_forecast_values(component, f))
+        parameters[!, Symbol(names[i])] = df[:, 2]
+    end
+    backend = Plots.backend()
+    save_fig = get(kwargs, :save, nothing)
+    basepower = system.basepower
+    return _demand_plot_internal(parameters, basepower, backend; kwargs...)
+end
+
+function demand_plot(systems::Array{PSY.System}; kwargs...)
+    parameter_list = []
+    basepowers = []
+    for system in systems
+        names = collect(PSY.get_name.(PSY.get_components(PSY.PowerLoad, system)))
+        component = PSY.get_component(PSY.PowerLoad, system, names[1])
+        forecast_key = collect(PSY.get_forecast_keys(component))[1]
+        f = PSY.get_forecast(
+            PSY.Deterministic,
+            component,
+            forecast_key.initial_time,
+            forecast_key.label,
+        )
+        parameters = DataFrames.rename(
+            DataFrames.DataFrame(PSY.get_forecast_values(component, f)),
+            :A => Symbol(names[1]),
+        )
+        for i in 2:length(names)
+            component = PSY.get_component(PSY.PowerLoad, system, names[i])
+            forecast_key = collect(PSY.get_forecast_keys(component))[1]
+            f = PSY.get_forecast(
+                PSY.Deterministic,
+                component,
+                forecast_key.initial_time,
+                forecast_key.label,
+            )
+            df = DataFrames.DataFrame(PSY.get_forecast_values(component, f))
+            parameters[!, Symbol(names[i])] = df[:, 2]
+        end
+        basepowers = vcat(basepowers, system.basepower)
+        parameter_list = vcat(parameter_list, parameters)
+    end
+    backend = Plots.backend()
+    save_fig = get(kwargs, :save, nothing)
+    return _demand_plot_internal(parameter_list, basepowers, backend; kwargs...)
 end
