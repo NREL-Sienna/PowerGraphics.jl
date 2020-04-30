@@ -11,6 +11,7 @@ using PowerGraphics
 using Plots
 using PlotlyJS
 using ORCA
+using Weave
 
 const PG = PowerGraphics
 const IS = InfrastructureSystems
