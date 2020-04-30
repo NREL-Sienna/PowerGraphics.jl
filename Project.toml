@@ -12,11 +12,11 @@ Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PowerSystems = "bcd98974-b02a-5e2f-9ee0-a103f5c450dd"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
-TestSetExtensions = "98d24dd4-01ad-11ea-1b02-c9a08f80db04"
 
 [compat]
 Colors = "~0.12"
 DataFrames = "0.20"
+Plots = "1"
 InfrastructureSystems = "~0.6.3"
 PowerSystems = "~0.16"
 Reexport = "0.2"
