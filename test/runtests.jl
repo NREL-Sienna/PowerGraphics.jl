@@ -6,9 +6,7 @@ using DataFrames
 import InfrastructureSystems
 import InfrastructureSystems: Deterministic, Probabilistic, ScenarioBased, Forecast
 using PowerSystems
-import PowerSystems: PowerSystemTableData
 using PowerGraphics
-using Plots
 using PlotlyJS
 using ORCA
 using Weave

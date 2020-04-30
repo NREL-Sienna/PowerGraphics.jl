@@ -16,11 +16,11 @@ export sort_data
 import Dates
 
 #I/O Imports
-using Reexport
+import Reexport
 import Requires
 import Colors
 import DataFrames
-@reexport using Plots
+Reexport.@reexport using Plots
 import PowerSystems
 import InfrastructureSystems
 
