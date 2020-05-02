@@ -53,8 +53,56 @@ function _get_iterator(sys::PSY.System, results::IS.Results)
     return iterators_sorted
 end
 
+
+"""Return a dict where keys are a tuple of input parameters (fuel, unit_type) and values are
+generator types."""
+function get_generator_mapping(filename = nothing)
+    if isnothing(filename)
+        filename = GENERATOR_MAPPING_FILE
+    end
+    genmap = open(filename) do file
+        YAML.load(file)
+    end
+
+    mappings = Dict{NamedTuple, String}()
+    for (gen_type, vals) in genmap
+        for val in vals
+            pm = isnothing(val["primemover"]) ? nothing : uppercase(string(val["primemover"]))
+            key = (fuel = val["fuel"], primemover = pm)
+            if haskey(mappings, key)
+                error("duplicate generator mappings: $gen_type $(key.fuel) $(key.primemover)")
+            end
+            mappings[key] = gen_type
+        end
+    end
+
+    return mappings
+end
+
+"""Return the generator category for this fuel and unit_type."""
+function get_generator_category(fuel, primemover, mappings::Dict{NamedTuple, String})
+    fuel = isnothing(fuel) ? nothing : uppercase(string(fuel))
+    primemover = isnothing(primemover) ? nothing : uppercase(string(primemover))
+    generator = nothing
+
+    # Try to match the primemover if it's defined. If it's nothing then just match on fuel.
+    for pm in (primemover, nothing), f in (fuel, nothing)
+        key = (fuel = f, primemover = pm)
+        if haskey(mappings, key)
+            generator = mappings[key]
+            break
+        end
+    end
+
+    if isnothing(generator)
+        @error "No mapping defined for generator fuel=$fuel primemover=$primemover"
+    end
+
+    return generator
+end
+
 """
-    generators = make_fuel_dictionary(results::IS.Results, system::PSY.System)
+    generators = make_fuel_dictionary(system::PSY.System, mapping::Dict{NamedTuple, String})
 
 This function makes a dictionary of fuel type and the generators associated.
 
@@ -67,9 +115,31 @@ This function makes a dictionary of fuel type and the generators associated.
 
 # Example
 results = solve_op_model!(OpModel)
-generators = make_fuel_dictionary(results, c_sys5_re)
+generators = make_fuel_dictionary(c_sys5_re)
 
 """
+function make_fuel_dictionary(sys::PSY.System, mapping::Dict{NamedTuple,String})
+    generators = PSY.get_components(PSY.Generator, sys)
+    gen_categories = Dict()
+    for category in unique(values(mapping))
+        gen_categories["$category"] = []
+    end
+
+    for gen in generators
+        fuel = hasmethod(PSY.get_fuel, Tuple{typeof(gen)}) ? PSY.get_fuel(gen) : nothing
+        category = get_generator_category(fuel, PSY.get_primemover(gen), mapping)
+        push!(gen_categories["$category"], gen)
+    end
+    [delete!(gen_categories, "$k") for (k, v) in gen_categories if isempty(v)]
+
+    return gen_categories
+end
+
+function make_fuel_dictionary(sys::PSY.System; kwargs...)
+    mapping = get_generator_mapping(get(kwargs, :generator_mapping_file, nothing))
+    return make_fuel_dictionary(sys, mapping)
+end
+#=
 function make_fuel_dictionary(res::IS.Results, sys::PSY.System; kwargs...)
 
     categories = Dict()
@@ -84,6 +154,8 @@ function make_fuel_dictionary(res::IS.Results, sys::PSY.System; kwargs...)
         NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.CT, PSY.ThermalFuels.NATURAL_GAS)
     categories["Gas_CC"] =
         NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.CC, PSY.ThermalFuels.NATURAL_GAS)
+    categories["Gas_OT"] =
+        NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.OT, PSY.ThermalFuels.NATURAL_GAS)
     categories["Hydro"] = NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.HY, nothing)
     categories["Coal"] =
         NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.ST, PSY.ThermalFuels.COAL)
@@ -98,7 +170,7 @@ function make_fuel_dictionary(res::IS.Results, sys::PSY.System; kwargs...)
         for (name, fuels) in iterators
             for fuel in fuels
                 if isnothing(fuel_type) || fuel == fuel_type
-                    generators["$category"] = vcat(generators["$category"], name)
+                    push!(generators["$category"], name)
                 end
             end
         end
@@ -108,12 +180,12 @@ function make_fuel_dictionary(res::IS.Results, sys::PSY.System; kwargs...)
     end
     return generators
 end
-
+=#
 function _aggregate_data(res::IS.Results, generators::Dict)
-    All_var = DataFrames.DataFrame()
+    all_var = DataFrames.DataFrame()
     var_names = collect(keys(IS.get_variables(res)))
-    for i in 1:length(var_names)
-        All_var = hcat(All_var, IS.get_variables(res)[var_names[i]], makeunique = true)
+    for var in var_names
+        all_var = hcat(all_var, IS.get_variables(res)[var], makeunique = true)
     end
     fuel_dataframes = Dict()
 
@@ -140,7 +212,7 @@ so that the results can be plotted using the StackedGeneration recipe.
 ```julia
 using Plots
 gr()
-generators = make_fuel_dictionary(res, system)
+generators = make_fuel_dictionary(system)
 stack = get_stacked_aggregation_data(res, generators)
 plot(stack)
 ```
@@ -158,7 +230,7 @@ function get_stacked_aggregation_data(res::IS.Results, generators::Dict)
     labels = collect(keys(category_aggs))
     p_labels = collect(keys(res.parameter_values))
     new_labels = []
-
+    @show order, labels
     for fuel in order
         for label in labels
             if label == fuel
@@ -199,7 +271,7 @@ so that the results can be plotted using the StackedGeneration recipe.
 ```julia
 using Plots
 gr()
-generators = make_fuel_dictionary(res, system)
+generators = make_fuel_dictionary(system)
 bar = get_bar_aggregation_data(res, generators)
 plot(bar)
 ```

@@ -159,16 +159,13 @@ fuel_plot(res, sys)
 - `save::String = "file_path"`: set a file path to save the plots
 - `seriescolor::Array`: Set different colors for the plots
 - `title::String = "Title"`: Set a title for the plots
+- `generator_mapping_file` = "file_path" : file path to yaml definig generator category by fuel and primemover
 """
-function fuel_plot(res::IS.Results, sys::PSY.System; kwargs...)
-    ref = make_fuel_dictionary(res, sys)
+function fuel_plot(res::Union{IS.Results,Array}, sys::PSY.System; kwargs...)
+    ref = make_fuel_dictionary(sys; kwargs...)
     return fuel_plot(res, ref; kwargs...)
 end
 
-function fuel_plot(res::Array, sys::PSY.System; kwargs...)
-    ref = make_fuel_dictionary(res[1], sys)
-    return fuel_plot(res, ref; kwargs...)
-end
 """
     fuel_plot(results::IS.Results, generators)
 
@@ -185,7 +182,7 @@ and assigns each fuel type a specific color.
 
 ```julia
 res = solve_op_problem!(OpProblem)
-generator_dict = make_fuel_dictionary(res, sys)
+generator_dict = make_fuel_dictionary(sys, mapping)
 fuel_plot(res, generator_dict)
 ```
 

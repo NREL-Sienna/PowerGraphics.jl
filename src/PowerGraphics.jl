@@ -20,6 +20,7 @@ import Reexport
 import Requires
 import Colors
 import DataFrames
+import YAML
 Reexport.@reexport using Plots
 import PowerSystems
 import InfrastructureSystems
