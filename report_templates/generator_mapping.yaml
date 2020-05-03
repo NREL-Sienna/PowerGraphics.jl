@@ -19,7 +19,7 @@ NG-CC:
   - {primemover: CC, fuel: NATURAL_GAS}
 NG-ST:
   - {primemover: ST, fuel: NATURAL_GAS}
-Natural Gas:
+Natural gas:
   - {primemover: null, fuel: NATURAL_GAS}
   - {primemover: null, fuel: OTHER_GAS}
 Hydropower:
@@ -35,4 +35,3 @@ Biopower:
   - {primemover: null, fuel: WOOD_WASTE}
 Other:
   - {primemover: OT, fuel: OTHER}
-
