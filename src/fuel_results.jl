@@ -1,18 +1,5 @@
-order = ([
-    "Nuclear",
-    "Coal",
-    "Hydro",
-    "Gas_CC",
-    "Gas_CT",
-    "Storage",
-    "Oil_ST",
-    "Oil_CT",
-    "Sync_Cond",
-    "Wind",
-    "Solar",
-    "CSP",
-    "curtailment",
-])
+order = CATEGORY_DEFAULT # TODO: move inside function
+
 function _get_iterator(sys::PSY.System, results::IS.Results)
     iterators = []
     for (k, v) in IS.get_variables(results)
@@ -128,7 +115,7 @@ function make_fuel_dictionary(sys::PSY.System, mapping::Dict{NamedTuple,String})
     for gen in generators
         fuel = hasmethod(PSY.get_fuel, Tuple{typeof(gen)}) ? PSY.get_fuel(gen) : nothing
         category = get_generator_category(fuel, PSY.get_primemover(gen), mapping)
-        push!(gen_categories["$category"], gen)
+        push!(gen_categories["$category"], PSY.get_name(gen))
     end
     [delete!(gen_categories, "$k") for (k, v) in gen_categories if isempty(v)]
 
@@ -139,62 +126,24 @@ function make_fuel_dictionary(sys::PSY.System; kwargs...)
     mapping = get_generator_mapping(get(kwargs, :generator_mapping_file, nothing))
     return make_fuel_dictionary(sys, mapping)
 end
-#=
-function make_fuel_dictionary(res::IS.Results, sys::PSY.System; kwargs...)
 
-    categories = Dict()
-    categories["Solar"] = NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.PVe, nothing)
-    categories["Wind"] = NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.WT, nothing)
-    categories["Oil_CT"] = NamedTuple{(:primemover, :fuel)},
-    (PSY.PrimeMovers.CT, PSY.ThermalFuels.DISTILLATE_FUEL_OIL)
-    categories["Oil_ST"] = NamedTuple{(:primemover, :fuel)},
-    (PSY.PrimeMovers.ST, PSY.ThermalFuels.DISTILLATE_FUEL_OIL)
-    categories["Storage"] = NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.BA, nothing)
-    categories["Gas_CT"] =
-        NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.CT, PSY.ThermalFuels.NATURAL_GAS)
-    categories["Gas_CC"] =
-        NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.CC, PSY.ThermalFuels.NATURAL_GAS)
-    categories["Gas_OT"] =
-        NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.OT, PSY.ThermalFuels.NATURAL_GAS)
-    categories["Hydro"] = NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.HY, nothing)
-    categories["Coal"] =
-        NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.ST, PSY.ThermalFuels.COAL)
-    categories["Nuclear"] =
-        NamedTuple{(:primemover, :fuel)}, (PSY.PrimeMovers.ST, PSY.ThermalFuels.NUCLEAR)
-    categories = get(kwargs, :categories, categories)
-    iterators = _get_iterator(sys, res)
-    generators = Dict()
-
-    for (category, fuel_type) in categories
-        generators["$category"] = []
-        for (name, fuels) in iterators
-            for fuel in fuels
-                if isnothing(fuel_type) || fuel == fuel_type
-                    push!(generators["$category"], name)
-                end
-            end
-        end
-        if isempty(generators["$category"])
-            delete!(generators, "$category")
-        end
-    end
-    return generators
-end
-=#
 function _aggregate_data(res::IS.Results, generators::Dict)
-    all_var = DataFrames.DataFrame()
+    all_results = []
     var_names = collect(keys(IS.get_variables(res)))
     for var in var_names
-        all_var = hcat(all_var, IS.get_variables(res)[var], makeunique = true)
+        variables = IS.get_variables(res)[var]
+        push!(all_results, variables)
     end
+    hcat_ = (args...;) -> hcat(args...;makeunique=true)
+    all_var = reduce(hcat_, all_results)
     fuel_dataframes = Dict()
 
     for (k, v) in generators
         generator_df = DataFrames.DataFrame()
         for l in v
             colname = Symbol("$(l)")
-            if colname in names(All_var)
-                generator_df = hcat(generator_df, All_var[:, colname], makeunique = true)
+            if colname in names(all_var)
+                generator_df = hcat(generator_df, all_var[:, colname], makeunique = true)
             end
         end
         fuel_dataframes[k] = generator_df
@@ -229,16 +178,8 @@ function get_stacked_aggregation_data(res::IS.Results, generators::Dict)
     time_range = IS.get_time_stamp(res)[!, :Range]
     labels = collect(keys(category_aggs))
     p_labels = collect(keys(res.parameter_values))
-    new_labels = []
-    @show order, labels
-    for fuel in order
-        for label in labels
-            if label == fuel
-                new_labels = vcat(new_labels, label)
-            end
-        end
-    end
-    variable = category_aggs[(new_labels[1])]
+    new_labels = intersect(CATEGORY_DEFAULT, labels)
+
     if !isempty(p_labels)
         parameter = res.parameter_values[p_labels[1]]
         parameters = abs.(sum(Matrix(parameter), dims = 2))
@@ -252,13 +193,19 @@ function get_stacked_aggregation_data(res::IS.Results, generators::Dict)
         parameters = nothing
         p_legend = []
     end
-    data_matrix = sum(Matrix(variable), dims = 2)
-    legend = [string.(new_labels[1])]
-    for i in 2:length(new_labels)
-        variable = category_aggs[(new_labels[i])]
-        legend = hcat(legend, string.(new_labels[i]))
-        data_matrix = hcat(data_matrix, sum(Matrix(variable), dims = 2))
+
+    legend = []
+    agg_var = []
+    for label in new_labels
+        variable = category_aggs[label]
+        if !isempty(variable)
+            push!(legend, label)
+            push!(agg_var, sum(Matrix(variable), dims = 2))
+        end
     end
+    legend = reduce(hcat, legend)
+    data_matrix = reduce(hcat, agg_var)
+
     return StackedGeneration(time_range, data_matrix, parameters, legend, p_legend)
 end
 """
@@ -283,40 +230,8 @@ fuel_plot(res, system)
 ```
 """
 function get_bar_aggregation_data(res::IS.Results, generators::Dict)
-    category_aggs = _aggregate_data(res, generators)
-    time_range = IS.get_time_stamp(res)[!, :Range]
-    labels = collect(keys(category_aggs))
-    p_labels = collect(keys(res.parameter_values))
-    new_labels = []
-    for fuel in order
-        for label in labels
-            if label == fuel
-                new_labels = vcat(new_labels, label)
-            end
-        end
-    end
-    variable = category_aggs[(new_labels[1])]
-    data_matrix = sum(Matrix(variable), dims = 2)
-    legend = [string.(new_labels)[1]]
-    for i in 2:length(new_labels)
-        variable = category_aggs[(new_labels[i])]
-        data_matrix = hcat(data_matrix, sum(Matrix(variable), dims = 2))
-        legend = hcat(legend, string.(new_labels)[i])
-    end
-    if !isempty(p_labels)
-        parameter = res.parameter_values[p_labels[1]]
-        parameters = sum(Matrix(parameter), dims = 2)
-        p_legend = [string.(p_labels[1])]
-        for i in 2:length(p_labels)
-            parameter = res.parameter_values[p_labels[i]]
-            parameters = hcat(parameters, sum(Matrix(parameter), dims = 2))
-            p_legend = vcat(p_legend, string.(p_labels[i]))
-        end
-        p_bar_data = abs.(sum(parameters, dims = 1))
-    else
-        p_bar_data = nothing
-        p_legend = []
-    end
-    bar_data = sum(data_matrix, dims = 1)
-    return BarGeneration(time_range, bar_data, p_bar_data, legend, p_legend)
+    stack_data = get_stacked_aggregation_data(res, generators)
+    bar_data = sum(stack_data.data_matrix, dims = 1)
+    p_bar_data = isnothing(stack_data.parameters) ? nothing : abs.(sum(stack_data.parameters, dims = 1))
+    return BarGeneration(stack_data.time_range, bar_data, p_bar_data, stack_data.labels, stack_data.p_labels)
 end

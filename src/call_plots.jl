@@ -614,15 +614,18 @@ function demand_plot(results::Array; kwargs...)
 end
 # TODO make this function
 
-function demand_plot(system::PSY.System; kwargs...)
+function make_demand_plot_data(system::PSY.System; kwargs...)
     names = collect(PSY.get_name.(PSY.get_components(PSY.PowerLoad, system)))
     component = PSY.get_component(PSY.PowerLoad, system, names[1])
     forecast_key = collect(PSY.get_forecast_keys(component))[1]
+    initial_time = get(kwargs, :initial_time, forecast_key.initial_time)
+    horizon = get(kwargs, :horizon, PSY.get_forecasts_horizon(system))
     f = PSY.get_forecast(
         PSY.Deterministic,
         component,
-        forecast_key.initial_time,
+        initial_time,
         forecast_key.label,
+        horizon
     )
     parameters = DataFrames.rename(
         DataFrames.DataFrame(PSY.get_forecast_values(component, f)),
@@ -634,49 +637,28 @@ function demand_plot(system::PSY.System; kwargs...)
         f = PSY.get_forecast(
             PSY.Deterministic,
             component,
-            forecast_key.initial_time,
+            initial_time,
             forecast_key.label,
+            horizon
         )
         df = DataFrames.DataFrame(PSY.get_forecast_values(component, f))
         parameters[!, Symbol(names[i])] = df[:, 2]
     end
-    backend = Plots.backend()
     save_fig = get(kwargs, :save, nothing)
-    basepower = system.basepower
-    return _demand_plot_internal(parameters, basepower, backend; kwargs...)
+    return parameters
+end
+
+function demand_plot(system::PSY.System; kwargs...)
+    parameters = make_demand_plot_data(system; kwargs...)
+    return _demand_plot_internal(parameters, system.basepower, Plots.backend(); kwargs...)
 end
 
 function demand_plot(systems::Array{PSY.System}; kwargs...)
     parameter_list = []
     basepowers = []
     for system in systems
-        names = collect(PSY.get_name.(PSY.get_components(PSY.PowerLoad, system)))
-        component = PSY.get_component(PSY.PowerLoad, system, names[1])
-        forecast_key = collect(PSY.get_forecast_keys(component))[1]
-        f = PSY.get_forecast(
-            PSY.Deterministic,
-            component,
-            forecast_key.initial_time,
-            forecast_key.label,
-        )
-        parameters = DataFrames.rename(
-            DataFrames.DataFrame(PSY.get_forecast_values(component, f)),
-            :A => Symbol(names[1]),
-        )
-        for i in 2:length(names)
-            component = PSY.get_component(PSY.PowerLoad, system, names[i])
-            forecast_key = collect(PSY.get_forecast_keys(component))[1]
-            f = PSY.get_forecast(
-                PSY.Deterministic,
-                component,
-                forecast_key.initial_time,
-                forecast_key.label,
-            )
-            df = DataFrames.DataFrame(PSY.get_forecast_values(component, f))
-            parameters[!, Symbol(names[i])] = df[:, 2]
-        end
-        basepowers = vcat(basepowers, system.basepower)
-        parameter_list = vcat(parameter_list, parameters)
+        push!(basepowers, system.basepower)
+        push!(parameter_list, make_demand_plot_data(system; kwargs...))
     end
     backend = Plots.backend()
     save_fig = get(kwargs, :save, nothing)
