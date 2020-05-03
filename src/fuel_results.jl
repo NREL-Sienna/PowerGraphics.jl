@@ -40,7 +40,6 @@ function _get_iterator(sys::PSY.System, results::IS.Results)
     return iterators_sorted
 end
 
-
 """Return a dict where keys are a tuple of input parameters (fuel, unit_type) and values are
 generator types."""
 function get_generator_mapping(filename = nothing)
@@ -54,7 +53,8 @@ function get_generator_mapping(filename = nothing)
     mappings = Dict{NamedTuple, String}()
     for (gen_type, vals) in genmap
         for val in vals
-            pm = isnothing(val["primemover"]) ? nothing : uppercase(string(val["primemover"]))
+            pm = isnothing(val["primemover"]) ? nothing :
+                uppercase(string(val["primemover"]))
             key = (fuel = val["fuel"], primemover = pm)
             if haskey(mappings, key)
                 error("duplicate generator mappings: $gen_type $(key.fuel) $(key.primemover)")
@@ -105,7 +105,7 @@ results = solve_op_model!(OpModel)
 generators = make_fuel_dictionary(c_sys5_re)
 
 """
-function make_fuel_dictionary(sys::PSY.System, mapping::Dict{NamedTuple,String})
+function make_fuel_dictionary(sys::PSY.System, mapping::Dict{NamedTuple, String})
     generators = PSY.get_components(PSY.Generator, sys)
     gen_categories = Dict()
     for category in unique(values(mapping))
@@ -134,7 +134,7 @@ function _aggregate_data(res::IS.Results, generators::Dict)
         variables = IS.get_variables(res)[var]
         push!(all_results, variables)
     end
-    hcat_ = (args...;) -> hcat(args...;makeunique=true)
+    hcat_ = (args...) -> hcat(args...; makeunique = true)
     all_var = reduce(hcat_, all_results)
     fuel_dataframes = Dict()
 
@@ -232,6 +232,13 @@ fuel_plot(res, system)
 function get_bar_aggregation_data(res::IS.Results, generators::Dict)
     stack_data = get_stacked_aggregation_data(res, generators)
     bar_data = sum(stack_data.data_matrix, dims = 1)
-    p_bar_data = isnothing(stack_data.parameters) ? nothing : abs.(sum(stack_data.parameters, dims = 1))
-    return BarGeneration(stack_data.time_range, bar_data, p_bar_data, stack_data.labels, stack_data.p_labels)
+    p_bar_data = isnothing(stack_data.parameters) ? nothing :
+        abs.(sum(stack_data.parameters, dims = 1))
+    return BarGeneration(
+        stack_data.time_range,
+        bar_data,
+        p_bar_data,
+        stack_data.labels,
+        stack_data.p_labels,
+    )
 end

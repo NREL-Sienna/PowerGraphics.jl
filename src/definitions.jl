@@ -1,6 +1,10 @@
 
 # Color Definitions
-PALETTE_FILE = joinpath(dirname(dirname(pathof(PowerGraphics))), "report_templates", "color-palette.yaml")
+PALETTE_FILE = joinpath(
+    dirname(dirname(pathof(PowerGraphics))),
+    "report_templates",
+    "color-palette.yaml",
+)
 
 struct PaletteColor
     category::AbstractString
@@ -10,19 +14,20 @@ struct PaletteColor
 end
 
 function PaletteColor(category::String, RGB::String, order::Int64)
-    rgba = parse.(Int64, strip.(split(strip(RGB, ['r', 'g', 'b', 'a', '(', ')', ' ']), ",")))
-    color = Colors.RGBA(rgba[1]/288, rgba[2]/288, rgba[3]/288, rgba[4])
+    rgba =
+        parse.(Int64, strip.(split(strip(RGB, ['r', 'g', 'b', 'a', '(', ')', ' ']), ",")))
+    color = Colors.RGBA(rgba[1] / 288, rgba[2] / 288, rgba[3] / 288, rgba[4])
     return PaletteColor(category, RGB, color, order)
 end
 
 function get_palette(file = nothing)
     file = isnothing(file) ? PALETTE_FILE : file
     palette_config = YAML.load_file(file)
-    palette_colors =  []
-    for (k,v) in palette_config
+    palette_colors = []
+    for (k, v) in palette_config
         push!(palette_colors, PaletteColor(k, v["RGB"], v["order"]))
     end
-    sort!(palette_colors,  by=x->x.order)
+    sort!(palette_colors, by = x -> x.order)
     return palette_colors
 end
 
@@ -33,7 +38,11 @@ CATEGORY_DEFAULT = getfield.(get_palette(), :category)
 
 VARIABLE_TYPES = ["P", "Spin", "Reg", "Flex"]
 
-GENERATOR_MAPPING_FILE = joinpath(dirname(dirname(pathof(PowerGraphics))), "report_templates", "generator_mapping.yaml")
+GENERATOR_MAPPING_FILE = joinpath(
+    dirname(dirname(pathof(PowerGraphics))),
+    "report_templates",
+    "generator_mapping.yaml",
+)
 
 function match_fuel_colors(
     stack::StackedGeneration,

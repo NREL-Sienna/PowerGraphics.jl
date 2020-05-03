@@ -161,7 +161,7 @@ fuel_plot(res, sys)
 - `title::String = "Title"`: Set a title for the plots
 - `generator_mapping_file` = "file_path" : file path to yaml definig generator category by fuel and primemover
 """
-function fuel_plot(res::Union{IS.Results,Array}, sys::PSY.System; kwargs...)
+function fuel_plot(res::Union{IS.Results, Array}, sys::PSY.System; kwargs...)
     ref = make_fuel_dictionary(sys; kwargs...)
     return fuel_plot(res, ref; kwargs...)
 end
@@ -625,7 +625,7 @@ function make_demand_plot_data(system::PSY.System; kwargs...)
         component,
         initial_time,
         forecast_key.label,
-        horizon
+        horizon,
     )
     parameters = DataFrames.rename(
         DataFrames.DataFrame(PSY.get_forecast_values(component, f)),
@@ -639,7 +639,7 @@ function make_demand_plot_data(system::PSY.System; kwargs...)
             component,
             initial_time,
             forecast_key.label,
-            horizon
+            horizon,
         )
         df = DataFrames.DataFrame(PSY.get_forecast_values(component, f))
         parameters[!, Symbol(names[i])] = df[:, 2]

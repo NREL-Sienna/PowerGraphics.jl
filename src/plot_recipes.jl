@@ -1038,10 +1038,10 @@ function _fuel_plot_internal(
     time_range = stack.time_range
     time_interval =
         IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
-    @show bar_data = cumsum(bar.bar_data, dims = 2)
-    @show bar_base_data = [0 bar_data]
-    @show stack_data = cumsum(stack.data_matrix, dims = 2)
-    @show stack_base_data = [zeros(size(stack_data, 1)) stack_data]
+    bar_data = cumsum(bar.bar_data, dims = 2)
+    bar_base_data = [0 bar_data]
+    stack_data = cumsum(stack.data_matrix, dims = 2)
+    stack_base_data = [zeros(size(stack_data, 1)) stack_data]
     p1 = Plots.plot(
         time_range,
         stack_data;

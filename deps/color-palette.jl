@@ -15,7 +15,10 @@ This function makes a yaml of generator categorization based on a csv input.
 palette_csv2yaml("deps/NREL-palette.csv", "report_templates/color-palette.yaml")
 
 """
-function palette_csv2yaml(palette_csv_path::AbstractString, palette_yaml_path::AbstractString)
+function palette_csv2yaml(
+    palette_csv_path::AbstractString,
+    palette_yaml_path::AbstractString,
+)
     palette = CSV.read(palette_csv_path)
 
     palette_yaml = Dict()
