@@ -11,8 +11,7 @@ function _filter_variables(results::IS.Results; kwargs...)
         end
     else
         for (key, var) in IS.get_variables(results)
-            start = split("$key", "_")[1]
-            if start == "P"
+            if startswith("$key", "P")
                 filter_results[key] = var
             end
         end
@@ -20,7 +19,7 @@ function _filter_variables(results::IS.Results; kwargs...)
     load = get(kwargs, :load, false)
     if load
         for (key, parameter) in results.parameter_values
-            param = split("$key", "_")[3]
+            param = split("$key", "_")[end]
             if param == "PowerLoad"
                 filter_parameters[Symbol(param)] = parameter
             end
@@ -41,7 +40,7 @@ end
 function _filter_parameters(results::IS.Results)
     filter_parameters = Dict()
     for (k, v) in results.parameter_values
-        param = split("$k", "_")[3]
+        param = split("$k", "_")[end]
         filter_parameters[Symbol(param)] = v
     end
     new_results = Results(

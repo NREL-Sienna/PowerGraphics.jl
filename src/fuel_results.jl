@@ -179,16 +179,18 @@ function get_stacked_aggregation_data(res::IS.Results, generators::Dict)
     labels = collect(keys(category_aggs))
     p_labels = collect(keys(res.parameter_values))
     new_labels = intersect(CATEGORY_DEFAULT, labels)
+    !isempty(setdiff(labels, new_labels)) && throw(IS.DataFormatError("Some generators are not categorized: adjust $GENERATOR_MAPPING_FILE"))
 
     if !isempty(p_labels)
-        parameter = res.parameter_values[p_labels[1]]
-        parameters = abs.(sum(Matrix(parameter), dims = 2))
-        p_legend = [string.(p_labels[1])]
-        for i in 2:length(p_labels)
+        parameters = []
+        p_legend = []
+        for i in 1:length(p_labels)
             parameter = res.parameter_values[p_labels[i]]
-            parameters = hcat(parameters, abs.(sum(Matrix(parameter), dims = 2)))
-            p_legend = vcat(p_legend, string.(p_labels[i]))
+            parameter = abs.(sum(Matrix(parameter), dims = 2))
+            push!(parameters, parameter)
+            push!(p_legend, string.(p_labels[i]))
         end
+        parameters = reduce(hcat, parameters)
     else
         parameters = nothing
         p_legend = []

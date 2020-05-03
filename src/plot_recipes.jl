@@ -384,11 +384,7 @@ function plotly_fuel_stack_gen(
     kwargs...,
 )
     stair = get(kwargs, :stair, false)
-    if stair
-        line_shape = "hv"
-    else
-        line_shape = "linear"
-    end
+    line_shape = stair ? "hv" : "linear"
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
@@ -410,6 +406,21 @@ function plotly_fuel_stack_gen(
             ),
         )
     end
+    if get(kwargs, :load, false) == true
+        push!(
+            traces,
+            Plots.PlotlyJS.scatter(;
+                name = "Load",
+                x = stacked_gen.time_range,
+                y = stacked_gen.parameters[:,1],
+                mode = "lines",
+                line_color = "black",
+                line_shape = line_shape,
+                marker_size=12
+            )
+        )
+    end
+
     p = Plots.PlotlyJS.plot(
         traces,
         Plots.PlotlyJS.Layout(title = title, yaxis_title = ylabel),
@@ -539,7 +550,7 @@ function plotly_fuel_bar_gen(
     ylabel::String;
     kwargs...,
 )
-    time_range = bar_gen.time_range
+    time_range = convert.(Dates.DateTime, bar_gen.time_range)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     time_span = IS.convert_compound_period(
@@ -1591,7 +1602,7 @@ end
 ######################################### DEMAND ########################
 
 function _demand_plot_internal(res::IS.Results, backend::Plots.PlotlyJSBackend; kwargs...)
-    seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
+    seriescolor = get(kwargs, :seriescolor, [:auto])
     stair = get(kwargs, :stair, false)
     if stair
         line_shape = "hv"
@@ -1605,8 +1616,10 @@ function _demand_plot_internal(res::IS.Results, backend::Plots.PlotlyJSBackend; 
     for (key, parameters) in res.parameter_values
         traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
         param_names = names(parameters)
+        n_traces = length(param_names)
+        seriescolor = length(seriescolor) < n_traces ? repeat(seriescolor, Int64(ceil(n_traces/length(seriescolor)))) : seriescolor
         title = get(kwargs, :title, "$key")
-        for i in 1:length(param_names)
+        for i in 1:n_traces
             push!(
                 traces,
                 Plots.PlotlyJS.scatter(;
@@ -1641,7 +1654,7 @@ function _demand_plot_internal(res::IS.Results, backend::Plots.PlotlyJSBackend; 
 end
 
 function _demand_plot_internal(results::Array, backend::Plots.PlotlyJSBackend; kwargs...)
-    seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
+    seriescolor = get(kwargs, :seriescolor, [:auto])
     save_fig = get(kwargs, :save, nothing)
     set_display = get(kwargs, :display, true)
     ylabel = _make_ylabel(IS.get_base_power(results[1]))
@@ -1659,12 +1672,14 @@ function _demand_plot_internal(results::Array, backend::Plots.PlotlyJSBackend; k
             traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
             parameters = results[n].parameter_values[key]
             p_names = collect(names(parameters))
+            n_traces = length(p_names)
+            seriescolor = length(seriescolor) < n_traces ? repeat(seriescolor, Int64(ceil(n_traces/length(seriescolor)))) : seriescolor
             if n == 1
                 leg = true
             else
                 leg = false
             end
-            for i in 1:length(p_names)
+            for i in 1:n_traces
                 push!(
                     traces,
                     Plots.PlotlyJS.scatter(;
@@ -1708,7 +1723,7 @@ function _demand_plot_internal(res::IS.Results, backend::Any; kwargs...)
     else
         linetype = :line
     end
-    seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
+    seriescolor = get(kwargs, :seriescolor, :auto)
     save_fig = get(kwargs, :save, nothing)
     set_display = get(kwargs, :display, true)
     time_range = res.time_stamp[:, 1]
@@ -1753,7 +1768,7 @@ function _demand_plot_internal(results::Array{}, backend::Any; kwargs...)
     else
         linetype = :line
     end
-    seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
+    seriescolor = get(kwargs, :seriescolor, :auto)
     save_fig = get(kwargs, :save, nothing)
     set_display = get(kwargs, :display, true)
     time_range = results[1].time_stamp[:, 1]
@@ -1801,7 +1816,6 @@ function _demand_plot_internal(
     backend::Plots.PlotlyJSBackend;
     kwargs...,
 )
-    seriescolor = get(kwargs, :seriescolor, :auto)
     stair = get(kwargs, :stair, false)
     if stair
         line_shape = "hv"
@@ -1815,8 +1829,10 @@ function _demand_plot_internal(
     traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
     data = DataFrames.select(parameters, DataFrames.Not(:timestamp))
     param_names = names(data)
+    n_traces = length(param_names)
+    seriescolor = get(kwargs, :seriescolor, repeat([:auto], n_traces))
     title = get(kwargs, :title, "PowerLoad")
-    for i in 1:length(param_names)
+    for i in 1:n_traces
         push!(
             traces,
             Plots.PlotlyJS.scatter(;
