@@ -986,8 +986,8 @@ end
 
 ###################################### PLOTLYJS FUEL ################################
 function _fuel_plot_internal(
-    stack::StackedGeneration,
-    bar::BarGeneration,
+    stack::Union{StackedGeneration, Array{StackedGeneration}},
+    bar::Union{BarGeneration, Array{BarGeneration}},
     seriescolor::Array,
     backend::Plots.PlotlyJSBackend,
     save_fig::Any,
@@ -1008,116 +1008,8 @@ function _fuel_plot_internal(
 end
 
 function _fuel_plot_internal(
-    stack::Array,
-    bar::Array,
-    seriescolor::Array,
-    backend::Plots.PlotlyJSBackend,
-    save_fig::Any,
-    set_display::Bool,
-    title::String,
-    ylabel::String;
-    kwargs...,
-)
-    stair = get(kwargs, :stair, false)
-    if stair
-        stack_title = "$(title) Stair"
-    else
-        stack_title = "$(title) Stack"
-    end
-    stack = plotly_fuel_stack_gen(stack, seriescolor, stack_title, ylabel; kwargs...)
-    bar = plotly_fuel_bar_gen(bar, seriescolor, "$(title) Bar", ylabel; kwargs...)
-    return
-end
-
-function _fuel_plot_internal(
-    stack::StackedGeneration,
-    bar::BarGeneration,
-    seriescolor::Array,
-    backend::Any,
-    save_fig::Any,
-    set_display::Bool,
-    title::String,
-    ylabel::String;
-    kwargs...,
-)
-    stair = get(kwargs, :stair, false)
-    if stair
-        linetype = :steppost
-    else
-        linetype = :line
-    end
-    time_range = stack.time_range
-    time_interval =
-        IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
-    bar_data = cumsum(bar.bar_data, dims = 2)
-    bar_base_data = [0 bar_data]
-    stack_data = cumsum(stack.data_matrix, dims = 2)
-    stack_base_data = [zeros(size(stack_data, 1)) stack_data]
-    p1 = Plots.plot(
-        time_range,
-        stack_data;
-        seriescolor = seriescolor,
-        title = title,
-        ylabel = ylabel,
-        xlabel = "$time_interval",
-        lab = stack.labels,
-        xtick = [time_range[1], last(time_range)],
-        grid = false,
-        fillrange = stack_base_data,
-        linetype = linetype,
-    )
-    if !isempty(bar.p_labels)
-        load = cumsum(stack.parameters, dims = 2)
-        Plots.plot!(
-            time_range,
-            load;
-            seriescolor = :black,
-            lab = "PowerLoad",
-            legend = :outerright,
-            linetype = linetype,
-        )
-    end
-    p2 = Plots.plot(
-        [3.5; 5.5],
-        [bar_data; bar_data];
-        seriescolor = seriescolor,
-        ylabel = ylabel,
-        xlabel = "$time_interval",
-        xticks = false,
-        xlims = (1, 8),
-        grid = false,
-        lab = bar.labels,
-        title = title,
-        legend = :outerright,
-        fillrange = bar_base_data,
-    )
-    if !isempty(bar.p_labels)
-        load = cumsum(bar.parameters, dims = 2)
-        Plots.plot!(
-            [3.5; 5.5],
-            [load; load];
-            seriescolor = :black,
-            lab = "PowerLoad",
-            legend = :outerright,
-        )
-    end
-    set_display && display(p1)
-    set_display && display(p2)
-    if !isnothing(save_fig)
-        title = replace(title, " " => "_")
-        if linetype == :line
-            Plots.savefig(p1, joinpath(save_fig, "$(title)_Stack.png"))
-        else
-            Plots.savefig(p1, joinpath(save_fig, "$(title)_Stair.png"))
-        end
-        Plots.savefig(p2, joinpath(save_fig, "$(title)_Bar.png"))
-    end
-    return [p1, p2]
-end
-
-function _fuel_plot_internal(
-    stacks::Any,
-    bars::Any,
+    stack::Union{StackedGeneration, Array{StackedGeneration}},
+    bar::Union{BarGeneration, Array{BarGeneration}},
     seriescolor::Array,
     backend::Any,
     save_fig::Any,
@@ -1134,10 +1026,13 @@ function _fuel_plot_internal(
     else
         linetype = :line
     end
-    time_range = stacks[1].time_range
-    time_interval =
-        IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
+    stacks = vcat([],stack)
+    bars = vcat([],bar)
+
     for stack in stacks
+        time_range = stack.time_range
+        time_interval =
+            IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
         stack_data = cumsum(stack.data_matrix, dims = 2)
         stack_base_data = [zeros(size(stack_data, 1)) stack_data]
         p1 = Plots.plot(
@@ -1164,10 +1059,13 @@ function _fuel_plot_internal(
                 linetype = linetype,
             )
         end
-        stack_plots = vcat(stack_plots, p1)
+        push!(stack_plots, p1)
     end
     p1 = Plots.plot(stack_plots...; layout = (length(stacks), 1))
     for bar in bars
+        time_range = bar.time_range
+        time_interval =
+            IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
         bar_data = cumsum(bar.bar_data, dims = 2)
         bar_base_data = [0 bar_data]
         p2 = Plots.plot(
@@ -1194,7 +1092,7 @@ function _fuel_plot_internal(
                 legend = :outerright,
             )
         end
-        bar_plots = vcat(bar_plots, p2)
+        push!(bar_plots, p2)
     end
     p2 = Plots.plot(bar_plots...; layout = (length(bars), 1))
     set_display && display(p1)
@@ -1207,7 +1105,7 @@ function _fuel_plot_internal(
         end
         Plots.savefig(p2, joinpath(save_fig, "$(title)_Bar.png"))
     end
-    return [p1, p2]
+    return (stack_plots, bar_plots)
 end
 
 ############################# BAR ##########################################

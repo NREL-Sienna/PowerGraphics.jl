@@ -55,7 +55,7 @@ function _filter_parameters(results::IS.Results)
     return new_results
 end
 
-function fuel_plot(res::IS.Results, variables::Array, generator_dict::Dict; kwargs...)
+function fuel_plot(res::IS.Results, variables::Array, genterator_data::Union{Dict, PSY.System}; kwargs...)
     res_var = Dict()
     for variable in variables
         res_var[variable] = IS.get_variables(res)[variable]
@@ -69,29 +69,11 @@ function fuel_plot(res::IS.Results, variables::Array, generator_dict::Dict; kwar
         res.dual_values,
         res.parameter_values,
     )
-    plots = fuel_plot(results, generator_dict; kwargs...)
+    plots = fuel_plot(results, genterator_data; kwargs...)
     return plots
 end
 
-function fuel_plot(res::IS.Results, variables::Array, system::PSY.System; kwargs...)
-    res_var = Dict()
-    for variable in variables
-        res_var[variable] = IS.get_variables(res)[variable]
-    end
-    results = Results(
-        IS.get_base_power(res),
-        res_var,
-        IS.get_optimizer_log(res),
-        IS.get_total_cost(res),
-        IS.get_time_stamp(res),
-        res.dual_values,
-        res.parameter_values,
-    )
-    plots = fuel_plot(results, system; kwargs...)
-    return plots
-end
-
-function fuel_plot(results::Array, variables::Array, system::PSY.System; kwargs...)
+function fuel_plot(results::Array, variables::Array, genterator_data::Union{Dict, PSY.System}; kwargs...)
     new_results = []
     for res in results
         res_var = Dict()
@@ -109,31 +91,10 @@ function fuel_plot(results::Array, variables::Array, system::PSY.System; kwargs.
         )
         new_results = vcat(new_results, results)
     end
-    plots = fuel_plot(new_results, system; kwargs...)
+    plots = fuel_plot(new_results, genterator_data; kwargs...)
     return plots
 end
 
-function fuel_plot(results::Array, variables::Array, generator_dict::Dict; kwargs...)
-    new_results = []
-    for res in results
-        res_var = Dict()
-        for variable in variables
-            res_var[variable] = IS.get_variables(res)[variable]
-        end
-        results = Results(
-            IS.get_base_power(res),
-            res_var,
-            IS.get_optimizer_log(res),
-            IS.get_total_cost(res),
-            IS.get_time_stamp(res),
-            res.dual_values,
-            res.parameter_values,
-        )
-        new_results = vcat(new_results, results)
-    end
-    plots = fuel_plot(new_results, generator_dict; kwargs...)
-    return plots
-end
 """
     fuel_plot(results, system)
 
@@ -223,13 +184,12 @@ end
 function fuel_plot(results::Array, generator_dict::Dict; kwargs...)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
-    new_res = _filter_variables(results[1]; kwargs...)
-    stack = get_stacked_aggregation_data(new_res, generator_dict)
-    bar = get_bar_aggregation_data(new_res, generator_dict)
-    for i in 2:length(results)
-        new_res = _filter_variables(results[i]; kwargs...)
-        stack = hcat(stack, get_stacked_aggregation_data(new_res, generator_dict))
-        bar = hcat(bar, get_bar_aggregation_data(new_res, generator_dict))
+    stack = StackedGeneration[]
+    bar = BarGeneration[]
+    for result in results
+        new_res = _filter_variables(result; kwargs...)
+        push!(stack, get_stacked_aggregation_data(new_res, generator_dict))
+        push!(bar, get_bar_aggregation_data(new_res, generator_dict))
     end
     backend = Plots.backend()
     default_colors = match_fuel_colors(stack[1], bar[1], backend, FUEL_DEFAULT)
