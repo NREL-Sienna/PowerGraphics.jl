@@ -16,8 +16,9 @@ function _filter_variables(results::IS.Results; kwargs...)
             end
         end
         for (key,var) in results.parameter_values
-            if startswith("$key", "P")
-                filter_results[key] = var
+            new_key = replace("$key", "parameter_" => "")
+            if startswith(new_key, "P")
+                filter_results[Symbol(new_key)] = var
             end
         end
     end
