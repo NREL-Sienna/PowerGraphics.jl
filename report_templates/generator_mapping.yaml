@@ -33,5 +33,7 @@ Geothermal:
 Biopower:
   - {primemover: null, fuel: AG_BIPRODUCT}
   - {primemover: null, fuel: WOOD_WASTE}
+CSP:
+  - {primemover: CP, fuel: null}
 Other:
   - {primemover: OT, fuel: OTHER}
