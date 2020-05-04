@@ -10,15 +10,15 @@ function _filter_variables(results::IS.Results; kwargs...)
             end
         end
     else
-        for (key, var) in IS.get_variables(results)
-            if startswith("$key", "P")
-                filter_results[key] = var
-            end
-        end
         for (key,var) in results.parameter_values
-            new_key = replace("$key", "parameter_" => "")
+            new_key = replace(replace("$key", "parameter_" => ""), "_" => "__")
             if startswith(new_key, "P")
                 filter_results[Symbol(new_key)] = var
+            end
+        end
+        for (key, var) in IS.get_variables(results)
+            if startswith("$key", "P") | any(key.==[:γ⁻__P , :γ⁺__P])
+                filter_results[key] = var
             end
         end
     end
