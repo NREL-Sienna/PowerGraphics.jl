@@ -15,6 +15,11 @@ function _filter_variables(results::IS.Results; kwargs...)
                 filter_results[key] = var
             end
         end
+        for (key,var) in results.parameter_values
+            if startswith("$key", "P")
+                filter_results[key] = var
+            end
+        end
     end
     load = get(kwargs, :load, false)
     if load
