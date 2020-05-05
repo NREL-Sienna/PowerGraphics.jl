@@ -5,13 +5,13 @@ function test_plots(file_path::String)
     include("test_data.jl")
 
     @testset "test results sorting" begin
-        Variables = Dict(:P_ThermalStandard => [:one, :two])
+        Variables = Dict(:P__ThermalStandard => [:one, :two])
         sorted = PG.sort_data(res; Variables = Variables)
         sorted_two = PG.sort_data(res)
         sorted_names = [:one, :two]
         sorted_names_two = [:one, :three, :two]
-        @test names(IS.get_variables(sorted)[:P_ThermalStandard]) == sorted_names
-        @test names(IS.get_variables(sorted_two)[:P_ThermalStandard]) == sorted_names_two
+        @test names(IS.get_variables(sorted)[:P__ThermalStandard]) == sorted_names
+        @test names(IS.get_variables(sorted_two)[:P__ThermalStandard]) == sorted_names_two
     end
 
     @testset "test plot production" begin
@@ -26,12 +26,12 @@ function test_plots(file_path::String)
             "Fuel_Bar.png",
             "Fuel_Stack.png",
             "Fuel_Stair.png",
-            "P_RenewableDispatch_Bar.png",
-            "P_RenewableDispatch_Stack.png",
-            "P_RenewableDispatch_Stair.png",
-            "P_ThermalStandard_Bar.png",
-            "P_ThermalStandard_Stack.png",
-            "P_ThermalStandard_Stair.png",
+            "P__RenewableDispatch_Bar.png",
+            "P__RenewableDispatch_Stack.png",
+            "P__RenewableDispatch_Stair.png",
+            "P__ThermalStandard_Bar.png",
+            "P__ThermalStandard_Stack.png",
+            "P__ThermalStandard_Stair.png",
             "Title_Bar.png",
             "Title_Stack.png",
             "Title_Stair.png",
@@ -54,9 +54,9 @@ function test_plots(file_path::String)
         )
         list = readdir(path)
         @test list == [
-            "P_ThermalStandard_Bar.png",
-            "P_ThermalStandard_Stack.png",
-            "P_ThermalStandard_Stair.png",
+            "P__ThermalStandard_Bar.png",
+            "P__ThermalStandard_Stack.png",
+            "P__ThermalStandard_Stair.png",
             "Title_Bar.png",
             "Title_Stack.png",
             "Title_Stair.png",
@@ -79,12 +79,12 @@ function test_plots(file_path::String)
         )
         list = readdir(path)
         @test list == [
-            "P_RenewableDispatch_Bar.png",
-            "P_RenewableDispatch_Stack.png",
-            "P_RenewableDispatch_Stair.png",
-            "P_ThermalStandard_Bar.png",
-            "P_ThermalStandard_Stack.png",
-            "P_ThermalStandard_Stair.png",
+            "P__RenewableDispatch_Bar.png",
+            "P__RenewableDispatch_Stack.png",
+            "P__RenewableDispatch_Stair.png",
+            "P__ThermalStandard_Bar.png",
+            "P__ThermalStandard_Stack.png",
+            "P__ThermalStandard_Stair.png",
             "Title_Bar.png",
             "Title_Stack.png",
             "Title_Stair.png",
@@ -136,9 +136,9 @@ function test_plots(file_path::String)
         )
         list = readdir(path)
         @test list == [
-            "P_ThermalStandard_Bar.png",
-            "P_ThermalStandard_Stack.png",
-            "P_ThermalStandard_Stair.png",
+            "P__ThermalStandard_Bar.png",
+            "P__ThermalStandard_Stack.png",
+            "P__ThermalStandard_Stair.png",
             "Title_Bar.png",
             "Title_Stack.png",
             "Title_Stair.png",
@@ -190,12 +190,12 @@ function test_plots(file_path::String)
             "Fuel_Bar.png",
             "Fuel_Stack.png",
             "Fuel_Stair.png",
-            "P_RenewableDispatch_Bar.png",
-            "P_RenewableDispatch_Stack.png",
-            "P_RenewableDispatch_Stair.png",
-            "P_ThermalStandard_Bar.png",
-            "P_ThermalStandard_Stack.png",
-            "P_ThermalStandard_Stair.png",
+            "P__RenewableDispatch_Bar.png",
+            "P__RenewableDispatch_Stack.png",
+            "P__RenewableDispatch_Stair.png",
+            "P__ThermalStandard_Bar.png",
+            "P__ThermalStandard_Stack.png",
+            "P__ThermalStandard_Stair.png",
             "Title_Bar.png",
             "Title_Stack.png",
             "Title_Stair.png",
@@ -250,9 +250,9 @@ function test_plots(file_path::String)
         )
         list = readdir(path)
         @test list == [
-            "P_ThermalStandard_Bar.png",
-            "P_ThermalStandard_Stack.png",
-            "P_ThermalStandard_Stair.png",
+            "P__ThermalStandard_Bar.png",
+            "P__ThermalStandard_Stack.png",
+            "P__ThermalStandard_Stair.png",
             "Title_Bar.png",
             "Title_Stack.png",
             "Title_Stair.png",
@@ -304,12 +304,12 @@ function test_plots(file_path::String)
         )
         list = readdir(path)
         @test list == [
-            "P_RenewableDispatch_Bar.png",
-            "P_RenewableDispatch_Stack.png",
-            "P_RenewableDispatch_Stair.png",
-            "P_ThermalStandard_Bar.png",
-            "P_ThermalStandard_Stack.png",
-            "P_ThermalStandard_Stair.png",
+            "P__RenewableDispatch_Bar.png",
+            "P__RenewableDispatch_Stack.png",
+            "P__RenewableDispatch_Stair.png",
+            "P__ThermalStandard_Bar.png",
+            "P__ThermalStandard_Stack.png",
+            "P__ThermalStandard_Stair.png",
             "Title_Bar.png",
             "Title_Stack.png",
             "Title_Stair.png",
@@ -357,9 +357,9 @@ function test_plots(file_path::String)
         )
         list = readdir(path)
         @test list == [
-            "P_ThermalStandard_Bar.png",
-            "P_ThermalStandard_Stack.png",
-            "P_ThermalStandard_Stair.png",
+            "P__ThermalStandard_Bar.png",
+            "P__ThermalStandard_Stack.png",
+            "P__ThermalStandard_Stair.png",
             "Title_Bar.png",
             "Title_Stack.png",
             "Title_Stair.png",

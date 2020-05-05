@@ -1,10 +1,10 @@
 variables = Dict{Symbol, DataFrames.DataFrame}()
-variables[:P_ThermalStandard] = DataFrames.DataFrame(
+variables[:P__ThermalStandard] = DataFrames.DataFrame(
     :one => [1, 2, 3, 2, 1],
     :two => [3, 2, 1, 2, 3],
     :three => [1, 2, 3, 2, 1],
 )
-variables[:P_RenewableDispatch] = DataFrames.DataFrame(
+variables[:P__RenewableDispatch] = DataFrames.DataFrame(
     :one => [3, 2, 3, 2, 3],
     :two => [1, 2, 1, 2, 1],
     :three => [3, 2, 3, 2, 3],
