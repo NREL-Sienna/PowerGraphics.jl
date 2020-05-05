@@ -136,8 +136,8 @@ function _aggregate_data(res::IS.Results, generators::Dict)
     end
     hcat_ = (args...) -> hcat(args...; makeunique = true)
     all_var = reduce(hcat_, all_results)
-    fuel_dataframes = Dict()
 
+    fuel_dataframes = Dict()
     for (k, v) in generators
         generator_df = DataFrames.DataFrame()
         for l in v
@@ -204,6 +204,17 @@ function get_stacked_aggregation_data(res::IS.Results, generators::Dict)
             push!(legend, label)
             push!(agg_var, sum(Matrix(variable), dims = 2))
         end
+    end
+
+    # TODO: thee following is a hacky way to add the unserved energy slacks to plots
+    if UNSERVEDENERGY_VARIABLE in keys(res.variable_values)
+        push!(legend, "Unserved energy")
+        push!(agg_var, sum(Matrix(res.variable_values[UNSERVEDENERGY_VARIABLE]), dims = 2))
+    end
+    # TODO: thee following is a hacky way to add the over generation slacks to plots
+    if OVERGENERATION_VARIABLE in keys(res.variable_values)
+        push!(legend, "Over generation")
+        push!(agg_var, sum(Matrix(res.variable_values[OVERGENERATION_VARIABLE]), dims = 2))
     end
     legend = reduce(hcat, legend)
     data_matrix = reduce(hcat, agg_var)

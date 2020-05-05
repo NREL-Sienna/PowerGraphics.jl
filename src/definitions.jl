@@ -38,6 +38,9 @@ CATEGORY_DEFAULT = getfield.(get_palette(), :category)
 
 VARIABLE_TYPES = ["P", "Spin", "Reg", "Flex"]
 
+OVERGENERATION_VARIABLE = :γ⁻__P
+UNSERVEDENERGY_VARIABLE = :γ⁺__P
+
 GENERATOR_MAPPING_FILE = joinpath(
     dirname(dirname(pathof(PowerGraphics))),
     "report_templates",

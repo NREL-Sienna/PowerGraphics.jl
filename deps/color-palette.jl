@@ -1,6 +1,7 @@
 using CSV
 using YAML
 using Colors
+using DataFrames
 
 """
     palette_csv2yaml(palette_csv_path::AbstractString, palette_yaml_path::AbstractString)
@@ -19,7 +20,10 @@ function palette_csv2yaml(
     palette_csv_path::AbstractString,
     palette_yaml_path::AbstractString,
 )
-    palette = CSV.read(palette_csv_path)
+    palette = DataFrame(CSV.read(palette_csv_path))
+
+    if !("Over generation" in palette.Technology)
+        push!(palette, Dict(Symbol("Technology") => "Over generation", Symbol("R:") => 12, Symbol("G:") => 244, Symbol("B:") => 252, Symbol("HEX") => "0CF4FC"))
 
     palette_yaml = Dict()
     for row in eachrow(palette)

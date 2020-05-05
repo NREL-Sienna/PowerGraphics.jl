@@ -43,6 +43,9 @@ BECCS:
 UPV:
   RGB: "rgba(255, 201, 3, 1)"
   order: 28
+Over generation:
+  RGB: "rgba(12, 244, 252, 1)"
+  order: 56
 EGS:
   RGB: "rgba(212, 158, 46, 1)"
   order: 39
