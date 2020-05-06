@@ -179,7 +179,8 @@ function get_stacked_aggregation_data(res::IS.Results, generators::Dict)
     labels = collect(keys(category_aggs))
     p_labels = collect(keys(res.parameter_values))
     new_labels = intersect(CATEGORY_DEFAULT, labels)
-    !isempty(setdiff(labels, new_labels)) && throw(IS.DataFormatError("Some generators are not categorized: adjust $GENERATOR_MAPPING_FILE"))
+    !isempty(setdiff(labels, new_labels)) &&
+        throw(IS.DataFormatError("Some generators are not categorized: adjust $GENERATOR_MAPPING_FILE"))
 
     if !isempty(p_labels)
         parameters = []

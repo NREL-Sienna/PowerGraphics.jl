@@ -10,14 +10,14 @@ function _filter_variables(results::IS.Results; kwargs...)
             end
         end
     else
-        for (key,var) in results.parameter_values
+        for (key, var) in results.parameter_values
             new_key = replace(replace("$key", "parameter_" => ""), "_" => "__")
             if startswith(new_key, "P")
                 filter_results[Symbol(new_key)] = var
             end
         end
         for (key, var) in IS.get_variables(results)
-            if startswith("$key", "P") | any(key.==[:γ⁻__P , :γ⁺__P])
+            if startswith("$key", "P") | any(key .== [:γ⁻__P, :γ⁺__P])
                 filter_results[key] = var
             end
         end
@@ -61,7 +61,12 @@ function _filter_parameters(results::IS.Results)
     return new_results
 end
 
-function fuel_plot(res::IS.Results, variables::Array, genterator_data::Union{Dict, PSY.System}; kwargs...)
+function fuel_plot(
+    res::IS.Results,
+    variables::Array,
+    genterator_data::Union{Dict, PSY.System};
+    kwargs...,
+)
     res_var = Dict()
     for variable in variables
         res_var[variable] = IS.get_variables(res)[variable]
@@ -79,7 +84,12 @@ function fuel_plot(res::IS.Results, variables::Array, genterator_data::Union{Dic
     return plots
 end
 
-function fuel_plot(results::Array, variables::Array, genterator_data::Union{Dict, PSY.System}; kwargs...)
+function fuel_plot(
+    results::Array,
+    variables::Array,
+    genterator_data::Union{Dict, PSY.System};
+    kwargs...,
+)
     new_results = []
     for res in results
         res_var = Dict()

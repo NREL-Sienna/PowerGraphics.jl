@@ -412,12 +412,12 @@ function plotly_fuel_stack_gen(
             Plots.PlotlyJS.scatter(;
                 name = "Load",
                 x = stacked_gen.time_range,
-                y = stacked_gen.parameters[:,1],
+                y = stacked_gen.parameters[:, 1],
                 mode = "lines",
                 line_color = "black",
                 line_shape = line_shape,
-                marker_size=12
-            )
+                marker_size = 12,
+            ),
         )
     end
 
@@ -1026,8 +1026,8 @@ function _fuel_plot_internal(
     else
         linetype = :line
     end
-    stacks = vcat([],stack)
-    bars = vcat([],bar)
+    stacks = vcat([], stack)
+    bars = vcat([], bar)
 
     for stack in stacks
         time_range = stack.time_range
@@ -1515,7 +1515,8 @@ function _demand_plot_internal(res::IS.Results, backend::Plots.PlotlyJSBackend; 
         traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
         param_names = names(parameters)
         n_traces = length(param_names)
-        seriescolor = length(seriescolor) < n_traces ? repeat(seriescolor, Int64(ceil(n_traces/length(seriescolor)))) : seriescolor
+        seriescolor = length(seriescolor) < n_traces ?
+            repeat(seriescolor, Int64(ceil(n_traces / length(seriescolor)))) : seriescolor
         title = get(kwargs, :title, "$key")
         for i in 1:n_traces
             push!(
@@ -1571,7 +1572,9 @@ function _demand_plot_internal(results::Array, backend::Plots.PlotlyJSBackend; k
             parameters = results[n].parameter_values[key]
             p_names = collect(names(parameters))
             n_traces = length(p_names)
-            seriescolor = length(seriescolor) < n_traces ? repeat(seriescolor, Int64(ceil(n_traces/length(seriescolor)))) : seriescolor
+            seriescolor = length(seriescolor) < n_traces ?
+                repeat(seriescolor, Int64(ceil(n_traces / length(seriescolor)))) :
+                seriescolor
             if n == 1
                 leg = true
             else

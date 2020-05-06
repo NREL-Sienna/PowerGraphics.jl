@@ -23,7 +23,17 @@ function palette_csv2yaml(
     palette = DataFrame(CSV.read(palette_csv_path))
 
     if !("Over generation" in palette.Technology)
-        push!(palette, Dict(Symbol("Technology") => "Over generation", Symbol("R:") => 12, Symbol("G:") => 244, Symbol("B:") => 252, Symbol("HEX") => "0CF4FC"))
+        push!(
+            palette,
+            Dict(
+                Symbol("Technology") => "Over generation",
+                Symbol("R:") => 12,
+                Symbol("G:") => 244,
+                Symbol("B:") => 252,
+                Symbol("HEX") => "0CF4FC",
+            ),
+        )
+    end
 
     palette_yaml = Dict()
     for row in eachrow(palette)
