@@ -16,10 +16,10 @@ Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
 
 [compat]
-PowerSystems = "~0.17"
 Colors = "~0.12"
 DataFrames = "0.20"
 Plots = "1"
+PowerSystems = "~0.17"
 Reexport = "0.2"
 Requires = "1.0"
 julia = "1"

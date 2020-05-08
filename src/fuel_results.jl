@@ -185,9 +185,10 @@ function get_stacked_aggregation_data(res::IS.Results, generators::Dict)
     if !isempty(p_labels)
         parameters = []
         p_legend = []
-        for i in 1:length(p_labels)
-            parameter = res.parameter_values[p_labels[i]]
-            parameter = abs.(sum(Matrix(parameter), dims = 2))
+        for (ix, parameter) in res.parameter_values
+            label = p_labels[ix]
+            mult = label == "Load" ? -1.0 : 1.0
+            parameter = mult .* sum(Matrix(parameter), dims = 2)
             push!(parameters, parameter)
             push!(p_legend, string.(p_labels[i]))
         end
@@ -246,8 +247,8 @@ fuel_plot(res, system)
 function get_bar_aggregation_data(res::IS.Results, generators::Dict)
     stack_data = get_stacked_aggregation_data(res, generators)
     bar_data = sum(stack_data.data_matrix, dims = 1)
-    p_bar_data = isnothing(stack_data.parameters) ? nothing :
-        abs.(sum(stack_data.parameters, dims = 1))
+    p_bar_data =
+        isnothing(stack_data.parameters) ? nothing : sum(stack_data.parameters, dims = 1)
     return BarGeneration(
         stack_data.time_range,
         bar_data,
