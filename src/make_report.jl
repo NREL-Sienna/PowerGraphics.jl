@@ -58,7 +58,7 @@ and add additional markdowns to the report_design folder.
 # Example
 ```julia
 results = solve_op_problem!(OpModel)
-generators = make_fuel_dictionary(results, PSY.System)
+generators = make_fuel_dictionary(PSY.System, mapping)
 out_path = "/Users/downloads"
 report(results, generators, out_path)
 ```
