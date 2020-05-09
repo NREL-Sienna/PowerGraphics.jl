@@ -10,9 +10,14 @@ function _filter_variables(results::IS.Results; kwargs...)
             end
         end
     else
+        for (key, var) in results.parameter_values
+            new_key = replace(replace("$key", "parameter_" => ""), "_" => "__")
+            if startswith(new_key, "P")
+                filter_results[Symbol(new_key)] = var
+            end
+        end
         for (key, var) in IS.get_variables(results)
-            start = split("$key", "_")[1]
-            if start == "P"
+            if startswith("$key", "P") | any(key .== [:γ⁻__P, :γ⁺__P])
                 filter_results[key] = var
             end
         end
@@ -20,7 +25,7 @@ function _filter_variables(results::IS.Results; kwargs...)
     load = get(kwargs, :load, false)
     if load
         for (key, parameter) in results.parameter_values
-            param = split("$key", "_")[3]
+            param = split("$key", "_")[end]
             if param == "PowerLoad"
                 filter_parameters[Symbol(param)] = parameter
             end
@@ -41,7 +46,7 @@ end
 function _filter_parameters(results::IS.Results)
     filter_parameters = Dict()
     for (k, v) in results.parameter_values
-        param = split("$k", "_")[3]
+        param = split("$k", "_")[end]
         filter_parameters[Symbol(param)] = v
     end
     new_results = Results(
@@ -56,7 +61,12 @@ function _filter_parameters(results::IS.Results)
     return new_results
 end
 
-function fuel_plot(res::IS.Results, variables::Array, generator_dict::Dict; kwargs...)
+function fuel_plot(
+    res::IS.Results,
+    variables::Array,
+    genterator_data::Union{Dict, PSY.System};
+    kwargs...,
+)
     res_var = Dict()
     for variable in variables
         res_var[variable] = IS.get_variables(res)[variable]
@@ -70,29 +80,16 @@ function fuel_plot(res::IS.Results, variables::Array, generator_dict::Dict; kwar
         res.dual_values,
         res.parameter_values,
     )
-    plots = fuel_plot(results, generator_dict; kwargs...)
+    plots = fuel_plot(results, genterator_data; kwargs...)
     return plots
 end
 
-function fuel_plot(res::IS.Results, variables::Array, system::PSY.System; kwargs...)
-    res_var = Dict()
-    for variable in variables
-        res_var[variable] = IS.get_variables(res)[variable]
-    end
-    results = Results(
-        IS.get_base_power(res),
-        res_var,
-        IS.get_optimizer_log(res),
-        IS.get_total_cost(res),
-        IS.get_time_stamp(res),
-        res.dual_values,
-        res.parameter_values,
-    )
-    plots = fuel_plot(results, system; kwargs...)
-    return plots
-end
-
-function fuel_plot(results::Array, variables::Array, system::PSY.System; kwargs...)
+function fuel_plot(
+    results::Array,
+    variables::Array,
+    genterator_data::Union{Dict, PSY.System};
+    kwargs...,
+)
     new_results = []
     for res in results
         res_var = Dict()
@@ -110,31 +107,10 @@ function fuel_plot(results::Array, variables::Array, system::PSY.System; kwargs.
         )
         new_results = vcat(new_results, results)
     end
-    plots = fuel_plot(new_results, system; kwargs...)
+    plots = fuel_plot(new_results, genterator_data; kwargs...)
     return plots
 end
 
-function fuel_plot(results::Array, variables::Array, generator_dict::Dict; kwargs...)
-    new_results = []
-    for res in results
-        res_var = Dict()
-        for variable in variables
-            res_var[variable] = IS.get_variables(res)[variable]
-        end
-        results = Results(
-            IS.get_base_power(res),
-            res_var,
-            IS.get_optimizer_log(res),
-            IS.get_total_cost(res),
-            IS.get_time_stamp(res),
-            res.dual_values,
-            res.parameter_values,
-        )
-        new_results = vcat(new_results, results)
-    end
-    plots = fuel_plot(new_results, generator_dict; kwargs...)
-    return plots
-end
 """
     fuel_plot(results, system)
 
@@ -159,16 +135,13 @@ fuel_plot(res, sys)
 - `save::String = "file_path"`: set a file path to save the plots
 - `seriescolor::Array`: Set different colors for the plots
 - `title::String = "Title"`: Set a title for the plots
+- `generator_mapping_file` = "file_path" : file path to yaml definig generator category by fuel and primemover
 """
-function fuel_plot(res::IS.Results, sys::PSY.System; kwargs...)
-    ref = make_fuel_dictionary(res, sys)
+function fuel_plot(res::Union{IS.Results, Array}, sys::PSY.System; kwargs...)
+    ref = make_fuel_dictionary(sys; kwargs...)
     return fuel_plot(res, ref; kwargs...)
 end
 
-function fuel_plot(res::Array, sys::PSY.System; kwargs...)
-    ref = make_fuel_dictionary(res[1], sys)
-    return fuel_plot(res, ref; kwargs...)
-end
 """
     fuel_plot(results::IS.Results, generators)
 
@@ -185,7 +158,7 @@ and assigns each fuel type a specific color.
 
 ```julia
 res = solve_op_problem!(OpProblem)
-generator_dict = make_fuel_dictionary(res, sys)
+generator_dict = make_fuel_dictionary(sys, mapping)
 fuel_plot(res, generator_dict)
 ```
 
@@ -227,13 +200,12 @@ end
 function fuel_plot(results::Array, generator_dict::Dict; kwargs...)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
-    new_res = _filter_variables(results[1]; kwargs...)
-    stack = get_stacked_aggregation_data(new_res, generator_dict)
-    bar = get_bar_aggregation_data(new_res, generator_dict)
-    for i in 2:length(results)
-        new_res = _filter_variables(results[i]; kwargs...)
-        stack = hcat(stack, get_stacked_aggregation_data(new_res, generator_dict))
-        bar = hcat(bar, get_bar_aggregation_data(new_res, generator_dict))
+    stack = StackedGeneration[]
+    bar = BarGeneration[]
+    for result in results
+        new_res = _filter_variables(result; kwargs...)
+        push!(stack, get_stacked_aggregation_data(new_res, generator_dict))
+        push!(bar, get_bar_aggregation_data(new_res, generator_dict))
     end
     backend = Plots.backend()
     default_colors = match_fuel_colors(stack[1], bar[1], backend, FUEL_DEFAULT)
@@ -617,15 +589,18 @@ function demand_plot(results::Array; kwargs...)
 end
 # TODO make this function
 
-function demand_plot(system::PSY.System; kwargs...)
+function make_demand_plot_data(system::PSY.System; kwargs...)
     names = collect(PSY.get_name.(PSY.get_components(PSY.PowerLoad, system)))
     component = PSY.get_component(PSY.PowerLoad, system, names[1])
     forecast_key = collect(PSY.get_forecast_keys(component))[1]
+    initial_time = get(kwargs, :initial_time, forecast_key.initial_time)
+    horizon = get(kwargs, :horizon, PSY.get_forecasts_horizon(system))
     f = PSY.get_forecast(
         PSY.Deterministic,
         component,
-        forecast_key.initial_time,
+        initial_time,
         forecast_key.label,
+        horizon,
     )
     parameters = DataFrames.rename(
         DataFrames.DataFrame(PSY.get_forecast_values(component, f)),
@@ -637,49 +612,28 @@ function demand_plot(system::PSY.System; kwargs...)
         f = PSY.get_forecast(
             PSY.Deterministic,
             component,
-            forecast_key.initial_time,
+            initial_time,
             forecast_key.label,
+            horizon,
         )
         df = DataFrames.DataFrame(PSY.get_forecast_values(component, f))
         parameters[!, Symbol(names[i])] = df[:, 2]
     end
-    backend = Plots.backend()
     save_fig = get(kwargs, :save, nothing)
-    basepower = system.basepower
-    return _demand_plot_internal(parameters, basepower, backend; kwargs...)
+    return parameters
+end
+
+function demand_plot(system::PSY.System; kwargs...)
+    parameters = make_demand_plot_data(system; kwargs...)
+    return _demand_plot_internal(parameters, system.basepower, Plots.backend(); kwargs...)
 end
 
 function demand_plot(systems::Array{PSY.System}; kwargs...)
     parameter_list = []
     basepowers = []
     for system in systems
-        names = collect(PSY.get_name.(PSY.get_components(PSY.PowerLoad, system)))
-        component = PSY.get_component(PSY.PowerLoad, system, names[1])
-        forecast_key = collect(PSY.get_forecast_keys(component))[1]
-        f = PSY.get_forecast(
-            PSY.Deterministic,
-            component,
-            forecast_key.initial_time,
-            forecast_key.label,
-        )
-        parameters = DataFrames.rename(
-            DataFrames.DataFrame(PSY.get_forecast_values(component, f)),
-            :A => Symbol(names[1]),
-        )
-        for i in 2:length(names)
-            component = PSY.get_component(PSY.PowerLoad, system, names[i])
-            forecast_key = collect(PSY.get_forecast_keys(component))[1]
-            f = PSY.get_forecast(
-                PSY.Deterministic,
-                component,
-                forecast_key.initial_time,
-                forecast_key.label,
-            )
-            df = DataFrames.DataFrame(PSY.get_forecast_values(component, f))
-            parameters[!, Symbol(names[i])] = df[:, 2]
-        end
-        basepowers = vcat(basepowers, system.basepower)
-        parameter_list = vcat(parameter_list, parameters)
+        push!(basepowers, system.basepower)
+        push!(parameter_list, make_demand_plot_data(system; kwargs...))
     end
     backend = Plots.backend()
     save_fig = get(kwargs, :save, nothing)
