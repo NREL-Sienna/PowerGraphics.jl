@@ -19,4 +19,4 @@ YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
 
 [compat]
 InfrastructureSystems = ">=0.5"
-PowerSystems = ">=0.10"
+PowerSystems = ">=0.16"
