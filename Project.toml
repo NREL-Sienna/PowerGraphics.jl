@@ -16,6 +16,7 @@ Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
 
 [compat]
+CSV = "~0.6"
 Colors = "~0.12"
 DataFrames = "0.20"
 Plots = "1"
@@ -23,4 +24,5 @@ InfrastructureSystems = "~0.8"
 PowerSystems = "~0.18"
 Reexport = "0.2"
 Requires = "1.0"
+YAML = "~0.4"
 julia = "1"
