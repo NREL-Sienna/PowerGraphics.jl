@@ -4,15 +4,14 @@ path = joinpath(pwd(), "plots")
 function test_plots(file_path::String)
     include("get_test_data.jl")
     variables = [:P__ThermalStandard]
-    generators = PG.make_fuel_dictionary(res, c_sys5)
     @testset "test results sorting" begin
-        Variables = Dict(:P_ThermalStandard => [:one, :two])
-        sorted = PG.sort_data(res; Variables = Variables)
+        namez = collect(names(IS.get_variables(res)[:P__ThermalStandard]))
+        Variabless = Dict(:P__ThermalStandard => [namez[1], namez[2]])
+        sorted = PG.sort_data(res; Variables = Variabless)
         sorted_two = PG.sort_data(res)
-        sorted_names = [:one, :two]
-        sorted_names_two = [:one, :three, :two]
-        @test names(IS.get_variables(sorted)[:P_ThermalStandard]) == sorted_names
-        @test names(IS.get_variables(sorted_two)[:P_ThermalStandard]) == sorted_names_two
+        sorted_names = [namez[1], namez[2]]
+        @test names(IS.get_variables(sorted)[:P__ThermalStandard]) == sorted_names
+        @test names(IS.get_variables(sorted_two)[:P__ThermalStandard]) == sort(namez)
     end
 
     @testset "test plot production" begin
@@ -20,49 +19,68 @@ function test_plots(file_path::String)
         PG.bar_plot(res; save = path, display = false, title = "Title_Bar")
         PG.stack_plot(res; save = path, display = false, title = "Title_Stack")
         PG.stair_plot(res; save = path, display = false, title = "Title_Stair")
-        PG.fuel_plot(res, generators; save = path, display = false)
-        PG.fuel_plot(res, generators; save = path, stair = true, display = false)
+        PG.fuel_plot(res, c_sys5_re; save = path, display = false)
+        PG.fuel_plot(res, c_sys5_re; save = path, stair = true, display = false)
         list = readdir(path)
-        @test list == [
-            "Fuel_Bar.png",
-            "Fuel_Stack.png",
-            "Fuel_Stair.png",
-            "P_RenewableDispatch_Bar.png",
-            "P_RenewableDispatch_Stack.png",
-            "P_RenewableDispatch_Stair.png",
-            "P_ThermalStandard_Bar.png",
-            "P_ThermalStandard_Stack.png",
-            "P_ThermalStandard_Stair.png",
-            "Title_Bar.png",
-            "Title_Stack.png",
-            "Title_Stair.png",
-        ]
+        @test isempty(setdiff(
+            list,
+            [
+                "Fuel_Bar.png",
+                "Fuel_Stack.png",
+                "Fuel_Stair.png",
+                "P__RenewableDispatch_Bar.png",
+                "P__RenewableDispatch_Stack.png",
+                "P__RenewableDispatch_Stair.png",
+                "P__ThermalStandard_Bar.png",
+                "P__ThermalStandard_Stack.png",
+                "P__ThermalStandard_Stair.png",
+                "Title_Bar.png",
+                "Title_Stack.png",
+                "Title_Stair.png",
+                "P__FixedGeneration_Bar.png",
+                "P__FixedGeneration_Stack.png",
+                "P__FixedGeneration_Stair.png",
+                "P__PowerLoad_Bar.png",
+                "P__PowerLoad_Stack.png",
+                "P__PowerLoad_Stair.png",
+            ],
+        ))
     end
 
     @testset "test fewer variable plot production" begin
         path = mkdir(joinpath(file_path, "variables"))
+        variables = [:P__ThermalStandard]
         PG.bar_plot(res, variables; save = path, display = false, title = "Title_Bar")
         PG.stack_plot(res, variables; save = path, display = false, title = "Title_Stack")
         PG.stair_plot(res, variables; save = path, display = false, title = "Title_Stair")
         PG.fuel_plot(
             res,
             variables,
-            generators;
+            c_sys5_re;
             save = path,
             display = false,
             title = "Title_fuel",
         )
         list = readdir(path)
-        @test list == [
-            "P_ThermalStandard_Bar.png",
-            "P_ThermalStandard_Stack.png",
-            "P_ThermalStandard_Stair.png",
-            "Title_Bar.png",
-            "Title_Stack.png",
-            "Title_Stair.png",
-            "Title_fuel_Bar.png",
-            "Title_fuel_Stack.png",
-        ]
+        @test isempty(setdiff(
+            list,
+            [
+                "P__ThermalStandard_Bar.png",
+                "P__ThermalStandard_Stack.png",
+                "P__ThermalStandard_Stair.png",
+                "Title_Bar.png",
+                "Title_Stack.png",
+                "Title_Stair.png",
+                "Title_fuel_Bar.png",
+                "Title_fuel_Stack.png",
+                "P__FixedGeneration_Bar.png",
+                "P__FixedGeneration_Stack.png",
+                "P__FixedGeneration_Stair.png",
+                "P__PowerLoad_Bar.png",
+                "P__PowerLoad_Stack.png",
+                "P__PowerLoad_Stair.png",
+            ],
+        ))
     end
 
     @testset "test multi-plot production" begin
@@ -72,29 +90,39 @@ function test_plots(file_path::String)
         PG.stair_plot([res; res]; save = path, display = false, title = "Title_Stair")
         PG.fuel_plot(
             [res; res],
-            generators;
+            c_sys5_re;
             save = path,
             display = false,
             title = "Title_fuel",
         )
         list = readdir(path)
-        @test list == [
-            "P_RenewableDispatch_Bar.png",
-            "P_RenewableDispatch_Stack.png",
-            "P_RenewableDispatch_Stair.png",
-            "P_ThermalStandard_Bar.png",
-            "P_ThermalStandard_Stack.png",
-            "P_ThermalStandard_Stair.png",
-            "Title_Bar.png",
-            "Title_Stack.png",
-            "Title_Stair.png",
-            "Title_fuel_Bar.png",
-            "Title_fuel_Stack.png",
-        ]
+        @test isempty(setdiff(
+            list,
+            [
+                "P__RenewableDispatch_Bar.png",
+                "P__RenewableDispatch_Stack.png",
+                "P__RenewableDispatch_Stair.png",
+                "P__ThermalStandard_Bar.png",
+                "P__ThermalStandard_Stack.png",
+                "P__ThermalStandard_Stair.png",
+                "Title_Bar.png",
+                "Title_Stack.png",
+                "Title_Stair.png",
+                "Title_fuel_Bar.png",
+                "Title_fuel_Stack.png",
+                "P__FixedGeneration_Bar.png",
+                "P__FixedGeneration_Stack.png",
+                "P__FixedGeneration_Stair.png",
+                "P__PowerLoad_Bar.png",
+                "P__PowerLoad_Stack.png",
+                "P__PowerLoad_Stair.png",
+            ],
+        ))
     end
 
     @testset "test multi-plot variable production" begin
         path = mkdir(joinpath(file_path, "multi-plots-variables"))
+        variables = [:P__ThermalStandard]
         PG.bar_plot(
             [res, res],
             variables;
@@ -119,7 +147,7 @@ function test_plots(file_path::String)
         PG.fuel_plot(
             [res; res],
             variables,
-            generators;
+            c_sys5_re;
             save = path,
             display = false,
             title = "Title_fuel",
@@ -127,24 +155,33 @@ function test_plots(file_path::String)
         PG.fuel_plot(
             [res; res],
             variables,
-            generators;
+            c_sys5_re;
             save = path,
             display = false,
             title = "Title_fuel",
             stair = true,
         )
         list = readdir(path)
-        @test list == [
-            "P_ThermalStandard_Bar.png",
-            "P_ThermalStandard_Stack.png",
-            "P_ThermalStandard_Stair.png",
-            "Title_Bar.png",
-            "Title_Stack.png",
-            "Title_Stair.png",
-            "Title_fuel_Bar.png",
-            "Title_fuel_Stack.png",
-            "Title_fuel_Stair.png",
-        ]
+        @test isempty(setdiff(
+            list,
+            [
+                "P__ThermalStandard_Bar.png",
+                "P__ThermalStandard_Stack.png",
+                "P__ThermalStandard_Stair.png",
+                "Title_Bar.png",
+                "Title_Stack.png",
+                "Title_Stair.png",
+                "Title_fuel_Bar.png",
+                "Title_fuel_Stack.png",
+                "Title_fuel_Stair.png",
+                "P__FixedGeneration_Bar.png",
+                "P__FixedGeneration_Stack.png",
+                "P__FixedGeneration_Stair.png",
+                "P__PowerLoad_Bar.png",
+                "P__PowerLoad_Stack.png",
+                "P__PowerLoad_Stair.png",
+            ],
+        ))
     end
     @testset "Test Demand Plots" begin
         path = mkdir(joinpath(file_path, "demand"))
@@ -168,12 +205,12 @@ function test_plots(file_path::String)
         list = readdir(path)
         @test list == [
             "Fuel_Bar.png",
-            "Fuels_Bar.png",
-            "Fuel_var_Bar.png",
-            "Fuels_var_Bar.png",
             "Fuel_Stack.png",
-            "Fuels_Stack.png",
+            "Fuel_var_Bar.png",
             "Fuel_var_Stack.png",
+            "Fuels_Bar.png",
+            "Fuels_Stack.png",
+            "Fuels_var_Bar.png",
             "Fuels_var_Stack.png",
         ]
     end
@@ -196,34 +233,44 @@ function test_plots(file_path::String)
             title = "Title_Stair",
             format = "png",
         )
-        PG.fuel_plot(res, generators; save = path, display = false, format = "png")
+        PG.fuel_plot(res, c_sys5_re; save = path, display = false, format = "png")
         PG.fuel_plot(
             res,
-            generators;
+            c_sys5_re;
             save = path,
             stair = true,
             display = false,
             format = "png",
         )
         list = readdir(path)
-        @test list == [
-            "Fuel_Bar.png",
-            "Fuel_Stack.png",
-            "Fuel_Stair.png",
-            "P_RenewableDispatch_Bar.png",
-            "P_RenewableDispatch_Stack.png",
-            "P_RenewableDispatch_Stair.png",
-            "P_ThermalStandard_Bar.png",
-            "P_ThermalStandard_Stack.png",
-            "P_ThermalStandard_Stair.png",
-            "Title_Bar.png",
-            "Title_Stack.png",
-            "Title_Stair.png",
-        ]
+        @test isempty(setdiff(
+            list,
+            [
+                "Fuel_Bar.png",
+                "Fuel_Stack.png",
+                "Fuel_Stair.png",
+                "P__RenewableDispatch_Bar.png",
+                "P__RenewableDispatch_Stack.png",
+                "P__RenewableDispatch_Stair.png",
+                "P__ThermalStandard_Bar.png",
+                "P__ThermalStandard_Stack.png",
+                "P__ThermalStandard_Stair.png",
+                "Title_Bar.png",
+                "Title_Stack.png",
+                "Title_Stair.png",
+                "P__FixedGeneration_Bar.png",
+                "P__FixedGeneration_Stack.png",
+                "P__FixedGeneration_Stair.png",
+                "P__PowerLoad_Bar.png",
+                "P__PowerLoad_Stack.png",
+                "P__PowerLoad_Stair.png",
+            ],
+        ))
     end
 
     @testset "test fewer variable plotlyjs production" begin
         path = mkdir(joinpath(file_path, "variables_plotlyjs"))
+        variables = [:P__ThermalStandard]
         PG.bar_plot(
             res,
             variables;
@@ -251,7 +298,7 @@ function test_plots(file_path::String)
         PG.fuel_plot(
             res,
             variables,
-            generators;
+            c_sys5_re;
             save = path,
             display = false,
             title = "Title_fuel",
@@ -260,7 +307,7 @@ function test_plots(file_path::String)
         PG.fuel_plot(
             res,
             variables,
-            generators;
+            c_sys5_re;
             save = path,
             display = false,
             stair = true,
@@ -268,17 +315,26 @@ function test_plots(file_path::String)
             format = "png",
         )
         list = readdir(path)
-        @test list == [
-            "P_ThermalStandard_Bar.png",
-            "P_ThermalStandard_Stack.png",
-            "P_ThermalStandard_Stair.png",
-            "Title_Bar.png",
-            "Title_Stack.png",
-            "Title_Stair.png",
-            "Title_fuel_Bar.png",
-            "Title_fuel_Stack.png",
-            "Title_fuel_Stair.png",
-        ]
+        @test isempty(setdiff(
+            list,
+            [
+                "P__ThermalStandard_Bar.png",
+                "P__ThermalStandard_Stack.png",
+                "P__ThermalStandard_Stair.png",
+                "Title_Bar.png",
+                "Title_Stack.png",
+                "Title_Stair.png",
+                "Title_fuel_Bar.png",
+                "Title_fuel_Stack.png",
+                "Title_fuel_Stair.png",
+                "P__FixedGeneration_Bar.png",
+                "P__FixedGeneration_Stack.png",
+                "P__FixedGeneration_Stair.png",
+                "P__PowerLoad_Bar.png",
+                "P__PowerLoad_Stack.png",
+                "P__PowerLoad_Stair.png",
+            ],
+        ))
     end
 
     @testset "test multi-plotlyjs production" begin
@@ -306,7 +362,7 @@ function test_plots(file_path::String)
         )
         PG.fuel_plot(
             [res; res],
-            generators;
+            c_sys5_re;
             save = path,
             display = false,
             title = "Title_fuel",
@@ -314,7 +370,7 @@ function test_plots(file_path::String)
         )
         PG.fuel_plot(
             [res; res],
-            generators;
+            c_sys5_re;
             save = path,
             display = false,
             stair = true,
@@ -322,24 +378,34 @@ function test_plots(file_path::String)
             format = "png",
         )
         list = readdir(path)
-        @test list == [
-            "P_RenewableDispatch_Bar.png",
-            "P_RenewableDispatch_Stack.png",
-            "P_RenewableDispatch_Stair.png",
-            "P_ThermalStandard_Bar.png",
-            "P_ThermalStandard_Stack.png",
-            "P_ThermalStandard_Stair.png",
-            "Title_Bar.png",
-            "Title_Stack.png",
-            "Title_Stair.png",
-            "Title_fuel_Bar.png",
-            "Title_fuel_Stack.png",
-            "Title_fuel_Stair.png",
-        ]
+        @test isempty(setdiff(
+            list,
+            [
+                "P__RenewableDispatch_Bar.png",
+                "P__RenewableDispatch_Stack.png",
+                "P__RenewableDispatch_Stair.png",
+                "P__ThermalStandard_Bar.png",
+                "P__ThermalStandard_Stack.png",
+                "P__ThermalStandard_Stair.png",
+                "Title_Bar.png",
+                "Title_Stack.png",
+                "Title_Stair.png",
+                "Title_fuel_Bar.png",
+                "Title_fuel_Stack.png",
+                "Title_fuel_Stair.png",
+                "P__FixedGeneration_Bar.png",
+                "P__FixedGeneration_Stack.png",
+                "P__FixedGeneration_Stair.png",
+                "P__PowerLoad_Bar.png",
+                "P__PowerLoad_Stack.png",
+                "P__PowerLoad_Stair.png",
+            ],
+        ))
     end
 
     @testset "test multi-plotlyjs variable production" begin
         path = mkdir(joinpath(file_path, "multi-plotlyjs-variables"))
+        variables = [:P__ThermalStandard]
         PG.bar_plot(
             [res, res],
             variables;
@@ -367,26 +433,37 @@ function test_plots(file_path::String)
         PG.fuel_plot(
             [res; res],
             variables,
-            generators;
+            c_sys5_re;
             save = path,
             display = false,
             title = "Title_fuel",
             format = "png",
         )
         list = readdir(path)
-        @test list == [
-            "P_ThermalStandard_Bar.png",
-            "P_ThermalStandard_Stack.png",
-            "P_ThermalStandard_Stair.png",
-            "Title_Bar.png",
-            "Title_Stack.png",
-            "Title_Stair.png",
-            "Title_fuel_Bar.png",
-            "Title_fuel_Stack.png",
-        ]
+        @test isempty(setdiff(
+            list,
+            [
+                "P__ThermalStandard_Bar.png",
+                "P__ThermalStandard_Stack.png",
+                "P__ThermalStandard_Stair.png",
+                "Title_Bar.png",
+                "Title_Stack.png",
+                "Title_Stair.png",
+                "Title_fuel_Bar.png",
+                "Title_fuel_Stack.png",
+                "P__FixedGeneration_Bar.png",
+                "P__FixedGeneration_Stack.png",
+                "P__FixedGeneration_Stair.png",
+                "P__PowerLoad_Bar.png",
+                "P__PowerLoad_Stack.png",
+                "P__PowerLoad_Stair.png",
+            ],
+        ))
     end
     @testset "Test PlotlyJS Fuel plot with system" begin
         path = mkdir(joinpath(file_path, "plotly-fuel"))
+    #    maps = PG.get_generator_mapping()
+    #    generators = PG.make_fuel_dictionary()
         PG.fuel_plot(res, c_sys5; title = "Fuel", save = path, format = "png")
         PG.fuel_plot(res, variables, c_sys5; title = "Fuel_var", save = path, format = "png")
         PG.fuel_plot([res, res], c_sys5; title = "Fuels", save = path, format = "png")
@@ -394,12 +471,12 @@ function test_plots(file_path::String)
         list = readdir(path)
         @test list == [
             "Fuel_Bar.png",
-            "Fuels_Bar.png",
-            "Fuel_var_Bar.png",
-            "Fuels_var_Bar.png",
             "Fuel_Stack.png",
-            "Fuels_Stack.png",
+            "Fuel_var_Bar.png",
             "Fuel_var_Stack.png",
+            "Fuels_Bar.png",
+            "Fuels_Stack.png",
+            "Fuels_var_Bar.png",
             "Fuels_var_Stack.png",
         ]
     end

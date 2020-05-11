@@ -1,12 +1,30 @@
 ## Documentation: http://docs.travis-ci.org/user/languages/julia/
 language: julia
-os:
-  - linux
-  - osx
-  - windows
-julia:
-  - 1.4
-  - nightly
+
+matrix:
+  include:
+    - os: linux
+      julia: 1.4
+      env: TESTCMD="xvfb-run julia"
+    - os: linux
+      julia: nightly
+      env: TESTCMD="xvfb-run julia"
+    - os: windows
+      julia: 1.4
+    - os: windows
+      julia: nightly
+    - os: osx
+      julia: 1.4
+      env: TESTCMD="julia"
+    - os: osx
+      julia: nightly
+      env: TESTCMD="julia"
+  allow_failures:
+    - os: windows
+      julia: 1.4
+    - os: windows
+      julia: nightly
+
 
 ## uncomment the following lines to allow failures on nightly julia
 ## (tests will run but not make your overall status red)
@@ -20,6 +38,15 @@ notifications:
 #    - gfortran
 #before_script: # homebrew for mac
 #  - if [ $TRAVIS_OS_NAME = osx ]; then brew install gcc; fi
+addons:
+  apt:
+    packages:
+      - xvfb
+
+install:
+  - export DISPLAY=':99.0'
+  - Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+
 
 jobs:
   fast_finish: true

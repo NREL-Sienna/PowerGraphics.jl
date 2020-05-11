@@ -13,7 +13,7 @@ IS.get_total_cost(r::Results) = r.total_cost
 IS.get_optimizer_log(r::Results) = r.optimizer_log
 IS.get_time_stamp(r::Results) = r.time_stamp
 IS.get_base_power(r::Results) = r.base_power
-#IS.get_parameters(r::Results) = r.parameter_values
+IS.get_parameters(r::Results) = r.parameter_values
 
 struct StackedArea
     time_range::Array

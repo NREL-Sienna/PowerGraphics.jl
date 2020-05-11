@@ -1,3 +1,5 @@
+isdefined(Base, :__precompile__) && __precompile__()
+@info "PowerGrahics.jl loads Plots.jl. Precompile might take a while"
 module PowerGraphics
 
 export get_stacked_aggregation_data
@@ -14,14 +16,14 @@ export sort_data
 import Dates
 
 #I/O Imports
-using Reexport
+import Reexport
+import Requires
 import Colors
 import DataFrames
-@reexport using Plots
-import Weave
+import YAML
+Reexport.@reexport using Plots
 import PowerSystems
 import InfrastructureSystems
-import GR
 
 const PSY = PowerSystems
 const IS = InfrastructureSystems
@@ -31,6 +33,9 @@ include("definitions.jl")
 include("fuel_results.jl")
 include("plot_recipes.jl")
 include("call_plots.jl")
-include("make_report.jl")
+
+function __init__()
+    Requires.@require Weave = "44d3d7a6-8a23-5bf8-98c5-b353f8df5ec9" include("make_report.jl")
+end
 
 end

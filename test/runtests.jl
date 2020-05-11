@@ -6,14 +6,13 @@ using DataFrames
 import InfrastructureSystems
 import InfrastructureSystems: Deterministic, Probabilistic, ScenarioBased, Forecast
 using PowerSystems
-import PowerSystems: PowerSystemTableData
 using PowerGraphics
-using Plots
 using PlotlyJS
 using ORCA
 using PowerSimulations
 using JuMP
 using GLPK
+using Weave
 
 const PG = PowerGraphics
 const IS = InfrastructureSystems
@@ -87,7 +86,7 @@ function run_tests()
         global_logger(multi_logger)
 
         # Testing Topological components of the schema
-        @time @testset "Begin PowerSystems tests" begin
+        @time @testset "Begin PowerGraphics tests" begin
             @includetests ARGS
         end
 
