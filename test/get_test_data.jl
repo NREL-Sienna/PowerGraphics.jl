@@ -26,7 +26,6 @@ for t in 1:2
     end
 end
 
-
 PTDF5 = PTDF(c_sys5);
 
 #System with Renewable Energy

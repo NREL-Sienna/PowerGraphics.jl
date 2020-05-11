@@ -192,16 +192,36 @@ function test_plots(file_path::String)
         PG.demand_plot(c_sys5; title = "System", save = path)
         PG.demand_plot([c_sys5, c_sys5]; title = "Systems", save = path)
         list = readdir(path)
-        @test list ==
-              ["Multi-Plot.png", "Multi-Plot_Stair.png", "Plot.png", "Plot_Stair.png", "System.png", "Systems.png"]
+        @test list == [
+            "Multi-Plot.png",
+            "Multi-Plot_Stair.png",
+            "Plot.png",
+            "Plot_Stair.png",
+            "System.png",
+            "Systems.png",
+        ]
     end
 
     @testset "Test Fuel plot with system" begin
         path = mkdir(joinpath(file_path, "fuel"))
         PG.fuel_plot(res, c_sys5; title = "Fuel", save = path, format = "png")
-        PG.fuel_plot(res, variables, c_sys5; title = "Fuel_var", save = path, format = "png")
+        PG.fuel_plot(
+            res,
+            variables,
+            c_sys5;
+            title = "Fuel_var",
+            save = path,
+            format = "png",
+        )
         PG.fuel_plot([res, res], c_sys5; title = "Fuels", save = path, format = "png")
-        PG.fuel_plot([res, res], variables, c_sys5; title = "Fuels_var", save = path, format = "png")
+        PG.fuel_plot(
+            [res, res],
+            variables,
+            c_sys5;
+            title = "Fuels_var",
+            save = path,
+            format = "png",
+        )
         list = readdir(path)
         @test list == [
             "Fuel_Bar.png",
@@ -462,12 +482,26 @@ function test_plots(file_path::String)
     end
     @testset "Test PlotlyJS Fuel plot with system" begin
         path = mkdir(joinpath(file_path, "plotly-fuel"))
-    #    maps = PG.get_generator_mapping()
-    #    generators = PG.make_fuel_dictionary()
+        #    maps = PG.get_generator_mapping()
+        #    generators = PG.make_fuel_dictionary()
         PG.fuel_plot(res, c_sys5; title = "Fuel", save = path, format = "png")
-        PG.fuel_plot(res, variables, c_sys5; title = "Fuel_var", save = path, format = "png")
+        PG.fuel_plot(
+            res,
+            variables,
+            c_sys5;
+            title = "Fuel_var",
+            save = path,
+            format = "png",
+        )
         PG.fuel_plot([res, res], c_sys5; title = "Fuels", save = path, format = "png")
-        PG.fuel_plot([res, res], variables, c_sys5; title = "Fuels_var", save = path, format = "png")
+        PG.fuel_plot(
+            [res, res],
+            variables,
+            c_sys5;
+            title = "Fuels_var",
+            save = path,
+            format = "png",
+        )
         list = readdir(path)
         @test list == [
             "Fuel_Bar.png",
