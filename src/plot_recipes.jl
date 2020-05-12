@@ -95,7 +95,7 @@ function plotly_stack_gen(
     stack = hcat(stack...)
     parameters = []
     for (p, v) in res.parameter_values
-        parameters = vcat(stack, [sum(convert(Matrix, v), dims = 2)])
+        parameters = vcat(parameters, [sum(convert(Matrix, v), dims = 2)])
     end
     parameters = hcat(parameters...)
     seriescolor = set_seriescolor(seriescolor, gens)
@@ -1171,7 +1171,7 @@ function _bar_plot_internal(
     )
     parameters = res.parameter_values
     if !isempty(parameters)
-        load_data = -1.0 .* sum(convert(Matrix, parameters[:PowerLoad]))
+        load_data = sum(convert(Matrix, parameters[:PowerLoad]))
         Plots.plot!(
             [3.5, 5.5],
             [load_data; load_data];
@@ -1266,7 +1266,7 @@ function _bar_plot_internal(
         )
         parameters = res.parameter_values
         if !isempty(parameters)
-            load_data = -1.0 .* sum(convert(Matrix, parameters[:PowerLoad]))
+            load_data = sum(convert(Matrix, parameters[:PowerLoad]))
             Plots.plot!(
                 [3.5; 5.5],
                 [load_data; load_data];
@@ -1358,8 +1358,7 @@ function _stack_plot_internal(
     )
     parameters = res.parameter_values
     if !isempty(parameters)
-        load_data =
-            -1.0 .* cumsum(sum(convert(Matrix, parameters[:PowerLoad]), dims = 2), dims = 2)
+        load_data = cumsum(sum(convert(Matrix, parameters[:PowerLoad]), dims = 2), dims = 2)
         Plots.plot!(
             time_range,
             load_data;
@@ -1465,7 +1464,6 @@ function _stack_plot_internal(
         parameters = res.parameter_values
         if !isempty(parameters)
             load_data =
-                -1.0 .*
                 cumsum(sum(convert(Matrix, parameters[:PowerLoad]), dims = 2), dims = 2)
             Plots.plot!(
                 time_range,
@@ -1522,7 +1520,7 @@ function _demand_plot_internal(res::IS.Results, backend::Plots.PlotlyJSBackend; 
                 Plots.PlotlyJS.scatter(;
                     name = param_names[i],
                     x = res.time_stamp[:, 1],
-                    y = -1.0 .* parameters[:, param_names[i]],
+                    y = parameters[:, param_names[i]],
                     stackgroup = "one",
                     mode = "lines",
                     fill = "tonexty",
@@ -1584,7 +1582,7 @@ function _demand_plot_internal(results::Array, backend::Plots.PlotlyJSBackend; k
                     Plots.PlotlyJS.scatter(;
                         name = p_names[i],
                         x = results[n].time_stamp[:, 1],
-                        y = -1.0 .* parameters[:, p_names[i]],
+                        y = parameters[:, p_names[i]],
                         stackgroup = "one",
                         mode = "lines",
                         fill = "tonexty",
@@ -1632,7 +1630,7 @@ function _demand_plot_internal(res::IS.Results, backend::Any; kwargs...)
     plot_list = Dict()
     for (key, parameters) in res.parameter_values
         title = get(kwargs, :title, "$key")
-        data = -1.0 .* cumsum(convert(Matrix, parameters), dims = 2)
+        data = cumsum(convert(Matrix, parameters), dims = 2)
         labels = [string(names(parameters)[1])]
         for i in 2:length(names(parameters))
             labels = hcat(labels, string(names(parameters)[i]))
@@ -1681,7 +1679,7 @@ function _demand_plot_internal(results::Array{}, backend::Any; kwargs...)
         title = get(kwargs, :title, "$key")
         for i in 1:length(results)
             params = results[i].parameter_values[key]
-            data = -1.0 .* cumsum(convert(Matrix, params), dims = 2)
+            data = cumsum(convert(Matrix, params), dims = 2)
             p = Plots.plot(
                 time_range,
                 data;
@@ -1737,7 +1735,7 @@ function _demand_plot_internal(
             Plots.PlotlyJS.scatter(;
                 name = param_names[i],
                 x = parameters[:, :timestamp],
-                y = -1.0 .* data[:, param_names[i]],
+                y = data[:, param_names[i]],
                 stackgroup = "one",
                 mode = "lines",
                 fill = "tonexty",
@@ -1798,7 +1796,7 @@ function _demand_plot_internal(
                 Plots.PlotlyJS.scatter(;
                     name = p_names[n],
                     x = parameters[i][:, :timestamp],
-                    y = -1.0 .* data[:, p_names[n]],
+                    y = data[:, p_names[n]],
                     stackgroup = "one",
                     mode = "lines",
                     fill = "tonexty",
@@ -1850,7 +1848,7 @@ function _demand_plot_internal(
     plot_list = Dict()
     title = get(kwargs, :title, "PowerLoad")
     DataFrames.select!(parameters, DataFrames.Not(:timestamp))
-    data = -1.0 .* cumsum(convert(Matrix, parameters), dims = 2)
+    data = cumsum(convert(Matrix, parameters), dims = 2)
     labels = [string(names(parameters)[1])]
     for i in 2:length(names(parameters))
         labels = hcat(labels, string(names(parameters)[i]))
@@ -1902,7 +1900,7 @@ function _demand_plot_internal(
         ylabel = _make_ylabel(basepower[i])
         DataFrames.select!(parameter_list[i], DataFrames.Not(:timestamp))
         labels = string.(names(parameter_list[i]))
-        data = -1.0 .* cumsum(convert(Matrix, parameter_list[i]), dims = 2)
+        data = cumsum(convert(Matrix, parameter_list[i]), dims = 2)
         p = Plots.plot(
             time_range,
             data;
