@@ -581,15 +581,15 @@ function _shorten_time(results::IS.Results, horizon::Int64, init_time::Dates.Dat
     time_range = IS.get_time_stamp(results)[:, 1]
     resolution = Dates.Hour(time_range[2] - time_range[1])
     parameters = IS.get_parameters(results)
-    times = [init_time:resolution:init_time + resolution*horizon]
+    times = [init_time:resolution:(init_time + resolution * horizon)]
     new_time_range = DataFrames.DataFrame(:Range => vcat(times...))
     new_params = Dict()
-    init_spot = findall(x->x==init_time, time_range)[1]
+    init_spot = findall(x -> x == init_time, time_range)[1]
     if isempty(init_spot)
         @warn "$init_time is not in the time_range."
     end
     for (k, p) in parameters
-        new_params[k] = p[init_spot:(init_spot+horizon), :]
+        new_params[k] = p[init_spot:(init_spot + horizon), :]
     end
     return Results(
         IS.get_base_power(results),
@@ -641,7 +641,7 @@ function make_demand_plot_data(system::PSY.System; kwargs...)
     component = PSY.get_component(PSY.PowerLoad, system, names[1])
     forecast_key = collect(PSY.get_forecast_keys(component))[1]
     initial_time = get(kwargs, :initial_time, forecast_key.initial_time)
-    horizon = get(kwargs, :horizon, PSY.get_forecasts_horizon(system)-1)+1
+    horizon = get(kwargs, :horizon, PSY.get_forecasts_horizon(system) - 1) + 1
     f = PSY.get_forecast(
         PSY.Deterministic,
         component,
