@@ -214,7 +214,9 @@ function get_stacked_aggregation_data(res::IS.Results, generators::Dict)
     end
     legend = reduce(hcat, legend)
     data_matrix = reduce(hcat, agg_var)
-
+    if isa(legend, String)
+        legend = [legend]
+    end
     return StackedGeneration(time_range, data_matrix, parameters, legend, p_legend)
 end
 

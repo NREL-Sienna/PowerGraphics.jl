@@ -2,16 +2,16 @@ path = joinpath(pwd(), "plots")
 !isdir(path) && mkdir(path)
 
 function test_plots(file_path::String)
-    include("test_data.jl")
-
+    include("get_test_data.jl")
+    variables = [:P__ThermalStandard]
     @testset "test results sorting" begin
-        Variables = Dict(:P__ThermalStandard => [:one, :two])
-        sorted = PG.sort_data(res; Variables = Variables)
+        namez = collect(names(IS.get_variables(res)[:P__ThermalStandard]))
+        Variabless = Dict(:P__ThermalStandard => [namez[1], namez[2]])
+        sorted = PG.sort_data(res; Variables = Variabless)
         sorted_two = PG.sort_data(res)
-        sorted_names = [:one, :two]
-        sorted_names_two = [:one, :three, :two]
+        sorted_names = [namez[1], namez[2]]
         @test names(IS.get_variables(sorted)[:P__ThermalStandard]) == sorted_names
-        @test names(IS.get_variables(sorted_two)[:P__ThermalStandard]) == sorted_names_two
+        @test names(IS.get_variables(sorted_two)[:P__ThermalStandard]) == sort(namez)
     end
 
     @testset "test plot production" begin
@@ -19,8 +19,8 @@ function test_plots(file_path::String)
         PG.bar_plot(res; save = path, display = false, title = "Title_Bar")
         PG.stack_plot(res; save = path, display = false, title = "Title_Stack")
         PG.stair_plot(res; save = path, display = false, title = "Title_Stair")
-        PG.fuel_plot(res, generators; save = path, display = false)
-        PG.fuel_plot(res, generators; save = path, stair = true, display = false)
+        PG.fuel_plot(res, c_sys5_re; save = path, display = false)
+        PG.fuel_plot(res, c_sys5_re; save = path, stair = true, display = false)
         list = readdir(path)
         @test isempty(setdiff(
             list,
@@ -56,7 +56,7 @@ function test_plots(file_path::String)
         PG.fuel_plot(
             res,
             variables,
-            generators;
+            c_sys5_re;
             save = path,
             display = false,
             title = "Title_fuel",
@@ -90,7 +90,7 @@ function test_plots(file_path::String)
         PG.stair_plot([res; res]; save = path, display = false, title = "Title_Stair")
         PG.fuel_plot(
             [res; res],
-            generators;
+            c_sys5_re;
             save = path,
             display = false,
             title = "Title_fuel",
@@ -147,7 +147,7 @@ function test_plots(file_path::String)
         PG.fuel_plot(
             [res; res],
             variables,
-            generators;
+            c_sys5_re;
             save = path,
             display = false,
             title = "Title_fuel",
@@ -155,7 +155,7 @@ function test_plots(file_path::String)
         PG.fuel_plot(
             [res; res],
             variables,
-            generators;
+            c_sys5_re;
             save = path,
             display = false,
             title = "Title_fuel",
@@ -189,9 +189,50 @@ function test_plots(file_path::String)
         PG.demand_plot([res, res]; title = "Multi-Plot", save = path)
         PG.demand_plot(res; title = "Plot_Stair", stair = true, save = path)
         PG.demand_plot([res, res]; title = "Multi-Plot_Stair", stair = true, save = path)
+        PG.demand_plot(c_sys5; title = "System", save = path)
+        PG.demand_plot([c_sys5, c_sys5]; title = "Systems", save = path)
         list = readdir(path)
-        @test list ==
-              ["Multi-Plot.png", "Multi-Plot_Stair.png", "Plot.png", "Plot_Stair.png"]
+        @test list == [
+            "Multi-Plot.png",
+            "Multi-Plot_Stair.png",
+            "Plot.png",
+            "Plot_Stair.png",
+            "System.png",
+            "Systems.png",
+        ]
+    end
+
+    @testset "Test Fuel plot with system" begin
+        path = mkdir(joinpath(file_path, "fuel"))
+        PG.fuel_plot(res, c_sys5; title = "Fuel", save = path, format = "png")
+        PG.fuel_plot(
+            res,
+            variables,
+            c_sys5;
+            title = "Fuel_var",
+            save = path,
+            format = "png",
+        )
+        PG.fuel_plot([res, res], c_sys5; title = "Fuels", save = path, format = "png")
+        PG.fuel_plot(
+            [res, res],
+            variables,
+            c_sys5;
+            title = "Fuels_var",
+            save = path,
+            format = "png",
+        )
+        list = readdir(path)
+        @test list == [
+            "Fuel_Bar.png",
+            "Fuel_Stack.png",
+            "Fuel_var_Bar.png",
+            "Fuel_var_Stack.png",
+            "Fuels_Bar.png",
+            "Fuels_Stack.png",
+            "Fuels_var_Bar.png",
+            "Fuels_var_Stack.png",
+        ]
     end
 
     Plots.plotlyjs()
@@ -212,10 +253,10 @@ function test_plots(file_path::String)
             title = "Title_Stair",
             format = "png",
         )
-        PG.fuel_plot(res, generators; save = path, display = false, format = "png")
+        PG.fuel_plot(res, c_sys5_re; save = path, display = false, format = "png")
         PG.fuel_plot(
             res,
-            generators;
+            c_sys5_re;
             save = path,
             stair = true,
             display = false,
@@ -277,7 +318,7 @@ function test_plots(file_path::String)
         PG.fuel_plot(
             res,
             variables,
-            generators;
+            c_sys5_re;
             save = path,
             display = false,
             title = "Title_fuel",
@@ -286,7 +327,7 @@ function test_plots(file_path::String)
         PG.fuel_plot(
             res,
             variables,
-            generators;
+            c_sys5_re;
             save = path,
             display = false,
             stair = true,
@@ -341,7 +382,7 @@ function test_plots(file_path::String)
         )
         PG.fuel_plot(
             [res; res],
-            generators;
+            c_sys5_re;
             save = path,
             display = false,
             title = "Title_fuel",
@@ -349,7 +390,7 @@ function test_plots(file_path::String)
         )
         PG.fuel_plot(
             [res; res],
-            generators;
+            c_sys5_re;
             save = path,
             display = false,
             stair = true,
@@ -412,7 +453,7 @@ function test_plots(file_path::String)
         PG.fuel_plot(
             [res; res],
             variables,
-            generators;
+            c_sys5_re;
             save = path,
             display = false,
             title = "Title_fuel",
@@ -439,11 +480,46 @@ function test_plots(file_path::String)
             ],
         ))
     end
-
+    @testset "Test PlotlyJS Fuel plot with system" begin
+        path = mkdir(joinpath(file_path, "plotly-fuel"))
+        #    maps = PG.get_generator_mapping()
+        #    generators = PG.make_fuel_dictionary()
+        PG.fuel_plot(res, c_sys5; title = "Fuel", save = path, format = "png")
+        PG.fuel_plot(
+            res,
+            variables,
+            c_sys5;
+            title = "Fuel_var",
+            save = path,
+            format = "png",
+        )
+        PG.fuel_plot([res, res], c_sys5; title = "Fuels", save = path, format = "png")
+        PG.fuel_plot(
+            [res, res],
+            variables,
+            c_sys5;
+            title = "Fuels_var",
+            save = path,
+            format = "png",
+        )
+        list = readdir(path)
+        @test list == [
+            "Fuel_Bar.png",
+            "Fuel_Stack.png",
+            "Fuel_var_Bar.png",
+            "Fuel_var_Stack.png",
+            "Fuels_Bar.png",
+            "Fuels_Stack.png",
+            "Fuels_var_Bar.png",
+            "Fuels_var_Stack.png",
+        ]
+    end
     @testset "Test PlotlyJS Demand Plots" begin
         path = mkdir(joinpath(file_path, "plotly-multi-plots"))
         PG.demand_plot(res; title = "PlotlyJS", save = path, format = "png")
         PG.demand_plot([res, res]; title = "multi-PlotlyJS", save = path, format = "png")
+        PG.demand_plot(c_sys5; title = "System", save = path, format = "png")
+        PG.demand_plot([c_sys5, c_sys5]; title = "Systems", save = path, format = "png")
         PG.demand_plot(
             res;
             title = "PlotlyJS_Stair",
@@ -462,6 +538,8 @@ function test_plots(file_path::String)
         @test list == [
             "PlotlyJS.png",
             "PlotlyJS_Stair.png",
+            "System.png",
+            "Systems.png",
             "multi-PlotlyJS.png",
             "multi-PlotlyJS_Stair.png",
         ]
