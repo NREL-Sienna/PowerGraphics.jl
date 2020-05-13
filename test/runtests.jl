@@ -10,7 +10,6 @@ using PowerGraphics
 using PlotlyJS
 using ORCA
 using PowerSimulations
-using JuMP
 using GLPK
 using Weave
 
