@@ -38,6 +38,23 @@ CATEGORY_DEFAULT = getfield.(get_palette(), :category)
 
 VARIABLE_TYPES = ["P", "Spin", "Reg", "Flex"]
 
+SUPPORTEDGENPARAMS = [
+    "RenewableDispatch",
+    "RenewableFix",
+    "HydroDispatch",
+    "HydroEnergyReservoir",
+    "ThermalStandard",
+]
+
+SUPPORTEDLOADPARAMS = ["PowerLoad"]
+
+SUPPORTEDSERVICEPARAMS = [
+    "VariableReserve_ReserveUp",
+    "VariableReserve_ReserveDown",
+    "StaticReserve_ReserveUp",
+    "StaticReserve_ReserveDown",
+]
+
 OVERGENERATION_VARIABLE = :γ⁻__P
 UNSERVEDENERGY_VARIABLE = :γ⁺__P
 

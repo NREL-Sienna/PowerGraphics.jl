@@ -148,6 +148,6 @@ for t in 1:2
     end
 end
 
-GLPK_optimizer = JuMP.optimizer_with_attributes(GLPK.Optimizer, "msg_lev" => GLPK.MSG_OFF)
+GLPK_optimizer = optimizer_with_attributes(GLPK.Optimizer, "msg_lev" => GLPK.MSG_OFF)
 ED = PSI.EconomicDispatchProblem(c_sys5; use_parameters = true)
 res = PSI.solve!(ED; optimizer = GLPK_optimizer)
