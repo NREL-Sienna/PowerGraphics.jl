@@ -1,6 +1,21 @@
 function _filter_variables(results::IS.Results; kwargs...)
     filter_results = Dict()
     filter_parameters = Dict()
+    results = _filter_parameters(results)
+
+    for (key, var) in IS.get_variables(results)
+        if startswith("$key", "P") | any(key .== [:γ⁻__P, :γ⁺__P])
+            filter_results[key] = var
+        end
+    end
+    for (key, parameter) in IS.get_parameters(results)
+        param = "$key"
+        if !(key in keys(IS.get_variables(results))) &&
+           split(param, "_")[end] in SUPPORTEDGENPARAMS
+            filter_results[key] = parameter
+        end
+    end
+
     reserves = get(kwargs, :reserves, false)
     if reserves
         for (key, var) in IS.get_variables(results)
@@ -9,28 +24,13 @@ function _filter_variables(results::IS.Results; kwargs...)
                 filter_results[key] = var
             end
         end
-    else
-        for (key, var) in results.parameter_values
-            new_key = replace(replace("$key", "parameter_" => ""), "_" => "__")
-            if startswith(new_key, "P")
-                filter_results[Symbol(new_key)] = var
-            end
-        end
-        for (key, var) in IS.get_variables(results)
-            if startswith("$key", "P") | any(key .== [:γ⁻__P, :γ⁺__P])
-                filter_results[key] = var
-            end
-        end
     end
+
     load = get(kwargs, :load, false)
     if load
-        for (key, parameter) in results.parameter_values
-            param = split("$key", "_")[end]
-            if param == "PowerLoad"
-                filter_parameters[Symbol(param)] = parameter
-            end
-        end
+        filter_parameters[:P__PowerLoad] = results.parameter_values[:P__PowerLoad]
     end
+
     new_results = Results(
         IS.get_base_power(results),
         filter_results,
@@ -45,9 +45,14 @@ end
 
 function _filter_parameters(results::IS.Results)
     filter_parameters = Dict()
-    for (k, v) in results.parameter_values
-        param = split("$k", "_")[end]
-        filter_parameters[Symbol(param)] = v
+    for (key, parameter) in IS.get_parameters(results)
+        new_key = replace(replace("$key", "parameter_" => ""), "_" => "__")
+        param = split("$key", "_")[end]
+        if startswith(new_key, "P") && param in SUPPORTEDGENPARAMS
+            filter_parameters[Symbol(new_key)] = parameter
+        elseif startswith(new_key, "P") && param in SUPPORTEDLOADPARAMS
+            filter_parameters[Symbol(new_key)] = parameter .* -1.0
+        end
     end
     new_results = Results(
         IS.get_base_power(results),

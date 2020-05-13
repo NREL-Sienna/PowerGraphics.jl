@@ -151,6 +151,7 @@ function _aggregate_data(res::IS.Results, generators::Dict)
 
     return fuel_dataframes
 end
+
 """
     stack = get_stacked_aggregation_data(res::IS.Results, generators::Dict)
 
@@ -182,21 +183,14 @@ function get_stacked_aggregation_data(res::IS.Results, generators::Dict)
     !isempty(setdiff(labels, new_labels)) &&
         throw(IS.DataFormatError("Some generators are not categorized: adjust $GENERATOR_MAPPING_FILE"))
 
-    if !isempty(p_labels)
-        parameters = []
-        p_legend = []
-        for (ix, parameter) in res.parameter_values
-            label = p_labels[ix]
-            mult = label == "Load" ? -1.0 : 1.0
-            parameter = mult .* sum(Matrix(parameter), dims = 2)
-            push!(parameters, parameter)
-            push!(p_legend, string.(p_labels[ix]))
-        end
-        parameters = reduce(hcat, parameters)
-    else
-        parameters = nothing
-        p_legend = []
+    parameters = []
+    p_legend = []
+    for label in p_labels
+        parameter = sum(Matrix(res.parameter_values[label]), dims = 2)
+        push!(parameters, parameter)
+        push!(p_legend, string(label))
     end
+    parameters = isempty(parameters) ? nothing : reduce(hcat, parameters)
 
     legend = []
     agg_var = []
@@ -225,6 +219,7 @@ function get_stacked_aggregation_data(res::IS.Results, generators::Dict)
     end
     return StackedGeneration(time_range, data_matrix, parameters, legend, p_legend)
 end
+
 """
     bar = get_bar_aggregation_data(results::IS.Results, generators::Dict)
 
