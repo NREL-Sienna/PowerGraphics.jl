@@ -38,13 +38,14 @@ CATEGORY_DEFAULT = getfield.(get_palette(), :category)
 
 VARIABLE_TYPES = ["P", "Spin", "Reg", "Flex"]
 
-SUPPORTEDPARAMS = [
+SUPPORTEDGENPARAMS = [
     "RenewableDispatch",
     "RenewableFix",
     "HydroDispatch",
     "HydroEnergyReservoir",
     "ThermalStandard",
 ]
+
 SUPPORTEDLOADPARAMS = ["PowerLoad"]
 
 SUPPORTEDSERVICEPARAMS = [
