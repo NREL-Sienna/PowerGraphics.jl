@@ -190,7 +190,7 @@ function get_stacked_aggregation_data(res::IS.Results, generators::Dict)
             mult = label == "Load" ? -1.0 : 1.0
             parameter = mult .* sum(Matrix(parameter), dims = 2)
             push!(parameters, parameter)
-            push!(p_legend, string.(p_labels[i]))
+            push!(p_legend, string.(p_labels[ix]))
         end
         parameters = reduce(hcat, parameters)
     else
@@ -220,7 +220,9 @@ function get_stacked_aggregation_data(res::IS.Results, generators::Dict)
     end
     legend = reduce(hcat, legend)
     data_matrix = reduce(hcat, agg_var)
-
+    if isa(legend, String)
+        legend = [legend]
+    end
     return StackedGeneration(time_range, data_matrix, parameters, legend, p_legend)
 end
 """

@@ -9,11 +9,14 @@ using PowerSystems
 using PowerGraphics
 using PlotlyJS
 using ORCA
+using PowerSimulations
+using GLPK
 using Weave
 
 const PG = PowerGraphics
 const IS = InfrastructureSystems
 const PSY = PowerSystems
+const PSI = PowerSimulations
 const LOG_FILE = "PowerGraphics-test.log"
 
 base_dir = dirname(dirname(pathof(PowerGraphics)))
@@ -70,6 +73,7 @@ function get_logging_level(env_name::String, default)
 end
 
 function run_tests()
+    include("get_test_data.jl")
     console_level = get_logging_level("PS_CONSOLE_LOG_LEVEL", "Error")
     console_logger = ConsoleLogger(stderr, console_level)
     file_level = get_logging_level("PS_LOG_LEVEL", "Info")

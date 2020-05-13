@@ -573,8 +573,11 @@ end
 ################################### DEMAND #################################
 function demand_plot(res::IS.Results; kwargs...)
     results = _filter_parameters(res)
+    if isempty(IS.get_parameters(results))
+        @warn "No parameters provided."
+    end
     backend = Plots.backend()
-    _demand_plot_internal(results, backend; kwargs...)
+    return _demand_plot_internal(results, backend; kwargs...)
 end
 
 function demand_plot(results::Array; kwargs...)
@@ -582,10 +585,13 @@ function demand_plot(results::Array; kwargs...)
     for res in results
         new_res = _filter_parameters(res)
         new_results = vcat(new_results, new_res)
+        if isempty(IS.get_parameters(new_res))
+            @warn "No parameters provided."
+        end
     end
     backend = Plots.backend()
     save_fig = get(kwargs, :save, nothing)
-    _demand_plot_internal(new_results, backend; kwargs...)
+    return _demand_plot_internal(new_results, backend; kwargs...)
 end
 # TODO make this function
 
