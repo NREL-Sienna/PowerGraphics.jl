@@ -581,12 +581,12 @@ function _shorten_time(results::IS.Results, horizon::Int64, init_time::Dates.Dat
     time_range = IS.get_time_stamp(results)[:, 1]
     resolution = Dates.Hour(time_range[2] - time_range[1])
     parameters = IS.get_parameters(results)
-    times = [init_time:resolution:(init_time + resolution * horizon)]
-    new_time_range = DataFrames.DataFrame(:Range => vcat(times...))
+    times = collect(init_time:resolution:(init_time + resolution * horizon))
+    new_time_range = DataFrames.DataFrame(:Range => times)
     new_params = Dict()
     init_spot = findall(x -> x == init_time, time_range)[1]
     if isempty(init_spot)
-        @warn "$init_time is not in the time_range."
+        throw(IS.InvalidValue("$init_time is not in the time_range."))
     end
     for (k, p) in parameters
         new_params[k] = p[init_spot:(init_spot + horizon), :]
