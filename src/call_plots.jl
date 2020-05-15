@@ -576,36 +576,72 @@ function stair_plot(results::Array, variables::Array; kwargs...)
     return stair_plot(new_results; kwargs...)
 end
 ################################### DEMAND #################################
+
+function _shorten_time(results::IS.Results, horizon::Int64, init_time::Dates.DateTime)
+    time_range = IS.get_time_stamp(results)[:, 1]
+    resolution = Dates.Hour(time_range[2] - time_range[1])
+    parameters = IS.get_parameters(results)
+    times = collect(init_time:resolution:(init_time + resolution * horizon))
+    new_time_range = DataFrames.DataFrame(:Range => times)
+    new_params = Dict()
+    init_spot = findall(x -> x == init_time, time_range)[1]
+    if isempty(init_spot)
+        throw(IS.InvalidValue("$init_time is not in the time_range."))
+    end
+    for (k, p) in parameters
+        new_params[k] = p[init_spot:(init_spot + horizon), :]
+    end
+    return Results(
+        IS.get_base_power(results),
+        IS.get_variables(results),
+        IS.get_optimizer_log(results),
+        IS.get_total_cost(results),
+        new_time_range,
+        results.dual_values,
+        new_params,
+    )
+end
+
 function demand_plot(res::IS.Results; kwargs...)
     results = _filter_parameters(res)
     if isempty(IS.get_parameters(results))
         @warn "No parameters provided."
     end
     backend = Plots.backend()
+    horizon = get(kwargs, :horizon, nothing)
+    initial_time = get(kwargs, :initial_time, nothing)
+    if !isnothing(horizon) && !isnothing(initial_time)
+        results = _shorten_time(results, horizon, initial_time)
+    end
     return _demand_plot_internal(results, backend; kwargs...)
 end
 
 function demand_plot(results::Array; kwargs...)
-    new_results = []
+    newer_results = []
     for res in results
         new_res = _filter_parameters(res)
-        new_results = vcat(new_results, new_res)
+        horizon = get(kwargs, :horizon, nothing)
+        initial_time = get(kwargs, :initial_time, nothing)
+        if !isnothing(horizon) && !isnothing(initial_time)
+            new_res = _shorten_time(new_res, horizon, initial_time)
+        end
+        newer_results = vcat(newer_results, new_res)
         if isempty(IS.get_parameters(new_res))
             @warn "No parameters provided."
         end
+
     end
     backend = Plots.backend()
     save_fig = get(kwargs, :save, nothing)
-    return _demand_plot_internal(new_results, backend; kwargs...)
+    return _demand_plot_internal(newer_results, backend; kwargs...)
 end
-# TODO make this function
 
 function make_demand_plot_data(system::PSY.System; kwargs...)
     names = collect(PSY.get_name.(PSY.get_components(PSY.PowerLoad, system)))
     component = PSY.get_component(PSY.PowerLoad, system, names[1])
     forecast_key = collect(PSY.get_forecast_keys(component))[1]
     initial_time = get(kwargs, :initial_time, forecast_key.initial_time)
-    horizon = get(kwargs, :horizon, PSY.get_forecasts_horizon(system))
+    horizon = get(kwargs, :horizon, PSY.get_forecasts_horizon(system) - 1) + 1
     f = PSY.get_forecast(
         PSY.Deterministic,
         component,
@@ -636,6 +672,7 @@ end
 
 function demand_plot(system::PSY.System; kwargs...)
     parameters = make_demand_plot_data(system; kwargs...)
+    backend = Plots.backend()
     return _demand_plot_internal(parameters, system.basepower, Plots.backend(); kwargs...)
 end
 
@@ -647,6 +684,5 @@ function demand_plot(systems::Array{PSY.System}; kwargs...)
         push!(parameter_list, make_demand_plot_data(system; kwargs...))
     end
     backend = Plots.backend()
-    save_fig = get(kwargs, :save, nothing)
     return _demand_plot_internal(parameter_list, basepowers, backend; kwargs...)
 end

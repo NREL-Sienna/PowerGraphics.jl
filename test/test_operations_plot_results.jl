@@ -188,16 +188,32 @@ function test_plots(file_path::String)
         PG.demand_plot(res; title = "Plot", save = path)
         PG.demand_plot([res, res]; title = "Multi-Plot", save = path)
         PG.demand_plot(res; title = "Plot_Stair", stair = true, save = path)
+        PG.demand_plot(
+            res;
+            title = "Plot_Shorten",
+            save = path,
+            horizon = 6,
+            initial_time = Dates.DateTime(2024, 1, 1, 2, 0, 0),
+        )
         PG.demand_plot([res, res]; title = "Multi-Plot_Stair", stair = true, save = path)
         PG.demand_plot(c_sys5; title = "System", save = path)
         PG.demand_plot([c_sys5, c_sys5]; title = "Systems", save = path)
+        PG.demand_plot(
+            c_sys5;
+            title = "System_Shorten",
+            save = path,
+            horizon = 6,
+            initial_time = Dates.DateTime(2024, 1, 1, 2, 0, 0),
+        )
         list = readdir(path)
         @test list == [
             "Multi-Plot.png",
             "Multi-Plot_Stair.png",
             "Plot.png",
+            "Plot_Shorten.png",
             "Plot_Stair.png",
             "System.png",
+            "System_Shorten.png",
             "Systems.png",
         ]
     end
@@ -517,9 +533,25 @@ function test_plots(file_path::String)
     @testset "Test PlotlyJS Demand Plots" begin
         path = mkdir(joinpath(file_path, "plotly-multi-plots"))
         PG.demand_plot(res; title = "PlotlyJS", save = path, format = "png")
+        PG.demand_plot(
+            res;
+            title = "PlotlyJS_Shorten",
+            save = path,
+            horizon = 6,
+            format = "png",
+            initial_time = Dates.DateTime(2024, 1, 1, 2, 0, 0),
+        )
         PG.demand_plot([res, res]; title = "multi-PlotlyJS", save = path, format = "png")
         PG.demand_plot(c_sys5; title = "System", save = path, format = "png")
         PG.demand_plot([c_sys5, c_sys5]; title = "Systems", save = path, format = "png")
+        PG.demand_plot(
+            c_sys5;
+            title = "System_Shorten",
+            save = path,
+            horizon = 6,
+            format = "png",
+            initial_time = Dates.DateTime(2024, 1, 1, 2, 0, 0),
+        )
         PG.demand_plot(
             res;
             title = "PlotlyJS_Stair",
@@ -537,8 +569,10 @@ function test_plots(file_path::String)
         list = readdir(path)
         @test list == [
             "PlotlyJS.png",
+            "PlotlyJS_Shorten.png",
             "PlotlyJS_Stair.png",
             "System.png",
+            "System_Shorten.png",
             "Systems.png",
             "multi-PlotlyJS.png",
             "multi-PlotlyJS_Stair.png",
