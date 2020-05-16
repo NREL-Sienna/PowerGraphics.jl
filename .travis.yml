@@ -24,6 +24,10 @@ matrix:
       julia: 1.4
     - os: windows
       julia: nightly
+    - os: osx
+      julia: nightly
+    - os: linux
+      julia: nightly
 
 
 ## uncomment the following lines to allow failures on nightly julia
