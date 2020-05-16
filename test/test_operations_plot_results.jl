@@ -231,6 +231,13 @@ function test_plots(file_path::String)
         )
         PG.fuel_plot([res, res], c_sys5; title = "Fuels", save = path, format = "png")
         PG.fuel_plot(
+            res,
+            c_sys5;
+            title = "Fuel_Curtailment",
+            save = path,
+            curtailment = true,
+        )
+        PG.fuel_plot(
             [res, res],
             variables,
             c_sys5;
@@ -241,6 +248,8 @@ function test_plots(file_path::String)
         list = readdir(path)
         @test list == [
             "Fuel_Bar.png",
+            "Fuel_Curtailment_Bar.png",
+            "Fuel_Curtailment_Stack.png",
             "Fuel_Stack.png",
             "Fuel_var_Bar.png",
             "Fuel_var_Stack.png",
@@ -518,9 +527,19 @@ function test_plots(file_path::String)
             save = path,
             format = "png",
         )
+        PG.fuel_plot(
+            res,
+            c_sys5;
+            title = "Fuel_Curtailment",
+            save = path,
+            format = "png",
+            curtailment = true,
+        )
         list = readdir(path)
         @test list == [
             "Fuel_Bar.png",
+            "Fuel_Curtailment_Bar.png",
+            "Fuel_Curtailment_Stack.png",
             "Fuel_Stack.png",
             "Fuel_var_Bar.png",
             "Fuel_var_Stack.png",

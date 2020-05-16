@@ -136,7 +136,6 @@ function _aggregate_data(res::IS.Results, generators::Dict)
     end
     hcat_ = (args...) -> hcat(args...; makeunique = true)
     all_var = reduce(hcat_, all_results)
-
     fuel_dataframes = Dict()
     for (k, v) in generators
         generator_df = DataFrames.DataFrame()
@@ -176,6 +175,9 @@ fuel_plot(res, system)
 function get_stacked_aggregation_data(res::IS.Results, generators::Dict)
     # order at the top
     category_aggs = _aggregate_data(res, generators)
+    if Symbol("Curtailment") in keys(IS.get_variables(res))
+        category_aggs["Curtailment"] = IS.get_variables(res)[Symbol("Curtailment")]
+    end
     time_range = IS.get_time_stamp(res)[!, :Range]
     labels = collect(keys(category_aggs))
     p_labels = collect(keys(res.parameter_values))

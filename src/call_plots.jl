@@ -8,14 +8,6 @@ function _filter_variables(results::IS.Results; kwargs...)
             filter_results[key] = var
         end
     end
-    for (key, parameter) in IS.get_parameters(results)
-        param = "$key"
-        if !(key in keys(IS.get_variables(results))) &&
-           split(param, "_")[end] in SUPPORTEDGENPARAMS
-            filter_results[key] = parameter
-        end
-    end
-
     reserves = get(kwargs, :reserves, false)
     if reserves
         for (key, var) in IS.get_variables(results)
@@ -25,7 +17,8 @@ function _filter_variables(results::IS.Results; kwargs...)
             end
         end
     end
-
+    curtailment = get(kwargs, :curtailment, false)
+    _filter_curtailment!(results, filter_results, curtailment)
     load = get(kwargs, :load, false)
     if load
         filter_parameters[:P__PowerLoad] = results.parameter_values[:P__PowerLoad]
@@ -41,6 +34,22 @@ function _filter_variables(results::IS.Results; kwargs...)
         filter_parameters,
     )
     return new_results
+end
+
+function _filter_curtailment!(results::IS.Results, filter_results::Dict, curtailment::Bool)
+    for (key, parameter) in IS.get_parameters(results)
+        param = "$key"
+        if !(key in keys(IS.get_variables(results))) &&
+           split(param, "_")[end] in SUPPORTEDGENPARAMS
+            filter_results[key] = parameter
+        elseif (key in keys(IS.get_variables(results))) &&
+               split(param, "_")[end] in SUPPORTEDGENPARAMS &&
+               curtailment
+            filter_results[Symbol("Curtailment")] =
+                parameter .- IS.get_variables(results)[key]
+        end
+    end
+    return filter_results
 end
 
 function _filter_parameters(results::IS.Results)
