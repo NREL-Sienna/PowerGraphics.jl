@@ -1758,7 +1758,7 @@ function _demand_plot_internal(
                 y = data[:, param_names[i]],
                 stackgroup = "one",
                 mode = "lines",
-                fill = "empty",#"tonexty",
+                fill = "tonexty",
                 line_color = seriescolor[i],
                 line_shape = line_shape,
             ),
