@@ -140,7 +140,7 @@ function _aggregate_data(res::IS.Results, generators::Dict)
     for (k, v) in generators
         generator_df = DataFrames.DataFrame()
         for l in v
-            colname = Symbol("$(l)")
+            colname = "$(l)"
             if colname in names(all_var)
                 generator_df = hcat(generator_df, all_var[:, colname], makeunique = true)
             end
@@ -197,6 +197,7 @@ function get_stacked_aggregation_data(res::IS.Results, generators::Dict)
     legend = []
     agg_var = []
     for label in new_labels
+        label
         variable = category_aggs[label]
         if !isempty(variable)
             push!(legend, label)
