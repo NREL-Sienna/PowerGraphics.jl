@@ -16,6 +16,7 @@ export sort_data
 import Dates
 
 #I/O Imports
+import TimeSeries
 import Reexport
 import Requires
 import Colors
