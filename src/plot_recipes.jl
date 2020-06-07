@@ -128,6 +128,8 @@ function plotly_stack_gen(
                     line_shape = line_shape,
                     fill = "tozeroy",
                     line_color = "black",
+                    line_dash = "dash",
+                    line_width = "3",
                     fillcolor = "rgba(0, 0, 0, 0)",
                 ),
             )
@@ -222,6 +224,8 @@ function plotly_stack_gen(
                         line_shape = line_shape,
                         fill = "tozeroy",
                         line_color = "black",
+                        line_dash = "dash",
+                        line_width = "3",
                         fillcolor = "rgba(0, 0, 0, 0)",
                     ),
                 )
@@ -816,7 +820,7 @@ function plotly_bar_gen(
         end
         p_data = hcat(p_data...)
         for gen in 1:length(gens)
-            if bar == 1
+            if res == 1
                 leg = true
             else
                 leg = false
@@ -1056,6 +1060,8 @@ function _fuel_plot_internal(
                 seriescolor = :black,
                 lab = "PowerLoad",
                 legend = :outerright,
+                linestyle = :dash,
+                linewidth = 2.5,
                 linetype = linetype,
             )
         end
@@ -1089,6 +1095,8 @@ function _fuel_plot_internal(
                 [load; load];
                 seriescolor = :black,
                 lab = "PowerLoad",
+                linestyle = :dash,
+                linewidth = 2.5,
                 legend = :outerright,
             )
         end
@@ -1098,6 +1106,7 @@ function _fuel_plot_internal(
     set_display && display(p1)
     set_display && display(p2)
     if !isnothing(save_fig)
+        title = replace(title, " " => "_")
         if linetype == :line
             Plots.savefig(p1, joinpath(save_fig, "$(title)_Stack.png"))
         else
@@ -1171,11 +1180,13 @@ function _bar_plot_internal(
     )
     parameters = res.parameter_values
     if !isempty(parameters)
-        load_data = sum(convert(Matrix, parameters[:PowerLoad]))
+        load_data = sum(convert(Matrix, parameters[:P__PowerLoad]))
         Plots.plot!(
             [3.5, 5.5],
             [load_data; load_data];
             seriescolor = :black,
+            linestyle = :dash,
+            linewidth = 2.5,
             lab = "PowerLoad",
             legend = :outerright,
         )
@@ -1266,11 +1277,13 @@ function _bar_plot_internal(
         )
         parameters = res.parameter_values
         if !isempty(parameters)
-            load_data = sum(convert(Matrix, parameters[:PowerLoad]))
+            load_data = sum(convert(Matrix, parameters[:P__PowerLoad]))
             Plots.plot!(
                 [3.5; 5.5],
                 [load_data; load_data];
                 seriescolor = :black,
+                linestyle = :dash,
+                linewidth = 2.5,
                 lab = "PowerLoad",
                 legend = :outerright,
             )
@@ -1358,13 +1371,16 @@ function _stack_plot_internal(
     )
     parameters = res.parameter_values
     if !isempty(parameters)
-        load_data = cumsum(sum(convert(Matrix, parameters[:PowerLoad]), dims = 2), dims = 2)
+        load_data =
+            cumsum(sum(convert(Matrix, parameters[:P__PowerLoad]), dims = 2), dims = 2)
         Plots.plot!(
             time_range,
             load_data;
             seriescolor = :black,
             lab = "PowerLoad",
             legend = :outerright,
+            linestyle = :dash,
+            linewidth = 2.5,
             linetype = linetype,
         )
     end
@@ -1464,12 +1480,14 @@ function _stack_plot_internal(
         parameters = res.parameter_values
         if !isempty(parameters)
             load_data =
-                cumsum(sum(convert(Matrix, parameters[:PowerLoad]), dims = 2), dims = 2)
+                cumsum(sum(convert(Matrix, parameters[:P__PowerLoad]), dims = 2), dims = 2)
             Plots.plot!(
                 time_range,
                 load_data;
                 seriescolor = :black,
                 lab = "PowerLoad",
+                linestyle = :dash,
+                linewidth = 2.5,
                 legend = :outerright,
                 linetype = linetype,
             )
@@ -1496,7 +1514,7 @@ end
 ######################################### DEMAND ########################
 
 function _demand_plot_internal(res::IS.Results, backend::Plots.PlotlyJSBackend; kwargs...)
-    seriescolor = get(kwargs, :seriescolor, [:auto])
+    seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
     stair = get(kwargs, :stair, false)
     if stair
         line_shape = "hv"
@@ -1536,6 +1554,7 @@ function _demand_plot_internal(res::IS.Results, backend::Plots.PlotlyJSBackend; 
         )
         set_display && Plots.display(p)
         if !isnothing(save_fig)
+            title = replace(title, " " => "_")
             Plots.PlotlyJS.savefig(
                 p,
                 joinpath(save_fig, "$title.$format");
@@ -1549,7 +1568,7 @@ function _demand_plot_internal(res::IS.Results, backend::Plots.PlotlyJSBackend; 
 end
 
 function _demand_plot_internal(results::Array, backend::Plots.PlotlyJSBackend; kwargs...)
-    seriescolor = get(kwargs, :seriescolor, [:auto])
+    seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
     save_fig = get(kwargs, :save, nothing)
     set_display = get(kwargs, :display, true)
     ylabel = _make_ylabel(IS.get_base_power(results[1]))
@@ -1620,7 +1639,7 @@ function _demand_plot_internal(res::IS.Results, backend::Any; kwargs...)
     else
         linetype = :line
     end
-    seriescolor = get(kwargs, :seriescolor, :auto)
+    seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
     save_fig = get(kwargs, :save, nothing)
     set_display = get(kwargs, :display, true)
     time_range = res.time_stamp[:, 1]
@@ -1631,7 +1650,7 @@ function _demand_plot_internal(res::IS.Results, backend::Any; kwargs...)
     for (key, parameters) in res.parameter_values
         title = get(kwargs, :title, "$key")
         data = cumsum(convert(Matrix, parameters), dims = 2)
-        labels = [string(names(parameters)[1])]
+        labels = string(names(parameters)[1])
         for i in 2:length(names(parameters))
             labels = hcat(labels, string(names(parameters)[i]))
         end
@@ -1665,7 +1684,7 @@ function _demand_plot_internal(results::Array{}, backend::Any; kwargs...)
     else
         linetype = :line
     end
-    seriescolor = get(kwargs, :seriescolor, :auto)
+    seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
     save_fig = get(kwargs, :save, nothing)
     set_display = get(kwargs, :display, true)
     time_range = results[1].time_stamp[:, 1]
@@ -1698,6 +1717,7 @@ function _demand_plot_internal(results::Array{}, backend::Any; kwargs...)
         p = Plots.plot(plots...; layout = (length(results), 1))
         set_display && display(p)
         if !isnothing(save_fig)
+            title = replace(title, " " => "_")
             Plots.savefig(p, joinpath(save_fig, "$title.png"))
         end
         plot_list[key] = p
@@ -1727,7 +1747,7 @@ function _demand_plot_internal(
     data = DataFrames.select(parameters, DataFrames.Not(:timestamp))
     param_names = names(data)
     n_traces = length(param_names)
-    seriescolor = get(kwargs, :seriescolor, repeat([:auto], n_traces))
+    seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)#repeat([PLOTLY_DEFAULT], n_traces))
     title = get(kwargs, :title, "PowerLoad")
     for i in 1:n_traces
         push!(
@@ -1739,7 +1759,7 @@ function _demand_plot_internal(
                 stackgroup = "one",
                 mode = "lines",
                 fill = "tonexty",
-                line_color = seriescolor,
+                line_color = seriescolor[i],
                 line_shape = line_shape,
             ),
         )
@@ -1751,6 +1771,7 @@ function _demand_plot_internal(
     )
     set_display && Plots.display(p)
     if !isnothing(save_fig)
+        title = replace(title, " " => "_")
         Plots.PlotlyJS.savefig(
             p,
             joinpath(save_fig, "$title.$format");
@@ -1786,7 +1807,7 @@ function _demand_plot_internal(
         ylabel = _make_ylabel(basepower[i])
         traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
         for n in 1:length(p_names)
-            if n == 1
+            if i == 1
                 leg = true
             else
                 leg = false
@@ -1815,6 +1836,7 @@ function _demand_plot_internal(
     set_display && Plots.display(plots)
     if !isnothing(save_fig)
         format = get(kwargs, :format, "html")
+        title = replace(title, " " => "_")
         Plots.PlotlyJS.savefig(
             plots,
             joinpath(save_fig, "$title.$format");
@@ -1849,7 +1871,7 @@ function _demand_plot_internal(
     title = get(kwargs, :title, "PowerLoad")
     DataFrames.select!(parameters, DataFrames.Not(:timestamp))
     data = cumsum(convert(Matrix, parameters), dims = 2)
-    labels = [string(names(parameters)[1])]
+    labels = string(names(parameters)[1])
     for i in 2:length(names(parameters))
         labels = hcat(labels, string(names(parameters)[i]))
     end
@@ -1919,6 +1941,7 @@ function _demand_plot_internal(
     p = Plots.plot(plots...; layout = (length(parameter_list), 1))
     set_display && display(p)
     if !isnothing(save_fig)
+        title = replace(title, " " => "_")
         Plots.savefig(p, joinpath(save_fig, "$title.png"))
     end
     plot_list[Symbol(title)] = p

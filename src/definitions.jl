@@ -30,10 +30,24 @@ function get_palette(file = nothing)
     sort!(palette_colors, by = x -> x.order)
     return palette_colors
 end
+function get_default_palette()
+    default_palette = []
+    palette = get_palette()
+    default_order = [6, 52, 14, 1, 32, 7, 18, 20, 27, 53, 17] # the default order from the color palette # 
+    for i in default_order
+        for p in palette
+            if p.order == i
+                push!(default_palette, p)
+            end
+        end
+    end
+    return default_palette
+end
 
-GR_DEFAULT = getfield.(get_palette(), :color)'
+GR_DEFAULT = getfield.(get_default_palette(), :color)'
 FUEL_DEFAULT = getfield.(get_palette(), :color)
-PLOTLY_DEFAULT = getfield.(get_palette(), :RGB)
+PLOTLY_DEFAULT = getfield.(get_default_palette(), :RGB)
+PLOTLY_FUEL_DEFAULT = getfield.(get_palette(), :RGB)
 CATEGORY_DEFAULT = getfield.(get_palette(), :category)
 
 VARIABLE_TYPES = ["P", "Spin", "Reg", "Flex"]
@@ -71,7 +85,7 @@ function match_fuel_colors(
     default::Array,
 )
     if backend == Plots.PlotlyJSBackend()
-        color_range = PLOTLY_DEFAULT
+        color_range = PLOTLY_FUEL_DEFAULT
     else
         color_range = FUEL_DEFAULT
     end
