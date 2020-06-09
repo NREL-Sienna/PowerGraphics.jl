@@ -9,6 +9,7 @@ export stack_plot
 export demand_plot
 export stair_plot
 export report
+export plot_variable
 export make_fuel_dictionary
 export fuel_plot
 export match_fuel_colors
