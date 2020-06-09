@@ -29,6 +29,7 @@ import InfrastructureSystems
 const PSY = PowerSystems
 const IS = InfrastructureSystems
 
+include("utils.jl")
 include("plot_results.jl")
 include("definitions.jl")
 include("fuel_results.jl")
