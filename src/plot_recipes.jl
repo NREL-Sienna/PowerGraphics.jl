@@ -216,7 +216,8 @@ function _bar_plot_internal(
                 fillrange = hcat(0, r_data),
             )
             set_display && display(r_plot)
-            !isnothing(save_fig) && Plots.savefig(r_plot, joinpath(save_fig, "$(key)_Reserves.png"))
+            !isnothing(save_fig) &&
+                Plots.savefig(r_plot, joinpath(save_fig, "$(key)_Reserves.png"))
             plot_list[Symbol("$(key)_Reserves")] = r_plot
         end
     end
@@ -343,7 +344,8 @@ function _bar_plot_internal(
             end
             r_plot = Plots.plot(r_plots...; layout = (length(results), 1))
             set_display && display(r_plot)
-            !isnothing(save_fig) && Plots.savefig(r_plot, joinpath(save_fig, "$(key)_Reserves.png"))
+            !isnothing(save_fig) &&
+                Plots.savefig(r_plot, joinpath(save_fig, "$(key)_Reserves.png"))
             plot_list[Symbol("$(key)_Reserves")] = r_plot
         end
     end
@@ -448,7 +450,8 @@ function _stack_plot_internal(
                 fillrange = hcat(zeros(length(time_range)), r_data),
             )
             set_display && display(r_plot)
-            !isnothing(save_fig) && Plots.savefig(r_plot, joinpath(save_fig, "$(key)_Reserves.png"))
+            !isnothing(save_fig) &&
+                Plots.savefig(r_plot, joinpath(save_fig, "$(key)_Reserves.png"))
             plot_list[Symbol("$(key)_Reserves")] = r_plot
         end
     end
@@ -578,7 +581,8 @@ function _stack_plot_internal(
             end
             r_plot = Plots.plot(r_plots...; layout = (length(results), 1))
             set_display && display(r_plot)
-            !isnothing(save_fig) && Plots.savefig(r_plot, joinpath(save_fig, "$(key)_Reserves.png"))
+            !isnothing(save_fig) &&
+                Plots.savefig(r_plot, joinpath(save_fig, "$(key)_Reserves.png"))
             plot_list[Symbol("$(key)_Reserves")] = r_plot
         end
     end

@@ -145,12 +145,17 @@ function plotly_stack_gen(
                 )
             end
             r_plot = Plots.PlotlyJS.plot(
-            r_traces,
-            Plots.PlotlyJS.Layout(title = "$(key) Reserves", yaxis_title = ylabel),
+                r_traces,
+                Plots.PlotlyJS.Layout(title = "$(key) Reserves", yaxis_title = ylabel),
             )
             set_display && Plots.display(r_plot)
             if !isnothing(save_fig)
-                Plots.PlotlyJS.savefig(r_plot, joinpath(save_fig, "$(key)_Reserves.$format"); width = 630, height = 630)
+                Plots.PlotlyJS.savefig(
+                    r_plot,
+                    joinpath(save_fig, "$(key)_Reserves.$format");
+                    width = 630,
+                    height = 630,
+                )
             end
             plot_output[Symbol("$(key)_Reserves")] = r_plot
         end
@@ -280,15 +285,20 @@ function plotly_stack_gen(
                     )
                 end
                 r_plot = Plots.PlotlyJS.plot(
-                r_traces,
-                Plots.PlotlyJS.Layout(title = "$(key) Reserves", yaxis_title = ylabel),
+                    r_traces,
+                    Plots.PlotlyJS.Layout(title = "$(key) Reserves", yaxis_title = ylabel),
                 )
                 r_plots = vcat(r_plots, r_plot)
             end
             r_plot = vcat(r_plots...)
             set_display && Plots.display(r_plot)
             if !isnothing(save_fig)
-                Plots.PlotlyJS.savefig(r_plot, joinpath(save_fig, "$(key)_Reserves.$format"); width = 630, height = 630)
+                Plots.PlotlyJS.savefig(
+                    r_plot,
+                    joinpath(save_fig, "$(key)_Reserves.$format");
+                    width = 630,
+                    height = 630,
+                )
             end
             plot_output[Symbol("$(key)_Reserves")] = r_plot
         end
@@ -546,7 +556,8 @@ function _bar_plot_internal(
     title = get(kwargs, :title, " ")
     ylabel = _make_bar_ylabel(IS.get_base_power(res))
     plots = plotly_bar_plots(res, seriescolor, ylabel, interval; kwargs...)
-    gen_plots = plotly_bar_gen(res, seriescolor, title, ylabel, interval, reserves; kwargs...)
+    gen_plots =
+        plotly_bar_gen(res, seriescolor, title, ylabel, interval, reserves; kwargs...)
     return PlotList(merge(plots, gen_plots))
 end
 
@@ -563,7 +574,8 @@ function _bar_plot_internal(
     title = get(kwargs, :title, " ")
     ylabel = _make_bar_ylabel(IS.get_base_power(res[1]))
     plots = plotly_bar_plots(res, seriescolor, ylabel, interval; kwargs...)
-    gen_plots = plotly_bar_gen(res, seriescolor, title, ylabel, interval, reserves; kwargs...)
+    gen_plots =
+        plotly_bar_gen(res, seriescolor, title, ylabel, interval, reserves; kwargs...)
     return PlotList(merge(plots, gen_plots))
 end
 
@@ -740,12 +752,12 @@ function plotly_bar_gen(
     seriescolors = set_seriescolor(seriescolor, gens)
     data = []
     for (k, v) in IS.get_variables(res)
-        data = vcat(data, [sum(sum(convert(Matrix, v), dims =2), dims = 1)])
+        data = vcat(data, [sum(sum(convert(Matrix, v), dims = 2), dims = 1)])
     end
     bar_data = hcat(data...) ./ interval
     p_data = []
     for (p, v) in res.parameter_values
-        p_data = vcat(p_data, [sum(sum(convert(Matrix, v), dims =2), dims = 1)])
+        p_data = vcat(p_data, [sum(sum(convert(Matrix, v), dims = 2), dims = 1)])
     end
     p_data = hcat(p_data...) ./ interval
     for gen in 1:length(gens)
@@ -805,7 +817,7 @@ function plotly_bar_gen(
             r_traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
             r_data = []
             for (k, v) in reserve
-                r_data = vcat(r_data, [sum(sum(convert(Matrix, v), dims =2), dims = 1)])
+                r_data = vcat(r_data, [sum(sum(convert(Matrix, v), dims = 2), dims = 1)])
             end
             r_data = hcat(r_data...) / interval
             r_gens = collect(keys(reserve))
@@ -825,15 +837,15 @@ function plotly_bar_gen(
                 )
             end
             r_plot = Plots.PlotlyJS.plot(
-            r_traces,
-            Plots.PlotlyJS.Layout(
-                title = "$(key) Reserves",
-                yaxis_title = ylabel,
-                color = seriescolor,
-                barmode = "stack",
+                r_traces,
+                Plots.PlotlyJS.Layout(
+                    title = "$(key) Reserves",
+                    yaxis_title = ylabel,
+                    color = seriescolor,
+                    barmode = "stack",
                 ),
             )
-            set_display&& Plots.display(r_plot)#, Plots.display(down_plot)
+            set_display && Plots.display(r_plot)#, Plots.display(down_plot)
             if !isnothing(save_fig)
                 Plots.PlotlyJS.savefig(
                     r_plot,
@@ -875,12 +887,12 @@ function plotly_bar_gen(
         params = collect(keys((results[i].parameter_values)))
         data = []
         for (k, v) in IS.get_variables(results[i])
-            data = vcat(data, [sum(sum(convert(Matrix, v), dims =2), dims = 1)])
+            data = vcat(data, [sum(sum(convert(Matrix, v), dims = 2), dims = 1)])
         end
         data = hcat(data...) ./ interval
         p_data = []
         for (p, v) in results[i].parameter_values
-            p_data = vcat(p_data, [sum(sum(convert(Matrix, v), dims =2), dims = 1)])
+            p_data = vcat(p_data, [sum(sum(convert(Matrix, v), dims = 2), dims = 1)])
         end
         p_data = hcat(p_data...) ./ interval
         for gen in 1:length(gens)
@@ -943,7 +955,8 @@ function plotly_bar_gen(
             for i in 1:length(reserve_list)
                 r_data = []
                 for (k, v) in reserve_list[i][key]
-                    r_data = vcat(r_data, [sum(sum(convert(Matrix, v), dims =2), dims = 1)])
+                    r_data =
+                        vcat(r_data, [sum(sum(convert(Matrix, v), dims = 2), dims = 1)])
                 end
                 r_data = hcat(r_data...) / interval
                 r_gens = collect(keys(reserve_list[i][key]))
@@ -966,12 +979,12 @@ function plotly_bar_gen(
                     )
                 end
                 r_plot = Plots.PlotlyJS.plot(
-                r_traces,
-                Plots.PlotlyJS.Layout(
-                    title = "$(key) Reserves",
-                    yaxis_title = ylabel,
-                    color = seriescolor,
-                    barmode = "stack",
+                    r_traces,
+                    Plots.PlotlyJS.Layout(
+                        title = "$(key) Reserves",
+                        yaxis_title = ylabel,
+                        color = seriescolor,
+                        barmode = "stack",
                     ),
                 )
                 r_plots = vcat(r_plots, r_plot)
@@ -992,7 +1005,13 @@ function plotly_bar_gen(
     return plot_output
 end
 
-function plotly_bar_plots(results::Array, seriescolor::Array, ylabel::String, interval::Float64; kwargs...)
+function plotly_bar_plots(
+    results::Array,
+    seriescolor::Array,
+    ylabel::String,
+    interval::Float64;
+    kwargs...,
+)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     time_range = results[1].time_stamp
@@ -1019,7 +1038,8 @@ function plotly_bar_plots(results::Array, seriescolor::Array, ylabel::String, in
                         y = sum(convert(Matrix, var)[:, gen], dims = 1) ./ interval,
                         type = "bar",
                         barmode = "stack",
-                        marker_color = seriescolor[gen],)
+                        marker_color = seriescolor[gen],
+                    ),
                 )
             end
             p = Plots.PlotlyJS.plot(
@@ -1048,7 +1068,13 @@ function plotly_bar_plots(results::Array, seriescolor::Array, ylabel::String, in
     return plot_list
 end
 
-function plotly_bar_plots(res::IS.Results, seriescolor::Array, ylabel::String, interval::Float64; kwargs...)
+function plotly_bar_plots(
+    res::IS.Results,
+    seriescolor::Array,
+    ylabel::String,
+    interval::Float64;
+    kwargs...,
+)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     time_range = IS.get_time_stamp(res)
@@ -1109,7 +1135,8 @@ function _fuel_plot_internal(
     stair = get(kwargs, :stair, false)
     stack_title = stair ? "$(title) Stair" : stack_title = "$(title) Stack"
     stacks = plotly_fuel_stack_gen(stack, seriescolor, stack_title, ylabel; kwargs...)
-    bars = plotly_fuel_bar_gen(bar, seriescolor, "$(title) Bar", ylabel, interval; kwargs...)
+    bars =
+        plotly_fuel_bar_gen(bar, seriescolor, "$(title) Bar", ylabel, interval; kwargs...)
     return PlotList(Dict(:Fuel_Stack => stacks, :Fuel_Bar => bars))
 end
 
@@ -1182,7 +1209,7 @@ function _demand_plot_internal(results::Array, backend::Plots.PlotlyJSBackend; k
             seriescolor = length(seriescolor) < n_traces ?
                 repeat(seriescolor, Int64(ceil(n_traces / length(seriescolor)))) :
                 seriescolor
-                n == 1 ? leg = true : leg = false
+            n == 1 ? leg = true : leg = false
             for i in 1:n_traces
                 push!(
                     traces,

@@ -247,7 +247,8 @@ function fuel_plot(results::Array, generator_dict::Dict; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    time_interval = IS.get_time_stamp(results[1])[2, 1] - IS.get_time_stamp(results[1])[1, 1]
+    time_interval =
+        IS.get_time_stamp(results[1])[2, 1] - IS.get_time_stamp(results[1])[1, 1]
     interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
     return _fuel_plot_internal(
         stack,
@@ -299,7 +300,15 @@ function bar_plot(res::IS.Results; kwargs...)
     end
     time_interval = IS.get_time_stamp(res)[2, 1] - IS.get_time_stamp(res)[1, 1]
     interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
-    return _bar_plot_internal(res, backend, save_fig, set_display, interval, reserves; kwargs...)
+    return _bar_plot_internal(
+        res,
+        backend,
+        save_fig,
+        set_display,
+        interval,
+        reserves;
+        kwargs...,
+    )
 end
 
 """
@@ -345,7 +354,15 @@ function bar_plot(results::Array; kwargs...)
     end
     time_interval = IS.get_time_stamp(res[1])[2, 1] - IS.get_time_stamp(res[1])[1, 1]
     interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
-    return _bar_plot_internal(res, backend, save_fig, set_display, interval, reserve_list; kwargs...)
+    return _bar_plot_internal(
+        res,
+        backend,
+        save_fig,
+        set_display,
+        interval,
+        reserve_list;
+        kwargs...,
+    )
 end
 
 function bar_plot(res::IS.Results, variables::Array; kwargs...)
@@ -465,7 +482,14 @@ function stack_plot(results::Array{}; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    return _stack_plot_internal(new_results, backend, save_fig, set_display, reserve_list; kwargs...)
+    return _stack_plot_internal(
+        new_results,
+        backend,
+        save_fig,
+        set_display,
+        reserve_list;
+        kwargs...,
+    )
 end
 
 """

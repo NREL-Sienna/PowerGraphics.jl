@@ -69,15 +69,9 @@ SUPPORTEDSERVICEPARAMS = [
     "StaticReserve_ReserveDown",
 ]
 
-UP_RESERVES = [
-    "VariableReserve_ReserveUp",
-    "StaticReserve_ReserveUp",
-]
+UP_RESERVES = ["VariableReserve_ReserveUp", "StaticReserve_ReserveUp"]
 
-DOWN_RESERVES = [
-    "VariableReserve_ReserveDown",
-    "StaticReserve_ReserveDown",
-]
+DOWN_RESERVES = ["VariableReserve_ReserveDown", "StaticReserve_ReserveDown"]
 
 OVERGENERATION_VARIABLE = :γ⁻__P
 UNSERVEDENERGY_VARIABLE = :γ⁺__P
