@@ -9,6 +9,7 @@ export stack_plot
 export demand_plot
 export stair_plot
 export report
+export plot_variable
 export make_fuel_dictionary
 export fuel_plot
 export match_fuel_colors
@@ -29,6 +30,7 @@ import InfrastructureSystems
 const PSY = PowerSystems
 const IS = InfrastructureSystems
 
+include("utils.jl")
 include("plot_results.jl")
 include("definitions.jl")
 include("fuel_results.jl")
