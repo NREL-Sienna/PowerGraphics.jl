@@ -1,23 +1,14 @@
 function _filter_variables(results::IS.Results; kwargs...)
-    filter_results = Dict()
+    filter_variables = Dict()
     filter_parameters = Dict()
     results = _filter_parameters(results)
     for (key, var) in IS.get_variables(results)
-        if startswith("$key", "P") | any(key .== [:γ⁻__P, :γ⁺__P])
-            filter_results[key] = var
-        end
-    end
-    reserves = get(kwargs, :reserves, false)
-    if reserves
-        for (key, var) in IS.get_variables(results)
-            start = split("$key", "_")[1]
-            if in(start, VARIABLE_TYPES)
-                filter_results[key] = var
-            end
+        if startswith("$key", "P__") | any(key .== [:γ⁻__P, :γ⁺__P])
+            filter_variables[key] = var
         end
     end
     curtailment = get(kwargs, :curtailment, false)
-    _filter_curtailment!(results, filter_results, curtailment)
+    _filter_curtailment!(results, filter_variables, curtailment)
     load = get(kwargs, :load, false)
     if load
         filter_parameters[:P__PowerLoad] = results.parameter_values[:P__PowerLoad]
@@ -25,7 +16,7 @@ function _filter_variables(results::IS.Results; kwargs...)
 
     new_results = Results(
         IS.get_base_power(results),
-        filter_results,
+        filter_variables,
         IS.get_optimizer_log(results),
         IS.get_total_cost(results),
         IS.get_time_stamp(results),
@@ -33,6 +24,31 @@ function _filter_variables(results::IS.Results; kwargs...)
         filter_parameters,
     )
     return new_results
+end
+
+function _filter_reserves(results::IS.Results, reserves::Bool)
+    filter_up_reserves = Dict()
+    filter_down_reserves = Dict()
+    if reserves
+        for (key, var) in IS.get_variables(results)
+            if occursin("__", "$key")
+                ending = split("$key", "__")[2]
+                if in(ending, UP_RESERVES)
+                    filter_up_reserves[key] = var
+                elseif in(ending, DOWN_RESERVES)
+                    filter_down_reserves[key] = var
+                end
+            end
+        end
+        if isempty(filter_up_reserves) && isempty(filter_down_reserves)
+            @warn "No reserves found in results."
+            return nothing
+        else
+            return Dict("Up" => filter_up_reserves, "Down" => filter_down_reserves)
+        end
+    else
+        return nothing
+    end
 end
 
 function _filter_curtailment!(results::IS.Results, filter_results::Dict, curtailment::Bool)
@@ -197,6 +213,8 @@ function fuel_plot(res::IS.Results, generator_dict::Dict; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
+    time_interval = IS.get_time_stamp(res)[2, 1] - IS.get_time_stamp(res)[1, 1]
+    interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
     return _fuel_plot_internal(
         stack,
         bar,
@@ -205,7 +223,8 @@ function fuel_plot(res::IS.Results, generator_dict::Dict; kwargs...)
         save_fig,
         set_display,
         title,
-        ylabel;
+        ylabel,
+        interval;
         kwargs...,
     )
 end
@@ -228,6 +247,9 @@ function fuel_plot(results::Array, generator_dict::Dict; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
+    time_interval =
+        IS.get_time_stamp(results[1])[2, 1] - IS.get_time_stamp(results[1])[1, 1]
+    interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
     return _fuel_plot_internal(
         stack,
         bar,
@@ -236,7 +258,8 @@ function fuel_plot(results::Array, generator_dict::Dict; kwargs...)
         save_fig,
         set_display,
         title,
-        ylabel;
+        ylabel,
+        interval;
         kwargs...,
     )
 end
@@ -269,11 +292,23 @@ function bar_plot(res::IS.Results; kwargs...)
     backend = Plots.backend()
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
+    reserve = get(kwargs, :reserves, false)
+    reserves = _filter_reserves(res, reserve)
     res = _filter_variables(res; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    return _bar_plot_internal(res, backend, save_fig, set_display; kwargs...)
+    time_interval = IS.get_time_stamp(res)[2, 1] - IS.get_time_stamp(res)[1, 1]
+    interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
+    return _bar_plot_internal(
+        res,
+        backend,
+        save_fig,
+        set_display,
+        interval,
+        reserves;
+        kwargs...,
+    )
 end
 
 """
@@ -305,15 +340,29 @@ function bar_plot(results::Array; kwargs...)
     backend = Plots.backend()
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
-    res = _filter_variables(results[1]; kwargs...)
-    for i in 2:size(results, 1)
-        filter = _filter_variables(results[i]; kwargs...)
-        res = hcat(res, filter)
+    reserve = get(kwargs, :reserves, false)
+    reserve_list = []
+    res = []
+    for result in results
+        reserve_list = vcat(reserve_list, _filter_reserves(result, reserve))
+        res = vcat(res, _filter_variables(result; kwargs...))
     end
+    #res = hcat(res...)
+    #reserve_list = hcat(reserve_list...) 
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    return _bar_plot_internal(res, backend, save_fig, set_display; kwargs...)
+    time_interval = IS.get_time_stamp(res[1])[2, 1] - IS.get_time_stamp(res[1])[1, 1]
+    interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
+    return _bar_plot_internal(
+        res,
+        backend,
+        save_fig,
+        set_display,
+        interval,
+        reserve_list;
+        kwargs...,
+    )
 end
 
 function bar_plot(res::IS.Results, variables::Array; kwargs...)
@@ -382,11 +431,14 @@ function stack_plot(res::IS.Results; kwargs...)
     set_display = get(kwargs, :set_display, true)
     backend = Plots.backend()
     save_fig = get(kwargs, :save, nothing)
+    reserve = get(kwargs, :reserves, false)
+    reserves = _filter_reserves(res, reserve)
+
     res = _filter_variables(res; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    return _stack_plot_internal(res, backend, save_fig, set_display; kwargs...)
+    return _stack_plot_internal(res, backend, save_fig, set_display, reserves; kwargs...)
 end
 
 """
@@ -418,15 +470,26 @@ function stack_plot(results::Array{}; kwargs...)
     set_display = get(kwargs, :set_display, true)
     backend = Plots.backend()
     save_fig = get(kwargs, :save, nothing)
-    new_results = _filter_variables(results[1]; kwargs...)
-    for res in 2:length(results)
-        filtered = _filter_variables(results[res]; kwargs...)
-        new_results = hcat(new_results, filtered)
+    reserves = get(kwargs, :reserves, false)
+    reserve_list = []
+    new_results = []
+    for res in results
+        reserve_list = vcat(reserve_list, _filter_reserves(res, reserves))
+        new_results = vcat(new_results, _filter_variables(res; kwargs...))
     end
+    #new_results = hcat(new_results...)
+    #reserves_list = hcat(reserves_list...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    return _stack_plot_internal(new_results, backend, save_fig, set_display; kwargs...)
+    return _stack_plot_internal(
+        new_results,
+        backend,
+        save_fig,
+        set_display,
+        reserve_list;
+        kwargs...,
+    )
 end
 
 """
@@ -504,10 +567,23 @@ function _make_ylabel(base_power::Float64)
     return ylabel
 end
 
+function _make_bar_ylabel(base_power::Float64)
+    if isapprox(base_power, 1)
+        ylabel = "Generation (MWh)"
+    elseif isapprox(base_power, 100)
+        ylabel = "Generation (GWh)"
+    else
+        ylabel = "Generation (MWh x$base_power)"
+    end
+    return ylabel
+end
+
 function stair_plot(res::IS.Results; kwargs...)
     set_display = get(kwargs, :set_display, true)
     backend = Plots.backend()
     save_fig = get(kwargs, :save, nothing)
+    reserve = get(kwargs, :reserves, false)
+    reserves = _filter_reserves(res, reserve)
     res = _filter_variables(res; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
@@ -516,7 +592,8 @@ function stair_plot(res::IS.Results; kwargs...)
         res,
         backend,
         save_fig,
-        set_display;
+        set_display,
+        reserves;
         stairs = "hv",
         linetype = :steppost,
         kwargs...,
@@ -527,11 +604,15 @@ function stair_plot(results::Array; kwargs...)
     set_display = get(kwargs, :set_display, true)
     backend = Plots.backend()
     save_fig = get(kwargs, :save, nothing)
-    new_results = _filter_variables(results[1]; kwargs...)
-    for res in 2:length(results)
-        filtered = _filter_variables(results[res]; kwargs...)
-        new_results = hcat(new_results, filtered)
+    reserves = get(kwargs, :reserves, false)
+    new_results = []
+    reserves_list = []
+    for res in results
+        reserves_list = vcat(reserves_list, _filter_reserves(res, reserves))
+        new_results = vcat(new_results, _filter_variables(res; kwargs...))
     end
+    #reserves_list = hcat(reserves_list...)
+    #new_results = hcat(new_results...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
@@ -539,7 +620,8 @@ function stair_plot(results::Array; kwargs...)
         new_results,
         backend,
         save_fig,
-        set_display;
+        set_display,
+        reserves_list;
         stairs = "hv",
         linetype = :steppost,
         kwargs...,

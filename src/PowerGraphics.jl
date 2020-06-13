@@ -35,6 +35,7 @@ include("plot_results.jl")
 include("definitions.jl")
 include("fuel_results.jl")
 include("plot_recipes.jl")
+include("plotly_recipes.jl")
 include("call_plots.jl")
 
 function __init__()
