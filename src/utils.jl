@@ -1,8 +1,8 @@
-function plot_dataframe(df, title; kwargs...)
+function plot_dataframe(time, df, title; kwargs...)
     labels = DataFrames.names(df)
     p = Plots.plot()
     for (ix, c) in enumerate(DataFrames.eachcol(df))
-        Plots.plot!(c, title = title, label = labels[ix]; kwargs...)
+        Plots.plot!(time[!,1], c, title = title, label = labels[ix]; kwargs...)
     end
     Plots.display(p)
     return p
