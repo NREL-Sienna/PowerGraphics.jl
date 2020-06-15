@@ -97,7 +97,7 @@ function _fuel_plot_internal(
             fillrange = bar_base_data,
         )
         if !isempty(bar.p_labels)
-            load = cumsum(bar.parameters, dims = 2)
+            load = cumsum(bar.parameters, dims = 2) ./ interval
             Plots.plot!(
                 [3.5; 5.5],
                 [load; load];
