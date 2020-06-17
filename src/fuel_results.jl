@@ -140,7 +140,7 @@ function _aggregate_data(res::IS.Results, generators::Dict)
     for (k, v) in generators
         generator_df = DataFrames.DataFrame()
         for l in v
-            colname = "$l"
+            colname = typeof(names(all_var)[1]) == String ? "$l" : Symbol(l)
             if colname in names(all_var)
                 generator_df = hcat(generator_df, all_var[:, colname], makeunique = true)
             end
