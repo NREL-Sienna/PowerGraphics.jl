@@ -93,11 +93,11 @@ function match_fuel_colors(
     else
         color_range = FUEL_DEFAULT
     end
-    @show color_fuel = DataFrames.DataFrame(fuels = CATEGORY_DEFAULT, colors = color_range)
+    color_fuel = DataFrames.DataFrame(fuels = CATEGORY_DEFAULT, colors = color_range)
     default =
         [(color_fuel[findall(in(["$(bar.labels[1])"]), color_fuel.fuels), :][:, :colors])[1]]
     for i in 2:length(bar.labels)
-        @show bar.labels[i] (color_fuel[findall(in(["$(bar.labels[i])"]), color_fuel.fuels), :][
+        @debug bar.labels[i] (color_fuel[findall(in(["$(bar.labels[i])"]), color_fuel.fuels), :][
                 :,
                 :colors,
             ])
