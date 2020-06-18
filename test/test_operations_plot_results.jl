@@ -185,20 +185,20 @@ function test_plots(file_path::String)
     end
     @testset "Test Demand Plots" begin
         path = mkdir(joinpath(file_path, "demand"))
-        PG.demand_plot(res; title = "Plot", save = path)
-        PG.demand_plot([res, res]; title = "Multi-Plot", save = path)
-        PG.demand_plot(res; title = "Plot_Stair", stair = true, save = path)
-        PG.demand_plot(
+        PG.plot_demand(res; title = "Plot", save = path)
+        PG.plot_demand([res, res]; title = "Multi-Plot", save = path)
+        PG.plot_demand(res; title = "Plot_Stair", stair = true, save = path)
+        PG.plot_demand(
             res;
             title = "Plot_Shorten",
             save = path,
             horizon = 6,
             initial_time = Dates.DateTime(2024, 1, 1, 2, 0, 0),
         )
-        PG.demand_plot([res, res]; title = "Multi-Plot_Stair", stair = true, save = path)
-        PG.demand_plot(c_sys5; title = "System", save = path)
-        PG.demand_plot([c_sys5, c_sys5]; title = "Systems", save = path)
-        PG.demand_plot(
+        PG.plot_demand([res, res]; title = "Multi-Plot_Stair", stair = true, save = path)
+        PG.plot_demand(c_sys5; title = "System", save = path)
+        PG.plot_demand([c_sys5, c_sys5]; title = "Systems", save = path)
+        PG.plot_demand(
             c_sys5;
             title = "System_Shorten",
             save = path,
@@ -217,7 +217,6 @@ function test_plots(file_path::String)
             "Systems.png",
         ]
     end
-
     @testset "Test Fuel plot with system" begin
         path = mkdir(joinpath(file_path, "fuel"))
         PG.fuel_plot(res, c_sys5; title = "Fuel", save = path, format = "png")
@@ -551,8 +550,8 @@ function test_plots(file_path::String)
     end
     @testset "Test PlotlyJS Demand Plots" begin
         path = mkdir(joinpath(file_path, "plotly-multi-plots"))
-        PG.demand_plot(res; title = "PlotlyJS", save = path, format = "png")
-        PG.demand_plot(
+        PG.plot_demand(res; title = "PlotlyJS", save = path, format = "png")
+        PG.plot_demand(
             res;
             title = "PlotlyJS_Shorten",
             save = path,
@@ -560,10 +559,10 @@ function test_plots(file_path::String)
             format = "png",
             initial_time = Dates.DateTime(2024, 1, 1, 2, 0, 0),
         )
-        PG.demand_plot([res, res]; title = "multi-PlotlyJS", save = path, format = "png")
-        PG.demand_plot(c_sys5; title = "System", save = path, format = "png")
-        PG.demand_plot([c_sys5, c_sys5]; title = "Systems", save = path, format = "png")
-        PG.demand_plot(
+        PG.plot_demand([res, res]; title = "multi-PlotlyJS", save = path, format = "png")
+        PG.plot_demand(c_sys5; title = "System", save = path, format = "png")
+        PG.plot_demand([c_sys5, c_sys5]; title = "Systems", save = path, format = "png")
+        PG.plot_demand(
             c_sys5;
             title = "System_Shorten",
             save = path,
@@ -571,14 +570,14 @@ function test_plots(file_path::String)
             format = "png",
             initial_time = Dates.DateTime(2024, 1, 1, 2, 0, 0),
         )
-        PG.demand_plot(
+        PG.plot_demand(
             res;
             title = "PlotlyJS_Stair",
             stair = true,
             save = path,
             format = "png",
         )
-        PG.demand_plot(
+        PG.plot_demand(
             [res, res];
             title = "multi-PlotlyJS_Stair",
             stair = true,
