@@ -761,3 +761,194 @@ function _demand_plot_internal(
     plot_list[Symbol(title)] = p
     return PlotList(plot_list)
 end
+
+function _reserve_plot(res::IS.Results, backend::Any; kwargs...)
+    reserves = _filter_reserves(res, true)
+    time_range = IS.get_time_stamp(res)[:, 1]
+    time_interval =
+        IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
+    interval = Dates.Millisecond(Dates.Hour(1)) / (time_range[2] - time_range[1])
+    seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
+    set_display = get(kwargs, :display, true)
+    linetype = get(kwargs, :stair, false) ? :steppost : :line
+    save_fig = get(kwargs, :save, nothing)
+    ylabel = _make_ylabel(IS.get_base_power(res))
+    bar_ylabel = _make_bar_ylabel(IS.get_base_power(res))
+    plot_list = Dict()
+    if !isnothing(reserves)
+        for (key, reserve) in reserves
+            bar_data = []
+            for (k, v) in reserve
+                bar_data = vcat(bar_data, [sum(convert(Matrix, v), dims = 2)])
+            end
+            bar_data = sum(cumsum(hcat(bar_data...), dims = 2), dims = 1) ./ interval
+            bar_plot = Plots.plot(
+                [3.5; 5.5],
+                [bar_data; bar_data];
+                seriescolor = seriescolor,
+                ylabel = bar_ylabel,
+                xlabel = "$(time_interval)",
+                xticks = false,
+                xlims = (1, 8),
+                grid = false,
+                lab = hcat(string.(keys(reserve))...),
+                title = "$(key) Reserves",
+                legend = :outerright,
+                fillrange = hcat(0, bar_data),
+            )
+            set_display && display(bar_plot)
+            !isnothing(save_fig) &&
+                Plots.savefig(bar_plot, joinpath(save_fig, "Bar_$(key)_Reserves.png"))
+            plot_list[Symbol("Bar_$(key)_Reserves")] = bar_plot
+            stack_data = []
+            for (k, v) in reserve
+                stack_data = vcat(stack_data, [sum(convert(Matrix, v), dims = 2)])
+            end
+            stack_data = cumsum(hcat(stack_data...), dims = 2)
+            time_range = IS.get_time_stamp(res)[:, 1]
+            r_plot = Plots.plot(
+                time_range,
+                stack_data;
+                seriescolor = seriescolor,
+                ylabel = ylabel,
+                xlabel = "$(IS.convert_compound_period(time_interval))",
+                xtick = [time_range[1], last(time_range)],
+                grid = false,
+                lab = hcat((string.(keys(reserve)))...),
+                title = "$(key) Reserves",
+                legend = :outerright,
+                linetype = linetype,
+                fillrange = hcat(zeros(length(time_range)), stack_data),
+            )
+            set_display && display(r_plot)
+            !isnothing(save_fig) &&
+                Plots.savefig(r_plot, joinpath(save_fig, "Stack_$(key)_Reserves.png"))
+            plot_list[Symbol("Stack_$(key)_Reserves")] = r_plot
+        end
+        return PlotList(plot_list)
+    end
+end
+
+function _reserve_plot(res::IS.Results, backend::Any; kwargs...)
+    reserves = _filter_reserves(res, true)
+    time_range = IS.get_time_stamp(res)[:, 1]
+    time_interval =
+        IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
+    interval = Dates.Millisecond(Dates.Hour(1)) / (time_range[2] - time_range[1])
+    seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
+    set_display = get(kwargs, :display, true)
+    linetype = get(kwargs, :stair, false) ? :steppost : :line
+    save_fig = get(kwargs, :save, nothing)
+    ylabel = _make_ylabel(IS.get_base_power(res))
+    bar_ylabel = _make_bar_ylabel(IS.get_base_power(res))
+    plot_list = Dict()
+    if !isnothing(reserves)
+        for (key, reserve) in reserves
+            bar_data = []
+            for (k, v) in reserve
+                bar_data = vcat(bar_data, [sum(convert(Matrix, v), dims = 2)])
+            end
+            bar_data = sum(cumsum(hcat(bar_data...), dims = 2), dims = 1) ./ interval
+            bar_plot = Plots.plot(
+                [3.5; 5.5],
+                [bar_data; bar_data];
+                seriescolor = seriescolor,
+                ylabel = bar_ylabel,
+                xlabel = "$(time_interval)",
+                xticks = false,
+                xlims = (1, 8),
+                grid = false,
+                lab = hcat(string.(keys(reserve))...),
+                title = "$(key) Reserves",
+                legend = :outerright,
+                fillrange = hcat(0, bar_data),
+            )
+            set_display && display(bar_plot)
+            !isnothing(save_fig) &&
+                Plots.savefig(bar_plot, joinpath(save_fig, "Bar_$(key)_Reserves.png"))
+            plot_list[Symbol("Bar_$(key)_Reserves")] = bar_plot
+            stack_data = []
+            for (k, v) in reserve
+                stack_data = vcat(stack_data, [sum(convert(Matrix, v), dims = 2)])
+            end
+            stack_data = cumsum(hcat(stack_data...), dims = 2)
+            time_range = IS.get_time_stamp(res)[:, 1]
+            r_plot = Plots.plot(
+                time_range,
+                stack_data;
+                seriescolor = seriescolor,
+                ylabel = ylabel,
+                xlabel = "$(IS.convert_compound_period(time_interval))",
+                xtick = [time_range[1], last(time_range)],
+                grid = false,
+                lab = hcat((string.(keys(reserve)))...),
+                title = "$(key) Reserves",
+                legend = :outerright,
+                linetype = linetype,
+                fillrange = hcat(zeros(length(time_range)), stack_data),
+            )
+            set_display && display(r_plot)
+            !isnothing(save_fig) &&
+                Plots.savefig(r_plot, joinpath(save_fig, "Stack_$(key)_Reserves.png"))
+            plot_list[Symbol("Stack_$(key)_Reserves")] = r_plot
+        end
+        return PlotList(plot_list)
+    end
+end
+
+function _variable_plots_internal(
+    res::IS.Results,
+    var_name::Symbol,
+    backend::Any,
+    interval::Float64;
+    kwargs...,
+)
+    seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
+    save_fig = get(kwargs, :save, nothing)
+    bar_y_label = _make_bar_ylabel(IS.get_base_power(res))
+    y_label = _make_ylabel(IS.get_base_power(res))
+    time_range = IS.get_time_stamp(res)[:, 1]
+    time_interval =
+        IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
+    plot_list = Dict()
+    variable = IS.get_variables(res)[var_name]
+    bar_plot_data = sum(cumsum(convert(Matrix, variable), dims = 2), dims = 1) ./ interval
+    p = Plots.plot(
+        [3.5; 5.5],
+        [bar_plot_data; bar_plot_data];
+        seriescolor = seriescolor,
+        ylabel = bar_y_label,
+        xlabel = "$time_interval",
+        xticks = false,
+        xlims = (1, 8),
+        grid = false,
+        lab = hcat(string.(names(variable))...),
+        title = "$var_name",
+        legend = :outerright,
+        fillrange = hcat(0, bar_plot_data),
+    )
+    get(kwargs, :display, true) && display(p)
+    !isnothing(save_fig) && Plots.savefig(p, joinpath(save_fig, "$(var_name)_Bar.png"))
+    plot_list["Bar_$var_name"] = p
+    plot_data = cumsum(convert(Matrix, variable), dims = 2)
+    linetype = get(kwargs, :stair, false) ? :steppost : :line
+    p = Plots.plot(
+        time_range,
+        plot_data;
+        seriescolor = seriescolor,
+        ylabel = y_label,
+        xlabel = "$time_interval",
+        xtick = [time_range[1], last(time_range)],
+        grid = false,
+        lab = hcat(string.(names(variable))...),
+        title = "$var_name",
+        legend = :outerright,
+        linetype = linetype,
+        fillrange = hcat(zeros(length(time_range)), plot_data),
+    )
+    get(kwargs, :display, true) && display(p)
+    stack_name = linetype == :line ? "$(var_name)_Stack" : "$(var_name)_Stair"
+    !isnothing(save_fig) && Plots.savefig(p, joinpath(save_fig, "$(stack_name).png"))
+    plot_list["Stack_$var_name"] = p
+    return PlotList(plot_list)
+end
