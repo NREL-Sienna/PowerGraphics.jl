@@ -6,14 +6,13 @@ export get_stacked_aggregation_data
 export get_bar_aggregation_data
 export bar_plot
 export stack_plot
-export demand_plot
+export plot_demand
 export stair_plot
 export report
 export plot_variable
 export make_fuel_dictionary
 export fuel_plot
-export reserve_plot
-export variable_plot
+export plot_reserves
 export match_fuel_colors
 export sort_data
 import Dates
@@ -33,7 +32,7 @@ const PSY = PowerSystems
 const IS = InfrastructureSystems
 
 include("utils.jl")
-include("plot_results.jl")
+include("process_results.jl")
 include("definitions.jl")
 include("fuel_results.jl")
 include("plot_recipes.jl")

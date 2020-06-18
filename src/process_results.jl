@@ -267,12 +267,3 @@ function sort_data(res::IS.Results; kwargs...)
         res.parameter_values,
     )
 end
-
-function plot_variable(res::IS.Results, variable_name::Symbol; kwargs...)
-    return plot_dataframe(
-        IS.get_time_stamp(res),
-        res.variable_values[variable_name],
-        variable_name;
-        kwargs...,
-    )
-end

@@ -811,7 +811,7 @@ function _reserve_plot(res::IS.Results, backend::Any; kwargs...)
                 stack_data;
                 seriescolor = seriescolor,
                 ylabel = ylabel,
-                xlabel = "$(IS.convert_compound_period(time_interval))",
+                xlabel = "$time_interval",
                 xtick = [time_range[1], last(time_range)],
                 grid = false,
                 lab = hcat((string.(keys(reserve)))...),

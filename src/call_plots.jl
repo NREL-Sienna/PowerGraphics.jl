@@ -692,7 +692,7 @@ function _shorten_time(results::IS.Results, horizon::Int64, init_time::Dates.Dat
     )
 end
 
-function demand_plot(res::IS.Results; kwargs...)
+function plot_demand(res::IS.Results; kwargs...)
     results = _filter_parameters(res)
     if isempty(IS.get_parameters(results))
         @warn "No parameters provided."
@@ -706,7 +706,7 @@ function demand_plot(res::IS.Results; kwargs...)
     return _demand_plot_internal(results, backend; kwargs...)
 end
 
-function demand_plot(results::Array; kwargs...)
+function plot_demand(results::Array; kwargs...)
     newer_results = []
     for res in results
         new_res = _filter_parameters(res)
@@ -787,14 +787,14 @@ function make_demand_plot_data(
     return parameters
 end
 
-function demand_plot(system::PSY.System; kwargs...)
+function plot_demand(system::PSY.System; kwargs...)
     aggregation = get(kwargs, :aggregate, PSY.PowerLoad)
     parameters = make_demand_plot_data(system, aggregation; kwargs...)
     backend = Plots.backend()
     return _demand_plot_internal(parameters, system.basepower, Plots.backend(); kwargs...)
 end
 
-function demand_plot(systems::Array{PSY.System}; kwargs...)
+function plot_demand(systems::Array{PSY.System}; kwargs...)
     parameter_list = []
     basepowers = []
     aggregation = get(kwargs, :aggregate, PSY.PowerLoad)
@@ -806,9 +806,15 @@ function demand_plot(systems::Array{PSY.System}; kwargs...)
     return _demand_plot_internal(parameter_list, basepowers, backend; kwargs...)
 end
 
+################################## Plot Forecasts ###########################
+#=
+function plot_forecast(forecast; kwargs...)
+end
+=#
+
 ############################### Reserve Plot ################################
 
-function reserve_plot(res::Union{IS.Results, Array}; kwargs...)
+function plot_reserves(res::Union{IS.Results, Array}; kwargs...)
     backend = Plots.backend()
     plot_list = _reserve_plot(res, backend; kwargs...)
     return plot_list
@@ -816,7 +822,7 @@ end
 
 ################################# Plotting a Single Variable ##########################
 
-function variable_plot(res::IS.Results, var::Union{Symbol, String}; kwargs...)
+function plot_variable(res::IS.Results, var::Union{Symbol, String}; kwargs...)
     variable = Symbol(var)
     if !(variable in keys(IS.get_variables(res)))
         @warn "$variable not found in results variables. Existing variables are \n$(keys(IS.get_variables(res)))"
