@@ -33,7 +33,7 @@ end
 function get_default_palette()
     default_palette = []
     palette = get_palette()
-    default_order = [6, 52, 14, 1, 32, 7, 18, 20, 27, 53, 17] # the default order from the color palette # 
+    default_order = [6, 52, 14, 1, 32, 7, 18, 20, 27, 53, 17] # the default order from the color palette #
     for i in default_order
         for p in palette
             if p.order == i
@@ -93,10 +93,14 @@ function match_fuel_colors(
     else
         color_range = FUEL_DEFAULT
     end
-    color_fuel = DataFrames.DataFrame(fuels = CATEGORY_DEFAULT, colors = color_range)
+    @show color_fuel = DataFrames.DataFrame(fuels = CATEGORY_DEFAULT, colors = color_range)
     default =
         [(color_fuel[findall(in(["$(bar.labels[1])"]), color_fuel.fuels), :][:, :colors])[1]]
     for i in 2:length(bar.labels)
+        @show bar.labels[i] (color_fuel[findall(in(["$(bar.labels[i])"]), color_fuel.fuels), :][
+                :,
+                :colors,
+            ])
         specific_color =
             (color_fuel[findall(in(["$(bar.labels[i])"]), color_fuel.fuels), :][
                 :,
