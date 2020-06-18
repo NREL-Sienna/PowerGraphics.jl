@@ -805,3 +805,44 @@ function demand_plot(systems::Array{PSY.System}; kwargs...)
     backend = Plots.backend()
     return _demand_plot_internal(parameter_list, basepowers, backend; kwargs...)
 end
+
+############################### Reserve Plot ################################
+
+function reserve_plot(res::Union{IS.Results, Array}; kwargs...)
+    backend = Plots.backend()
+    plot_list = _reserve_plot(res, backend; kwargs...)
+    return plot_list
+end
+
+################################# Plotting a Single Variable ##########################
+
+function variable_plot(res::IS.Results, var::Union{Symbol, String}; kwargs...)
+    variable = Symbol(var)
+    if !(variable in keys(IS.get_variables(res)))
+        @warn "$variable not found in results variables. Existing variables are \n$(keys(IS.get_variables(res)))"
+    else
+        variable = Symbol(var)
+        save_fig = get(kwargs, :save, nothing)
+        set_display = get(kwargs, :display, true)
+        time_interval = IS.get_time_stamp(res)[2, 1] - IS.get_time_stamp(res)[1, 1]
+        interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
+        new_variable = Dict(variable => IS.get_variables(res)[variable])
+        new_results = Results(
+            IS.get_base_power(res),
+            new_variable,
+            IS.get_optimizer_log(res),
+            IS.get_total_cost(res),
+            IS.get_time_stamp(res),
+            res.dual_values,
+            IS.get_parameters(res),
+        )
+        plots = _variable_plots_internal(
+            new_results,
+            variable,
+            Plots.backend(),
+            interval;
+            kwargs...,
+        )
+        return plots
+    end
+end

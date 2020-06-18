@@ -53,7 +53,7 @@ function plotly_stack_gen(
     kwargs...,
 )
     set_display = get(kwargs, :display, true)
-    line_shape = get(kwargs, :stairs, "linear")
+    line_shape = get(kwargs, :stair, false) ? "hv" : "linear"
     save_fig = get(kwargs, :save, nothing)
     format = get(kwargs, :format, "html")
     plot_output = Dict()
@@ -183,7 +183,7 @@ function plotly_stack_gen(
     kwargs...,
 )
     set_display = get(kwargs, :display, true)
-    line_shape = get(kwargs, :stairs, "linear")
+    line_shape = get(kwargs, :stair, false) ? "hv" : "linear"
     save_fig = get(kwargs, :save, nothing)
     format = get(kwargs, :format, "html")
     plot_output = Dict()
@@ -325,7 +325,7 @@ function plotly_stack_plots(
 )
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
-    line_shape = get(kwargs, :stairs, "linear")
+    line_shape = get(kwargs, :stair, false) ? "hv" : "linear"
     plot_list = Dict()
     for (key, var) in IS.get_variables(results)
         traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
@@ -371,7 +371,7 @@ end
 function plotly_stack_plots(results::Array, seriescolor::Array, ylabel::String; kwargs...)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
-    line_shape = get(kwargs, :stairs, "linear")
+    line_shape = get(kwargs, :stair, false) ? "hv" : "linear"
     _check_matching_variables(results)
     plot_list = Dict()
     for key in collect(keys(IS.get_variables(results[1, 1])))
@@ -1355,4 +1355,125 @@ function _demand_plot_internal(
     end
     plot_list[Symbol(title)] = plots
     return PlotList(plot_list)
+end
+
+function _reserve_plot(res::IS.Results, backend::Plots.PlotlyJSBackend; kwargs...)
+    reserves = _filter_reserves(res, true)
+    time_interval = IS.get_time_stamp(res)[2, 1] - IS.get_time_stamp(res)[1, 1]
+    interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
+    seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
+    set_display = get(kwargs, :display, true)
+    line_shape = get(kwargs, :stair, false) ? "hv" : "linear"
+    save_fig = get(kwargs, :save, nothing)
+    ylabel = _make_ylabel(IS.get_base_power(res))
+    bar_ylabel = _make_bar_ylabel(IS.get_base_power(res))
+    time_range = IS.get_time_stamp(res)[:, 1]
+    time_span = IS.convert_compound_period(
+        convert(Dates.TimePeriod, time_range[2] - time_range[1]) * length(time_range),
+    )
+    format = get(kwargs, :format, "html")
+    plot_list = Dict()
+    if !isnothing(reserves)
+        for (key, reserve) in reserves
+            stack_data = []
+            stack_gens = []
+            stack_traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
+            for (k, v) in reserve
+                stack_data = vcat(stack_data, [sum(convert(Matrix, v), dims = 2)])
+                stack_gens = vcat(stack_gens, k)
+            end
+            stack_data = hcat(stack_data...)
+            up_seriescolor = set_seriescolor(seriescolor, stack_gens)
+            for gen in 1:size(stack_gens, 1)
+                push!(
+                    stack_traces,
+                    Plots.PlotlyJS.scatter(;
+                        name = stack_gens[gen],
+                        x = time_range,
+                        y = stack_data[:, gen],
+                        stackgroup = "one",
+                        mode = "lines",
+                        showlegend = true,
+                        line_shape = line_shape,
+                        fill = "tonexty",
+                        line_color = up_seriescolor[gen],
+                        fillcolor = up_seriescolor[gen],
+                    ),
+                )
+            end
+            stack_plot = Plots.PlotlyJS.plot(
+                stack_traces,
+                Plots.PlotlyJS.Layout(title = "$(key) Reserves", yaxis_title = ylabel),
+            )
+            #bar
+            bar_traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
+            bar_data = []
+            for (k, v) in reserve
+                bar_data =
+                    vcat(bar_data, [sum(sum(convert(Matrix, v), dims = 2), dims = 1)])
+            end
+            bar_data = hcat(bar_data...) / interval
+            bar_gens = collect(keys(reserve))
+            bar_seriescolors = set_seriescolor(seriescolor, bar_gens)
+            for gen in 1:length(bar_gens)
+                push!(
+                    bar_traces,
+                    Plots.PlotlyJS.scatter(;
+                        name = bar_gens[gen],
+                        x = ["$time_span, $(time_range[1])"],
+                        y = bar_data[:, gen],
+                        type = "bar",
+                        barmode = "stack",
+                        stackgroup = "one",
+                        marker_color = bar_seriescolors[gen],
+                    ),
+                )
+            end
+            bar_plot = Plots.PlotlyJS.plot(
+                bar_traces,
+                Plots.PlotlyJS.Layout(
+                    title = "$(key) Reserves",
+                    yaxis_title = ylabel,
+                    color = seriescolor,
+                    barmode = "stack",
+                ),
+            )
+            set_display && Plots.display(stack_plot), Plots.display(bar_plot)
+            if !isnothing(save_fig)
+                Plots.PlotlyJS.savefig(
+                    stack_plot,
+                    joinpath(save_fig, "Stack_$(key)_Reserves.$format");
+                    width = 630,
+                    height = 630,
+                )
+                Plots.PlotlyJS.savefig(
+                    bar_plot,
+                    joinpath(save_fig, "Bar_$(key)_Reserves.$format");
+                    width = 630,
+                    height = 630,
+                )
+            end
+            plot_list[Symbol("Stack_$(key)_Reserves")] = stack_plot
+            plot_list[Symbol("Bar_$(key)_Reserves")] = bar_plot
+        end
+    end
+end
+
+function _variable_plots_internal(
+    res::IS.Results,
+    variable::Symbol,
+    backend::Plots.PlotlyJSBackend,
+    interval::Float64;
+    kwargs...,
+)
+    seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
+    bar_y_label = _make_bar_ylabel(IS.get_base_power(res))
+    y_label = _make_ylabel(IS.get_base_power(res))
+    plotlist = Dict()
+    plotlist["Bar_$variable"] =
+        plotly_bar_plots(res, seriescolor, bar_y_label, interval; kwargs...)
+    stack = get(kwargs, :stair, false) ? "Stair" : "Stack"
+    plotlist["$(stack)_$(variable)"] =
+        plotly_stack_plots(res, seriescolor, y_label; kwargs...)
+    return PlotList(plotlist)
 end

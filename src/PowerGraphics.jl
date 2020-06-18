@@ -12,6 +12,8 @@ export report
 export plot_variable
 export make_fuel_dictionary
 export fuel_plot
+export reserve_plot
+export variable_plot
 export match_fuel_colors
 export sort_data
 import Dates
