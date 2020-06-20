@@ -342,9 +342,8 @@ function plotly_stack_plots(
                     stackgroup = "one",
                     mode = "lines",
                     line_shape = line_shape,
-                    fill = "tonexty",
                     line_color = seriescolor[gen],
-                    fillcolor = seriescolor[gen],
+                    fillcolor = "transparent",
                 ),
             )
         end
@@ -395,7 +394,7 @@ function plotly_stack_plots(results::Array, seriescolor::Array, ylabel::String; 
                         line_shape = line_shape,
                         fill = "tonexty",
                         line_color = seriescolor[gen],
-                        fillcolor = seriescolor[gen],
+                        fillcolor = "transparent",
                     ),
                 )
             end
@@ -1266,6 +1265,8 @@ function _demand_plot_internal(
     param_names = names(data)
     n_traces = length(param_names)
     seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)#repeat([PLOTLY_DEFAULT], n_traces))
+    seriescolor = length(seriescolor) < n_traces ?
+        repeat(seriescolor, Int64(ceil(n_traces / length(seriescolor)))) : seriescolor
     title = get(kwargs, :title, "PowerLoad")
     for i in 1:n_traces
         push!(
@@ -1307,7 +1308,10 @@ function _demand_plot_internal(
     backend::Plots.PlotlyJSBackend;
     kwargs...,
 )
+    n_traces = length(parameters[1])
     seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
+    seriescolor = length(seriescolor) < n_traces ?
+        repeat(seriescolor, Int64(ceil(n_traces / length(seriescolor)))) : seriescolor
     save_fig = get(kwargs, :save, nothing)
     set_display = get(kwargs, :display, true)
     line_shape = get(kwargs, :stair, false) ? "hv" : "linear"
@@ -1467,11 +1471,8 @@ function _variable_plots_internal(
     kwargs...,
 )
     seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
-    bar_y_label = _make_bar_ylabel(IS.get_base_power(res))
     y_label = _make_ylabel(IS.get_base_power(res))
     plotlist = Dict()
-    plotlist["Bar_$variable"] =
-        plotly_bar_plots(res, seriescolor, bar_y_label, interval; kwargs...)
     stack = get(kwargs, :stair, false) ? "Stair" : "Stack"
     plotlist["$(stack)_$(variable)"] =
         plotly_stack_plots(res, seriescolor, y_label; kwargs...)

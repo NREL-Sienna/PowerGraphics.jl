@@ -97,10 +97,13 @@ function match_fuel_colors(
     default =
         [(color_fuel[findall(in(["$(bar.labels[1])"]), color_fuel.fuels), :][:, :colors])[1]]
     for i in 2:length(bar.labels)
-        @debug bar.labels[i] (color_fuel[findall(in(["$(bar.labels[i])"]), color_fuel.fuels), :][
-                :,
-                :colors,
-            ])
+        @debug bar.labels[i] (color_fuel[
+            findall(in(["$(bar.labels[i])"]), color_fuel.fuels),
+            :,
+        ][
+            :,
+            :colors,
+        ])
         specific_color =
             (color_fuel[findall(in(["$(bar.labels[i])"]), color_fuel.fuels), :][
                 :,

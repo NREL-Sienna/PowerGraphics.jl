@@ -46,6 +46,7 @@ function _fuel_plot_internal(
             IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
         stack_data = cumsum(stack.data_matrix, dims = 2)
         stack_base_data = [zeros(size(stack_data, 1)) stack_data]
+        labels = length(stack.labels) == 1 ? stack.labels[1] : stack.labels
         p1 = Plots.plot(
             time_range,
             stack_data;
@@ -53,7 +54,7 @@ function _fuel_plot_internal(
             title = title,
             ylabel = ylabel,
             xlabel = "$time_interval",
-            lab = stack.labels,
+            lab = labels,
             xtick = [time_range[1], last(time_range)],
             grid = false,
             fillrange = stack_base_data,
@@ -82,6 +83,7 @@ function _fuel_plot_internal(
             IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
         bar_data = cumsum(bar.bar_data, dims = 2) ./ interval
         bar_base_data = [0 bar_data]
+        labels = length(bar.labels) == 1 ? bar.labels[1] : bar.labels
         p2 = Plots.plot(
             [3.5; 5.5],
             [bar_data; bar_data];
@@ -91,7 +93,7 @@ function _fuel_plot_internal(
             xticks = false,
             xlims = (1, 8),
             grid = false,
-            lab = bar.labels,
+            lab = labels,
             title = title,
             legend = :outerright,
             fillrange = bar_base_data,
@@ -838,31 +840,12 @@ function _variable_plots_internal(
 )
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
     save_fig = get(kwargs, :save, nothing)
-    bar_y_label = _make_bar_ylabel(IS.get_base_power(res))
     y_label = _make_ylabel(IS.get_base_power(res))
     time_range = IS.get_time_stamp(res)[:, 1]
     time_interval =
         IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
     plot_list = Dict()
     variable = IS.get_variables(res)[var_name]
-    bar_plot_data = sum(cumsum(convert(Matrix, variable), dims = 2), dims = 1) ./ interval
-    p = Plots.plot(
-        [3.5; 5.5],
-        [bar_plot_data; bar_plot_data];
-        seriescolor = seriescolor,
-        ylabel = bar_y_label,
-        xlabel = "$time_interval",
-        xticks = false,
-        xlims = (1, 8),
-        grid = false,
-        lab = hcat(string.(names(variable))...),
-        title = "$var_name",
-        legend = :outerright,
-        fillrange = hcat(0, bar_plot_data),
-    )
-    get(kwargs, :display, true) && display(p)
-    !isnothing(save_fig) && Plots.savefig(p, joinpath(save_fig, "$(var_name)_Bar.png"))
-    plot_list["Bar_$var_name"] = p
     plot_data = cumsum(convert(Matrix, variable), dims = 2)
     linetype = get(kwargs, :stair, false) ? :steppost : :line
     p = Plots.plot(
@@ -877,7 +860,6 @@ function _variable_plots_internal(
         title = "$var_name",
         legend = :outerright,
         linetype = linetype,
-        fillrange = hcat(zeros(length(time_range)), plot_data),
     )
     get(kwargs, :display, true) && display(p)
     stack_name = linetype == :line ? "$(var_name)_Stack" : "$(var_name)_Stair"
