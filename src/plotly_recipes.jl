@@ -1266,7 +1266,7 @@ function _demand_plot_internal(
     n_traces = length(param_names)
     seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)#repeat([PLOTLY_DEFAULT], n_traces))
     seriescolor = length(seriescolor) < n_traces ?
-            repeat(seriescolor, Int64(ceil(n_traces / length(seriescolor)))) : seriescolor
+        repeat(seriescolor, Int64(ceil(n_traces / length(seriescolor)))) : seriescolor
     title = get(kwargs, :title, "PowerLoad")
     for i in 1:n_traces
         push!(
@@ -1311,7 +1311,7 @@ function _demand_plot_internal(
     n_traces = length(parameters[1])
     seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
     seriescolor = length(seriescolor) < n_traces ?
-            repeat(seriescolor, Int64(ceil(n_traces / length(seriescolor)))) : seriescolor
+        repeat(seriescolor, Int64(ceil(n_traces / length(seriescolor)))) : seriescolor
     save_fig = get(kwargs, :save, nothing)
     set_display = get(kwargs, :display, true)
     line_shape = get(kwargs, :stair, false) ? "hv" : "linear"
