@@ -46,6 +46,7 @@ function _fuel_plot_internal(
             IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
         stack_data = cumsum(stack.data_matrix, dims = 2)
         stack_base_data = [zeros(size(stack_data, 1)) stack_data]
+        labels = length(stack.labels) == 1 ? stack.labels[1] : stack.labels
         p1 = Plots.plot(
             time_range,
             stack_data;
@@ -53,7 +54,7 @@ function _fuel_plot_internal(
             title = title,
             ylabel = ylabel,
             xlabel = "$time_interval",
-            lab = stack.labels,
+            lab = labels,
             xtick = [time_range[1], last(time_range)],
             grid = false,
             fillrange = stack_base_data,
@@ -82,6 +83,7 @@ function _fuel_plot_internal(
             IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
         bar_data = cumsum(bar.bar_data, dims = 2) ./ interval
         bar_base_data = [0 bar_data]
+        labels = length(bar.labels) == 1 ? bar.labels[1] : bar.labels
         p2 = Plots.plot(
             [3.5; 5.5],
             [bar_data; bar_data];
@@ -91,7 +93,7 @@ function _fuel_plot_internal(
             xticks = false,
             xlims = (1, 8),
             grid = false,
-            lab = bar.labels,
+            lab = labels,
             title = title,
             legend = :outerright,
             fillrange = bar_base_data,
