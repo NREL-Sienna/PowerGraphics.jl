@@ -348,7 +348,7 @@ function bar_plot(results::Array; kwargs...)
         res = vcat(res, _filter_variables(result; kwargs...))
     end
     #res = hcat(res...)
-    #reserve_list = hcat(reserve_list...) 
+    #reserve_list = hcat(reserve_list...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
@@ -557,9 +557,9 @@ function stack_plot(results::Array, variables::Array; kwargs...)
 end
 
 function _make_ylabel(base_power::Float64)
-    if isapprox(base_power, 1)
+    if isapprox(base_power, 1.0)
         ylabel = "Generation (MW)"
-    elseif isapprox(base_power, 100)
+    elseif isapprox(base_power, 1000.0)
         ylabel = "Generation (GW)"
     else
         ylabel = "Generation (MW x$base_power)"
