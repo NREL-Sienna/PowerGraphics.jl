@@ -568,9 +568,9 @@ function _make_ylabel(base_power::Float64)
 end
 
 function _make_bar_ylabel(base_power::Float64)
-    if isapprox(base_power, 1)
+    if isapprox(base_power, 1.0)
         ylabel = "Generation (MWh)"
-    elseif isapprox(base_power, 100)
+    elseif isapprox(base_power, 1000.0)
         ylabel = "Generation (GWh)"
     else
         ylabel = "Generation (MWh x$base_power)"
