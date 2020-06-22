@@ -55,7 +55,7 @@ function plotly_stack_gen(
     set_display = get(kwargs, :display, true)
     line_shape = get(kwargs, :stair, false) ? "hv" : "linear"
     save_fig = get(kwargs, :save, nothing)
-    format = get(kwargs, :format, "html")
+    format = get(kwargs, :format, "png")
     plot_output = Dict()
     traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
     gens = collect(keys(IS.get_variables(res)))
@@ -185,7 +185,7 @@ function plotly_stack_gen(
     set_display = get(kwargs, :display, true)
     line_shape = get(kwargs, :stair, false) ? "hv" : "linear"
     save_fig = get(kwargs, :save, nothing)
-    format = get(kwargs, :format, "html")
+    format = get(kwargs, :format, "png")
     plot_output = Dict()
     plots = []
     for i in 1:length(results)
@@ -333,13 +333,14 @@ function plotly_stack_plots(
         gens = collect(names(var))
         seriescolor = set_seriescolor(seriescolor, gens)
         for gen in 1:length(gens)
+            stackgroup = get(kwargs, :stackgroup, true) ? "one" : "$gen"
             push!(
                 traces,
                 Plots.PlotlyJS.scatter(;
                     name = gens[gen],
                     x = results.time_stamp[:, 1],
                     y = convert(Matrix, var)[:, gen],
-                    stackgroup = "one",
+                    stackgroup = stackgroup,
                     mode = "lines",
                     line_shape = line_shape,
                     line_color = seriescolor[gen],
@@ -353,7 +354,7 @@ function plotly_stack_plots(
         )
         set_display && Plots.display(p)
         if !isnothing(save_fig)
-            format = get(kwargs, :format, "html")
+            format = get(kwargs, :format, "png")
             key_title = line_shape == "linear" ? "$(key)_Stack" : "$(key)_Stair"
             Plots.PlotlyJS.savefig(
                 p,
@@ -411,7 +412,7 @@ function plotly_stack_plots(results::Array, seriescolor::Array, ylabel::String; 
         plots = vcat(plots...)
         set_display && Plots.display(plots)
         if !isnothing(save_fig)
-            format = get(kwargs, :format, "html")
+            format = get(kwargs, :format, "png")
             key_title = line_shape == "linear" ? "$(key)_Stack" : "$(key)_Stair"
             Plots.PlotlyJS.savefig(
                 plots,
@@ -476,7 +477,7 @@ function plotly_fuel_stack_gen(
     )
     set_display && Plots.display(p)
     if !isnothing(save_fig)
-        format = get(kwargs, :format, "html")
+        format = get(kwargs, :format, "png")
         title = replace(title, " " => "_")
         Plots.PlotlyJS.savefig(
             p,
@@ -530,7 +531,7 @@ function plotly_fuel_stack_gen(
     plots = vcat(plots...)
     set_display && Plots.display(plots)
     if !isnothing(save_fig)
-        format = get(kwargs, :format, "html")
+        format = get(kwargs, :format, "png")
         title = replace(title, " " => "_")
         Plots.PlotlyJS.savefig(
             plots,
@@ -640,7 +641,7 @@ function plotly_fuel_bar_gen(
     set_display && Plots.display(p)
     if !isnothing(save_fig)
         title = title == " " ? "Bar_Generation" : replace(title, " " => "_")
-        format = get(kwargs, :format, "html")
+        format = get(kwargs, :format, "png")
         Plots.PlotlyJS.savefig(
             p,
             joinpath(save_fig, "$title.$format");
@@ -716,7 +717,7 @@ function plotly_fuel_bar_gen(
     set_display && Plots.display(plots)
     if !isnothing(save_fig)
         title = title == " " ? "Bar_Generation" : replace(title, " " => "_")
-        format = get(kwargs, :format, "html")
+        format = get(kwargs, :format, "png")
         Plots.PlotlyJS.savefig(
             plots,
             joinpath(save_fig, "$title.$format");
@@ -739,7 +740,7 @@ function plotly_bar_gen(
     time_range = IS.get_time_stamp(res)[:, 1]
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
-    format = get(kwargs, :format, "html")
+    format = get(kwargs, :format, "png")
     plot_output = Dict()
     time_span = IS.convert_compound_period(
         convert(Dates.TimePeriod, time_range[2] - time_range[1]) * length(time_range),
@@ -872,7 +873,7 @@ function plotly_bar_gen(
     time_range = IS.get_time_stamp(results[1])[:, 1]
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
-    format = get(kwargs, :format, "html")
+    format = get(kwargs, :format, "png")
     time_span = IS.convert_compound_period(
         convert(Dates.TimePeriod, time_range[2] - time_range[1]) * length(time_range),
     )
@@ -940,7 +941,7 @@ function plotly_bar_gen(
     title = replace(title, " " => "_")
     plot_output[Symbol(title)] = plots
     if !isnothing(save_fig)
-        format = get(kwargs, :format, "html")
+        format = get(kwargs, :format, "png")
         Plots.PlotlyJS.savefig(
             plots,
             joinpath(save_fig, "$title.$format");
@@ -1054,7 +1055,7 @@ function plotly_bar_plots(
         plot = vcat(plots...)
         set_display && Plots.display(plot)
         if !isnothing(save_fig)
-            format = get(kwargs, :format, "html")
+            format = get(kwargs, :format, "png")
             Plots.PlotlyJS.savefig(
                 plot,
                 joinpath(save_fig, "$(key)_Bar.$format");
@@ -1105,7 +1106,7 @@ function plotly_bar_plots(
         )
         set_display && Plots.display(p)
         if !isnothing(save_fig)
-            format = get(kwargs, :format, "html")
+            format = get(kwargs, :format, "png")
             Plots.PlotlyJS.savefig(
                 p,
                 joinpath(save_fig, "$(key)_Bar.$format");
@@ -1170,7 +1171,7 @@ function _demand_plot_internal(res::IS.Results, backend::Plots.PlotlyJSBackend; 
                 ),
             )
         end
-        format = get(kwargs, :format, "html")
+        format = get(kwargs, :format, "png")
         p = Plots.PlotlyJS.plot(
             traces,
             Plots.PlotlyJS.Layout(title = title, yaxis_title = ylabel),
@@ -1234,7 +1235,7 @@ function _demand_plot_internal(results::Array, backend::Plots.PlotlyJSBackend; k
         plots = vcat(plots...)
         set_display && Plots.display(plots)
         if !isnothing(save_fig)
-            format = get(kwargs, :format, "html")
+            format = get(kwargs, :format, "png")
             Plots.PlotlyJS.savefig(
                 plots,
                 joinpath(save_fig, "$title.$format");
@@ -1283,7 +1284,7 @@ function _demand_plot_internal(
             ),
         )
     end
-    format = get(kwargs, :format, "html")
+    format = get(kwargs, :format, "png")
     p = Plots.PlotlyJS.plot(
         traces,
         Plots.PlotlyJS.Layout(title = title, yaxis_title = ylabel),
@@ -1348,7 +1349,7 @@ function _demand_plot_internal(
     plots = vcat(plots...)
     set_display && Plots.display(plots)
     if !isnothing(save_fig)
-        format = get(kwargs, :format, "html")
+        format = get(kwargs, :format, "png")
         title = replace(title, " " => "_")
         Plots.PlotlyJS.savefig(
             plots,
@@ -1375,7 +1376,7 @@ function _reserve_plot(res::IS.Results, backend::Plots.PlotlyJSBackend; kwargs..
     time_span = IS.convert_compound_period(
         convert(Dates.TimePeriod, time_range[2] - time_range[1]) * length(time_range),
     )
-    format = get(kwargs, :format, "html")
+    format = get(kwargs, :format, "png")
     plot_list = Dict()
     if !isnothing(reserves)
         for (key, reserve) in reserves
@@ -1475,6 +1476,6 @@ function _variable_plots_internal(
     plotlist = Dict()
     stack = get(kwargs, :stair, false) ? "Stair" : "Stack"
     plotlist["$(stack)_$(variable)"] =
-        plotly_stack_plots(res, seriescolor, y_label; kwargs...)
+        plotly_stack_plots(res, seriescolor, y_label; stackgroup = false, kwargs...)
     return PlotList(plotlist)
 end
