@@ -333,13 +333,14 @@ function plotly_stack_plots(
         gens = collect(names(var))
         seriescolor = set_seriescolor(seriescolor, gens)
         for gen in 1:length(gens)
+            stackgroup = get(kwargs, :stackgroup, true) ? "one" : "$gen"
             push!(
                 traces,
                 Plots.PlotlyJS.scatter(;
                     name = gens[gen],
                     x = results.time_stamp[:, 1],
                     y = convert(Matrix, var)[:, gen],
-                    stackgroup = "one",
+                    stackgroup = stackgroup,
                     mode = "lines",
                     line_shape = line_shape,
                     line_color = seriescolor[gen],
@@ -1475,6 +1476,6 @@ function _variable_plots_internal(
     plotlist = Dict()
     stack = get(kwargs, :stair, false) ? "Stair" : "Stack"
     plotlist["$(stack)_$(variable)"] =
-        plotly_stack_plots(res, seriescolor, y_label; kwargs...)
+        plotly_stack_plots(res, seriescolor, y_label; stackgroup = false, kwargs...)
     return PlotList(plotlist)
 end
