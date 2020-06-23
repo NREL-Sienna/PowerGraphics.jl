@@ -367,7 +367,7 @@ function _stack_plot_internal(
     title = get(kwargs, :title, " ")
     ylabel = _make_ylabel(IS.get_base_power(res))
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
-    linetype = get(kwargs, :linetype, :line)
+    linetype = get(kwargs, :stair, false) ? :steppost : :line
     time_range = IS.get_time_stamp(res)[:, 1]
     time_interval =
         IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
@@ -471,7 +471,7 @@ function _stack_plot_internal(
     title = get(kwargs, :title, " ")
     ylabel = _make_ylabel(IS.get_base_power(results[1]))
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
-    linetype = get(kwargs, :linetype, :line)
+    linetype = get(kwargs, :stair, false) ? :steppost : :line
     variables = IS.get_variables(results[1])
     time_range = IS.get_time_stamp(results[1])[:, 1]
     time_interval =
@@ -846,7 +846,7 @@ function _variable_plots_internal(
         IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
     plot_list = Dict()
     variable = IS.get_variables(res)[var_name]
-    plot_data = cumsum(convert(Matrix, variable), dims = 2)
+    plot_data = convert(Matrix, variable)
     linetype = get(kwargs, :stair, false) ? :steppost : :line
     p = Plots.plot(
         time_range,
