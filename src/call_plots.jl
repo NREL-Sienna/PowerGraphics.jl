@@ -54,14 +54,17 @@ end
 function _filter_curtailment!(results::IS.Results, filter_results::Dict, curtailment::Bool)
     for (key, parameter) in IS.get_parameters(results)
         param = "$key"
+        name = split(param, "_")[end]
         if !(key in keys(IS.get_variables(results))) &&
-           split(param, "_")[end] in SUPPORTEDGENPARAMS
+            name in SUPPORTEDGENPARAMS
             filter_results[key] = parameter
         elseif (key in keys(IS.get_variables(results))) &&
-               split(param, "_")[end] in SUPPORTEDGENPARAMS &&
-               curtailment
-            filter_results[Symbol("Curtailment")] =
-                parameter .- IS.get_variables(results)[key]
+            name in SUPPORTEDGENPARAMS && curtailment
+            if Symbol("Curtailment") in keys(filter_results)
+                hcat(filter_results[Symbol("Curtailment")], (parameter .- IS.get_variables(results)[key]))
+            else
+                filter_results[Symbol("Curtailment")] = (parameter .- IS.get_variables(results)[key])
+            end
         end
     end
     return filter_results
