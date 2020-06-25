@@ -830,32 +830,31 @@ end
 ################################# Plotting a Single Variable ##########################
 
 function plot_variable(res::IS.Results, var::Union{Symbol, String}; kwargs...)
-    variable = Symbol(var)
-    if !(variable in keys(IS.get_variables(res)))
-        @warn "$variable not found in results variables. Existing variables are \n$(keys(IS.get_variables(res)))"
+    variable_name = Symbol(var)
+    if !(variable_name in keys(IS.get_variables(res)))
+        @warn "$variable_name not found in results variables. Existing variables are \n$(keys(IS.get_variables(res)))"
     else
-        variable = Symbol(var)
-        save_fig = get(kwargs, :save, nothing)
-        set_display = get(kwargs, :display, true)
-        time_interval = IS.get_time_stamp(res)[2, 1] - IS.get_time_stamp(res)[1, 1]
-        interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
-        new_variable = Dict(variable => IS.get_variables(res)[variable])
-        new_results = Results(
-            IS.get_base_power(res),
-            new_variable,
-            IS.get_optimizer_log(res),
-            IS.get_total_cost(res),
-            IS.get_time_stamp(res),
-            res.dual_values,
-            IS.get_parameters(res),
-        )
+        variable = IS.get_variables(res)[var]
+        time_range = IS.get_time_stamp(res)[:, 1]
         plots = _variable_plots_internal(
-            new_results,
             variable,
-            Plots.backend(),
-            interval;
+            time_range,
+            IS.get_base_power(res),
+            variable_name,
+            Plots.backend();
             kwargs...,
         )
         return plots
     end
+end
+
+function plot_dataframe(
+    variable::DataFrames.DataFrame,
+    time_range::Union{DataFrames.DataFrame, Array};
+    kwargs...,
+)
+    time_range = typeof(time_range) == DataFrames.DataFrame ? time_range[:, 1] : time_range
+    backend = Plots.backend()
+    plot = _dataframe_plots_internal(variable, time_range, backend; kwargs...)
+    return plot
 end
