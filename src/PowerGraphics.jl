@@ -10,6 +10,7 @@ export plot_demand
 export stair_plot
 export report
 export plot_variable
+export plot_dataframe
 export make_fuel_dictionary
 export fuel_plot
 export plot_reserves
