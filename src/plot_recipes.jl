@@ -830,6 +830,31 @@ function _variable_plots_internal(
     return p
 end
 
+function _variable_plots_internal(
+    plot::Any,
+    variable::DataFrames.DataFrame,
+    time_range::Array,
+    base_power::Float64,
+    variable_name::Symbol,
+    backend::Any;
+    kwargs...,
+)
+    seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
+    save_fig = get(kwargs, :save, nothing)
+    title = get(kwargs, :title, "$variable_name")
+    y_label = _make_ylabel(base_power)
+    p = _dataframe_plots_internal(
+        plot,
+        variable,
+        time_range,
+        backend;
+        y_label = y_label,
+        title = title,
+        kwargs...,
+    )
+    return p
+end
+
 function _dataframe_plots_internal(
     variable::DataFrames.DataFrame,
     time_range::Array,

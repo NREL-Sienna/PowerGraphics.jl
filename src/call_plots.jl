@@ -850,6 +850,26 @@ function plot_variable(res::IS.Results, var::Union{Symbol, String}; kwargs...)
     end
 end
 
+function plot_variable(plot::Any, res::IS.Results, var::Union{Symbol, String}; kwargs...)
+    variable_name = Symbol(var)
+    if !(variable_name in keys(IS.get_variables(res)))
+        @warn "$variable_name not found in results variables. Existing variables are \n$(keys(IS.get_variables(res)))"
+    else
+        variable = IS.get_variables(res)[var]
+        time_range = IS.get_time_stamp(res)[:, 1]
+        plots = _variable_plots_internal(
+            plot,
+            variable,
+            time_range,
+            IS.get_base_power(res),
+            variable_name,
+            Plots.backend();
+            kwargs...,
+        )
+        return plots
+    end
+end
+
 function plot_dataframe(
     variable::DataFrames.DataFrame,
     time_range::Union{DataFrames.DataFrame, Array};

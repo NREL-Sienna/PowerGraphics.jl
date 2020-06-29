@@ -1441,6 +1441,30 @@ function _variable_plots_internal(
     return plot
 end
 
+function _variable_plots_internal(
+    p::Any,
+    variable::DataFrames.DataFrame,
+    time_range::Array,
+    base_power::Float64,
+    variable_name::Symbol,
+    backend::Plots.PlotlyJSBackend;
+    kwargs...,
+)
+    seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
+    y_label = _make_ylabel(base_power)
+    title = get(kwargs, :title, "$variable_name")
+    plot = plotly_dataframe_plots(
+        p,
+        variable,
+        seriescolor,
+        time_range,
+        title,
+        y_label;
+        kwargs...,
+    )
+    return plot
+end
+
 function _dataframe_plots_internal(
     variable::DataFrames.DataFrame,
     time_range::Array,
