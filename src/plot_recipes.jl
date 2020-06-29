@@ -121,7 +121,7 @@ function _fuel_plot_internal(
         Plots.savefig(p1, joinpath(save_fig, "$(stack_title).png"))
         Plots.savefig(p2, joinpath(save_fig, "$(title)_Bar.png"))
     end
-    return PlotList(Dict(:Fuel_Stack => stack_plots, :Fuel_Bar => bar_plots))
+    return PlotList(Dict(:Fuel_Stack => p1, :Fuel_Bar => p2))
 end
 
 ############################# BAR ##########################################
@@ -769,66 +769,42 @@ function _reserve_plot(res::IS.Results, backend::Any; kwargs...)
     time_range = IS.get_time_stamp(res)[:, 1]
     time_interval =
         IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
-    interval = Dates.Millisecond(Dates.Hour(1)) / (time_range[2] - time_range[1])
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
     set_display = get(kwargs, :display, true)
     linetype = get(kwargs, :stair, false) ? :steppost : :line
     save_fig = get(kwargs, :save, nothing)
     ylabel = _make_ylabel(IS.get_base_power(res))
-    bar_ylabel = _make_bar_ylabel(IS.get_base_power(res))
     plot_list = Dict()
-    if !isnothing(reserves)
-        for (key, reserve) in reserves
-            bar_data = []
-            for (k, v) in reserve
-                bar_data = vcat(bar_data, [sum(convert(Matrix, v), dims = 2)])
-            end
-            bar_data = sum(cumsum(hcat(bar_data...), dims = 2), dims = 1) ./ interval
-            bar_plot = Plots.plot(
-                [3.5; 5.5],
-                [bar_data; bar_data];
-                seriescolor = seriescolor,
-                ylabel = bar_ylabel,
-                xlabel = "$(time_interval)",
-                xticks = false,
-                xlims = (1, 8),
-                grid = false,
-                lab = hcat(string.(keys(reserve))...),
-                title = "$(key) Reserves",
-                legend = :outerright,
-                fillrange = hcat(0, bar_data),
-            )
-            set_display && display(bar_plot)
-            !isnothing(save_fig) &&
-                Plots.savefig(bar_plot, joinpath(save_fig, "Bar_$(key)_Reserves.png"))
-            plot_list[Symbol("Bar_$(key)_Reserves")] = bar_plot
-            stack_data = []
-            for (k, v) in reserve
-                stack_data = vcat(stack_data, [sum(convert(Matrix, v), dims = 2)])
-            end
-            stack_data = cumsum(hcat(stack_data...), dims = 2)
-            time_range = IS.get_time_stamp(res)[:, 1]
-            r_plot = Plots.plot(
-                time_range,
-                stack_data;
-                seriescolor = seriescolor,
-                ylabel = ylabel,
-                xlabel = "$time_interval",
-                xtick = [time_range[1], last(time_range)],
-                grid = false,
-                lab = hcat((string.(keys(reserve)))...),
-                title = "$(key) Reserves",
-                legend = :outerright,
-                linetype = linetype,
-                fillrange = hcat(zeros(length(time_range)), stack_data),
-            )
-            set_display && display(r_plot)
-            !isnothing(save_fig) &&
-                Plots.savefig(r_plot, joinpath(save_fig, "Stack_$(key)_Reserves.png"))
-            plot_list[Symbol("Stack_$(key)_Reserves")] = r_plot
+    isnothing(reserves) && @error "No reserves found in results."
+    for (key, reserve) in reserves
+        data = []
+        for (k, v) in reserve
+            data = vcat(data, [sum(convert(Matrix, v), dims = 2)])
         end
-        return PlotList(plot_list)
+        data = hcat(data...)
+        stack_data = get(kwargs, :stack, false) ? cumsum(data, dims = 2) : data
+        fillrange = get(kwargs, :stack, false) ?
+            fillrange = hcat(zeros(length(time_range)), stack_data) : nothing
+        r_plot = Plots.plot(
+            time_range,
+            stack_data;
+            seriescolor = seriescolor,
+            ylabel = ylabel,
+            xlabel = "$time_interval",
+            xtick = [time_range[1], last(time_range)],
+            grid = false,
+            lab = hcat((string.(keys(reserve)))...),
+            title = "$(key) Reserves",
+            legend = :outerright,
+            linetype = linetype,
+            fillrange = fillrange,
+        )
+        set_display && display(r_plot)
+        !isnothing(save_fig) &&
+            Plots.savefig(r_plot, joinpath(save_fig, "Stack_$(key)_Reserves.png"))
+        plot_list[Symbol("Stack_$(key)_Reserves")] = r_plot
     end
+    return PlotList(plot_list)
 end
 
 function _variable_plots_internal(
@@ -887,7 +863,46 @@ function _dataframe_plots_internal(
         linetype = linetype,
         fillrange = fillrange,
     )
-    get(kwargs, :display, true) && display(p)
+    title = title == " " ? "Generation" : title
+    !isnothing(save_fig) && Plots.savefig(p, joinpath(save_fig, "$(title).png"))
+    return p
+end
+
+function _dataframe_plots_internal(
+    plot::Union{Plots.Plot, Nothing},
+    variable::DataFrames.DataFrame,
+    time_range::Array,
+    backend::Any;
+    kwargs...,
+)
+    seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
+    save_fig = get(kwargs, :save, nothing)
+    unit = get(kwargs, :y_label, nothing)
+    y_label = isnothing(unit) ? "Generation per unit" : unit
+    time_interval =
+        IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
+    plot_list = Dict()
+    data = convert(Matrix, variable)
+    plot_data = get(kwargs, :stack, false) ? cumsum(data, dims = 2) : data
+    fillrange = get(kwargs, :stack, false) ?
+        fillrange = hcat(zeros(length(time_range)), plot_data) : nothing
+    linetype = get(kwargs, :stair, false) ? :steppost : :line
+    title = get(kwargs, :title, " ")
+    @show plot
+    p = Plots.plot!(
+        time_range,
+        plot_data;
+        seriescolor = seriescolor,
+        ylabel = y_label,
+        xlabel = "$time_interval",
+        xtick = [time_range[1], last(time_range)],
+        grid = false,
+        lab = hcat(string.(names(variable))...),
+        title = title,
+        legend = :outerright,
+        linetype = linetype,
+        fillrange = fillrange,
+    )
     title = title == " " ? "Generation" : title
     !isnothing(save_fig) && Plots.savefig(p, joinpath(save_fig, "$(title).png"))
     return p

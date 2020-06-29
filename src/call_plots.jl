@@ -10,8 +10,10 @@ function _filter_variables(results::IS.Results; kwargs...)
     curtailment = get(kwargs, :curtailment, false)
     _filter_curtailment!(results, filter_variables, curtailment)
     load = get(kwargs, :load, false)
-    if load
+    if load && (:P__PowerLoad in keys(results.parameter_values))
         filter_parameters[:P__PowerLoad] = results.parameter_values[:P__PowerLoad]
+    elseif load
+        @warn "PowerLoad not found in results parameters."
     end
 
     new_results = Results(
@@ -857,4 +859,16 @@ function plot_dataframe(
     backend = Plots.backend()
     plot = _dataframe_plots_internal(variable, time_range, backend; kwargs...)
     return plot
+end
+
+function plot_dataframe(
+    p::Any,
+    variable::DataFrames.DataFrame,
+    time_range::Union{DataFrames.DataFrame, Array};
+    kwargs...,
+)
+    time_range = typeof(time_range) == DataFrames.DataFrame ? time_range[:, 1] : time_range
+    backend = Plots.backend()
+    p = _dataframe_plots_internal(p, variable, time_range, backend; kwargs...)
+    return p
 end
