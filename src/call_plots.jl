@@ -10,8 +10,10 @@ function _filter_variables(results::IS.Results; kwargs...)
     curtailment = get(kwargs, :curtailment, false)
     _filter_curtailment!(results, filter_variables, curtailment)
     load = get(kwargs, :load, false)
-    if load
+    if load && (:P__PowerLoad in keys(results.parameter_values))
         filter_parameters[:P__PowerLoad] = results.parameter_values[:P__PowerLoad]
+    elseif load
+        @warn "PowerLoad not found in results parameters."
     end
 
     new_results = Results(
@@ -848,6 +850,26 @@ function plot_variable(res::IS.Results, var::Union{Symbol, String}; kwargs...)
     end
 end
 
+function plot_variable(plot::Any, res::IS.Results, var::Union{Symbol, String}; kwargs...)
+    variable_name = Symbol(var)
+    if !(variable_name in keys(IS.get_variables(res)))
+        @warn "$variable_name not found in results variables. Existing variables are \n$(keys(IS.get_variables(res)))"
+    else
+        variable = IS.get_variables(res)[var]
+        time_range = IS.get_time_stamp(res)[:, 1]
+        plots = _variable_plots_internal(
+            plot,
+            variable,
+            time_range,
+            IS.get_base_power(res),
+            variable_name,
+            Plots.backend();
+            kwargs...,
+        )
+        return plots
+    end
+end
+
 function plot_dataframe(
     variable::DataFrames.DataFrame,
     time_range::Union{DataFrames.DataFrame, Array};
@@ -857,4 +879,16 @@ function plot_dataframe(
     backend = Plots.backend()
     plot = _dataframe_plots_internal(variable, time_range, backend; kwargs...)
     return plot
+end
+
+function plot_dataframe(
+    p::Any,
+    variable::DataFrames.DataFrame,
+    time_range::Union{DataFrames.DataFrame, Array};
+    kwargs...,
+)
+    time_range = typeof(time_range) == DataFrames.DataFrame ? time_range[:, 1] : time_range
+    backend = Plots.backend()
+    p = _dataframe_plots_internal(p, variable, time_range, backend; kwargs...)
+    return p
 end
