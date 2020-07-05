@@ -735,10 +735,10 @@ function plot_demand(results::Array; kwargs...)
     return _demand_plot_internal(newer_results, backend; kwargs...)
 end
 function _get_loads(system::PSY.System, bus::PSY.Bus)
-    return (
+    return [
         load for
         load in PSY.get_components(PSY.PowerLoad, system) if PSY.get_bus(load) == bus
-    )
+    ]
 end
 function _get_loads(system::PSY.System, agg::T) where {T <: PSY.AggregationTopology}
     return PSY.get_components_in_aggregation_topology(PSY.PowerLoad, system, agg)
@@ -788,6 +788,7 @@ function make_demand_plot_data(
                 kind = :outer,
             )
         end
+        length(loads) == 0 && continue
         load_values = length(loads) == 1 ? load_values[1] :
             dropdims(sum(Matrix(reduce(hcat, load_values)), dims = 2), dims = 2)
         parameters[:, Symbol(colname)] = load_values
