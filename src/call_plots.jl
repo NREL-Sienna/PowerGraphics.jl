@@ -770,6 +770,7 @@ function make_demand_plot_data(
     parameters = DataFrames.DataFrame(timestamp = Dates.DateTime[])
     for agg in aggregation_components
         loads = _get_loads(system, agg)
+        length(loads) == 0 && continue
         colname = aggregation == PSY.System ? "System" : PSY.get_name(agg)
         load_values = []
         for load in loads
@@ -788,7 +789,6 @@ function make_demand_plot_data(
                 kind = :outer,
             )
         end
-        length(loads) == 0 && continue
         load_values = length(loads) == 1 ? load_values[1] :
             dropdims(sum(Matrix(reduce(hcat, load_values)), dims = 2), dims = 2)
         parameters[:, Symbol(colname)] = load_values
