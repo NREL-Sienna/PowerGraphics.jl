@@ -735,10 +735,10 @@ function plot_demand(results::Array; kwargs...)
     return _demand_plot_internal(newer_results, backend; kwargs...)
 end
 function _get_loads(system::PSY.System, bus::PSY.Bus)
-    return (
-        load for
-        load in PSY.get_components(PSY.PowerLoad, system) if PSY.get_bus(load) == bus
-    )
+    return [
+        load
+        for load in PSY.get_components(PSY.PowerLoad, system) if PSY.get_bus(load) == bus
+    ]
 end
 function _get_loads(system::PSY.System, agg::T) where {T <: PSY.AggregationTopology}
     return PSY.get_components_in_aggregation_topology(PSY.PowerLoad, system, agg)
@@ -770,6 +770,7 @@ function make_demand_plot_data(
     parameters = DataFrames.DataFrame(timestamp = Dates.DateTime[])
     for agg in aggregation_components
         loads = _get_loads(system, agg)
+        length(loads) == 0 && continue
         colname = aggregation == PSY.System ? "System" : PSY.get_name(agg)
         load_values = []
         for load in loads
