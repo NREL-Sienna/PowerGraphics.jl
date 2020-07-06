@@ -8,7 +8,8 @@ function _filter_variables(results::IS.Results; kwargs...)
         end
     end
     curtailment = get(kwargs, :curtailment, false)
-    _filter_curtailment!(results, filter_variables, curtailment)
+    filter_variables =
+        curtailment ? _filter_curtailment(results, filter_variables) : filter_variables
     load = get(kwargs, :load, false)
     if load && (:P__PowerLoad in keys(results.parameter_values))
         filter_parameters[:P__PowerLoad] = results.parameter_values[:P__PowerLoad]
@@ -53,15 +54,13 @@ function _filter_reserves(results::IS.Results, reserves::Bool)
     end
 end
 
-function _filter_curtailment!(results::IS.Results, filter_results::Dict, curtailment::Bool)
+function _filter_curtailment(results::IS.Results, filter_results::Dict)
     for (key, parameter) in IS.get_parameters(results)
         param = "$key"
         name = split(param, "_")[end]
         if !(key in keys(IS.get_variables(results))) && name in SUPPORTEDGENPARAMS
             filter_results[key] = parameter
-        elseif (key in keys(IS.get_variables(results))) &&
-               name in SUPPORTEDGENPARAMS &&
-               curtailment
+        elseif (key in keys(IS.get_variables(results))) && name in SUPPORTEDGENPARAMS
             if Symbol("Curtailment") in keys(filter_results)
                 hcat(
                     filter_results[Symbol("Curtailment")],
@@ -442,12 +441,18 @@ function stack_plot(res::IS.Results; kwargs...)
     save_fig = get(kwargs, :save, nothing)
     reserve = get(kwargs, :reserves, false)
     reserves = _filter_reserves(res, reserve)
-
-    res = _filter_variables(res; kwargs...)
+    results = _filter_variables(res; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    return _stack_plot_internal(res, backend, save_fig, set_display, reserves; kwargs...)
+    return _stack_plot_internal(
+        results,
+        backend,
+        save_fig,
+        set_display,
+        reserves;
+        kwargs...,
+    )
 end
 
 """
@@ -529,8 +534,14 @@ stack_plot(results, variables)
 
 function stack_plot(res::IS.Results, variables::Array; kwargs...)
     res_var = Dict()
+    res_param = Dict()
     for variable in variables
+        ending = last(split("$variable", "_"))
+        parameter = Symbol("parameter_P_$ending")
         res_var[variable] = IS.get_variables(res)[variable]
+        if parameter in keys(IS.get_parameters(res))
+            res_param[parameter] = IS.get_parameters(res)[parameter]
+        end
     end
     results = Results(
         IS.get_base_power(res),
@@ -539,7 +550,7 @@ function stack_plot(res::IS.Results, variables::Array; kwargs...)
         IS.get_total_cost(res),
         IS.get_time_stamp(res),
         res.dual_values,
-        res.parameter_values,
+        res_param,
     )
     return stack_plot(results; kwargs...)
 end
@@ -548,8 +559,14 @@ function stack_plot(results::Array, variables::Array; kwargs...)
     new_results = []
     for res in results
         res_var = Dict()
+        res_param = Dict()
         for variable in variables
+            ending = last(split("$variable", "_"))
+            parameter = Symbol("parameter_P_$ending")
             res_var[variable] = IS.get_variables(res)[variable]
+            if parameter in keys(IS.get_parameters(res))
+                res_param[parameter] = IS.get_parameters(res)[parameter]
+            end
         end
         results = Results(
             IS.get_base_power(res),
@@ -558,7 +575,7 @@ function stack_plot(results::Array, variables::Array; kwargs...)
             IS.get_total_cost(res),
             IS.get_time_stamp(res),
             res.dual_values,
-            res.parameter_values,
+            res_param,
         )
         new_results = vcat(new_results, results)
     end
@@ -832,12 +849,18 @@ end
 
 ################################# Plotting a Single Variable ##########################
 
-function plot_variable(res::IS.Results, var::Union{Symbol, String}; kwargs...)
-    variable_name = Symbol(var)
-    if !(variable_name in keys(IS.get_variables(res)))
-        @warn "$variable_name not found in results variables. Existing variables are \n$(keys(IS.get_variables(res)))"
+function plot_variable(res::IS.Results, variable_name::Union{Symbol, String}; kwargs...)
+    var = Symbol(variable_name)
+    if !(var in keys(IS.get_variables(res)))
+        @warn "$var not found in results variables. Existing variables are \n$(keys(IS.get_variables(res)))"
     else
-        variable = IS.get_variables(res)[var]
+        curtailment = get(kwargs, :curtailment, false)
+        variables = Dict(variable_name => IS.get_variables(res)[var])
+        variables = curtailment ? _filter_curtailment(res, variables) : variables
+        variable = variables[var]
+        if :Curtailment in keys(variables)
+            variable[:, :Curtailment] .= sum(Matrix(variables[:Curtailment]))
+        end
         time_range = IS.get_time_stamp(res)[:, 1]
         plots = _variable_plots_internal(
             variable,
@@ -851,12 +874,23 @@ function plot_variable(res::IS.Results, var::Union{Symbol, String}; kwargs...)
     end
 end
 
-function plot_variable(plot::Any, res::IS.Results, var::Union{Symbol, String}; kwargs...)
-    variable_name = Symbol(var)
-    if !(variable_name in keys(IS.get_variables(res)))
-        @warn "$variable_name not found in results variables. Existing variables are \n$(keys(IS.get_variables(res)))"
+function plot_variable(
+    plot::Any,
+    res::IS.Results,
+    variable_name::Union{Symbol, String};
+    kwargs...,
+)
+    var = Symbol(variable_name)
+    if !(var in keys(IS.get_variables(res)))
+        @warn "$var not found in results variables. Existing variables are \n$(keys(IS.get_variables(res)))"
     else
-        variable = IS.get_variables(res)[var]
+        curtailment = get(kwargs, :curtailment, false)
+        variables = Dict(variable_name => IS.get_variables(res)[var])
+        variables = curtailment ? _filter_curtailment(res, variables) : variables
+        variable = variables[var]
+        if :Curtailment in keys(variables)
+            variable[:, :Curtailment] .= sum(Matrix(variables[:Curtailment]))
+        end
         time_range = IS.get_time_stamp(res)[:, 1]
         plots = _variable_plots_internal(
             plot,
