@@ -736,8 +736,8 @@ function plot_demand(results::Array; kwargs...)
 end
 function _get_loads(system::PSY.System, bus::PSY.Bus)
     return [
-        load for
-        load in PSY.get_components(PSY.PowerLoad, system) if PSY.get_bus(load) == bus
+        load
+        for load in PSY.get_components(PSY.PowerLoad, system) if PSY.get_bus(load) == bus
     ]
 end
 function _get_loads(system::PSY.System, agg::T) where {T <: PSY.AggregationTopology}
