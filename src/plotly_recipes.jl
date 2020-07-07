@@ -1275,15 +1275,18 @@ function _demand_plot_internal(
         repeat(seriescolor, Int64(ceil(n_traces / length(seriescolor)))) : seriescolor
     title = get(kwargs, :title, "PowerLoad")
     for i in 1:n_traces
+        stackgroup = get(kwargs, :stack, false) ? "one" : "$i"
+        fillcolor = get(kwargs, :stack, false) ? seriescolor[i] : "transparent"
         push!(
             traces,
             Plots.PlotlyJS.scatter(;
                 name = param_names[i],
                 x = parameters[:, :timestamp],
                 y = data[:, param_names[i]],
-                stackgroup = "one",
+                stackgroup = stackgroup,
                 mode = "lines",
                 fill = "tonexty",
+                fillcolor = fillcolor,
                 line_color = seriescolor[i],
                 line_shape = line_shape,
                 showlegend = true,
@@ -1332,15 +1335,18 @@ function _demand_plot_internal(
         traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
         for n in 1:length(p_names)
             i == 1 ? leg = true : leg = false
+            stackgroup = get(kwargs, :stack, false) ? "one" : "$n"
+            fillcolor = get(kwargs, :stack, false) ? seriescolor[n] : "transparent"
             push!(
                 traces,
                 Plots.PlotlyJS.scatter(;
                     name = p_names[n],
                     x = parameters[i][:, :timestamp],
                     y = data[:, p_names[n]],
-                    stackgroup = "one",
+                    stackgroup = stackgroup,
                     mode = "lines",
                     fill = "tonexty",
+                    fillcolor = fillcolor,
                     line_color = seriescolor[n],
                     showlegend = leg,
                 ),
