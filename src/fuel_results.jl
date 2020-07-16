@@ -139,7 +139,8 @@ function _aggregate_data(res::IS.Results, generators::Dict)
         for tuple in list
             if tuple[1] in keys(all_results)
                 data = all_results[tuple[1]]
-                colname = typeof(names(data)[1]) == String ? "$(tuple[2])" : Symbol(tuple[2])
+                colname =
+                    typeof(names(data)[1]) == String ? "$(tuple[2])" : Symbol(tuple[2])
                 generator_df = hcat(generator_df, data[:, colname], makeunique = true)
             end
         end
