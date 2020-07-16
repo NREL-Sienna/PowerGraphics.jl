@@ -115,10 +115,9 @@ function make_fuel_dictionary(sys::PSY.System, mapping::Dict{NamedTuple, String}
     for gen in generators
         fuel = hasmethod(PSY.get_fuel, Tuple{typeof(gen)}) ? PSY.get_fuel(gen) : nothing
         category = get_generator_category(fuel, PSY.get_primemover(gen), mapping)
-        push!(gen_categories["$category"], PSY.get_name(gen))
+        push!(gen_categories["$category"], (string(typeof(gen)), (PSY.get_name(gen))))
     end
     [delete!(gen_categories, "$k") for (k, v) in gen_categories if isempty(v)]
-
     return gen_categories
 end
 
@@ -128,24 +127,23 @@ function make_fuel_dictionary(sys::PSY.System; kwargs...)
 end
 
 function _aggregate_data(res::IS.Results, generators::Dict)
-    all_results = []
+    all_results = Dict()
     var_names = collect(keys(IS.get_variables(res)))
-    for var in var_names
-        variables = IS.get_variables(res)[var]
-        push!(all_results, variables)
-    end
-    hcat_ = (args...) -> hcat(args...; makeunique = true)
-    all_var = reduce(hcat_, all_results)
     fuel_dataframes = Dict()
-    for (k, v) in generators
+    for var in var_names
+        name_split = last(split(string(var), "_"))
+        all_results[name_split] = IS.get_variables(res)[var]
+    end
+    for (fuel, list) in generators
         generator_df = DataFrames.DataFrame()
-        for l in v
-            colname = typeof(names(all_var)[1]) == String ? "$l" : Symbol(l)
-            if colname in names(all_var)
-                generator_df = hcat(generator_df, all_var[:, colname], makeunique = true)
+        for tuple in list
+            if tuple[1] in keys(all_results)
+                data = all_results[tuple[1]]
+                colname = typeof(names(data)[1]) == String ? "$(tuple[2])" : Symbol(tuple[2])
+                generator_df = hcat(generator_df, data[:, colname], makeunique = true)
             end
         end
-        fuel_dataframes[k] = generator_df
+        fuel_dataframes[fuel] = generator_df
     end
     return fuel_dataframes
 end
