@@ -795,7 +795,7 @@ function make_demand_plot_data(
                 PSY.Deterministic,
                 load,
                 initial_time,
-                "get_maxactivepower",
+                "get_max_active_power",
                 horizon,
             )
             push!(load_values, values(f))
