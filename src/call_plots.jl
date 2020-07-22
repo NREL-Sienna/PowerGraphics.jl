@@ -818,19 +818,19 @@ function plot_demand(system::PSY.System; kwargs...)
     aggregation = get(kwargs, :aggregate, PSY.PowerLoad)
     parameters = make_demand_plot_data(system, aggregation; kwargs...)
     backend = Plots.backend()
-    return _demand_plot_internal(parameters, system.basepower, Plots.backend(); kwargs...)
+    return _demand_plot_internal(parameters, PSY.get_base_power(system), Plots.backend(); kwargs...)
 end
 
 function plot_demand(systems::Array{PSY.System}; kwargs...)
     parameter_list = []
-    basepowers = []
+    base_powers = []
     aggregation = get(kwargs, :aggregate, PSY.PowerLoad)
     for system in systems
-        push!(basepowers, system.basepower)
+        push!(base_powers, PSY.get_base_power(system))
         push!(parameter_list, make_demand_plot_data(system, aggregation; kwargs...))
     end
     backend = Plots.backend()
-    return _demand_plot_internal(parameter_list, basepowers, backend; kwargs...)
+    return _demand_plot_internal(parameter_list, base_powers, backend; kwargs...)
 end
 
 ################################## Plot Forecasts ###########################
