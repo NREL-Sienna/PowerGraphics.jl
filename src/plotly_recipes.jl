@@ -1257,14 +1257,14 @@ end
 
 function _demand_plot_internal(
     parameters::DataFrames.DataFrame,
-    basepower::Float64,
+    base_power::Float64,
     backend::Plots.PlotlyJSBackend;
     kwargs...,
 )
     line_shape = get(kwargs, :stair, false) ? "hv" : "linear"
     save_fig = get(kwargs, :save, nothing)
     set_display = get(kwargs, :display, true)
-    ylabel = _make_ylabel(basepower)
+    ylabel = _make_ylabel(base_power)
     plot_list = Dict()
     traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
     data = DataFrames.select(parameters, DataFrames.Not(:timestamp))
@@ -1314,11 +1314,11 @@ end
 
 function _demand_plot_internal(
     parameters::Array,
-    basepower::Array,
+    base_power::Array,
     backend::Plots.PlotlyJSBackend;
     kwargs...,
 )
-    n_traces = length(parameters[1])
+    n_traces = size((parameters[1]))[1]
     seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
     seriescolor = length(seriescolor) < n_traces ?
         repeat(seriescolor, Int64(ceil(n_traces / length(seriescolor)))) : seriescolor
@@ -1331,7 +1331,7 @@ function _demand_plot_internal(
     for i in 1:length(parameters)
         data = DataFrames.select(parameters[i], DataFrames.Not(:timestamp))
         p_names = collect(names(data))
-        ylabel = _make_ylabel(basepower[i])
+        ylabel = _make_ylabel(base_power[i])
         traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
         for n in 1:length(p_names)
             i == 1 ? leg = true : leg = false
