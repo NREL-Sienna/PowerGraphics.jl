@@ -163,15 +163,18 @@ and assigns each fuel type a specific color.
 
 ```julia
 res = solve_op_problem!(OpProblem)
-fuel_plot(res, sys)
+plot = fuel_plot(res, sys)
 ```
 
 # Accepted Key Words
 - `display::Bool`: set to false to prevent the plots from displaying
-- `reserves::Bool`: if reserves = true, the researves will be plotted with the active power
 - `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "html"`: set a different format for saving a PlotlyJS plot
 - `seriescolor::Array`: Set different colors for the plots
 - `title::String = "Title"`: Set a title for the plots
+- `curtailment::Bool`: To plot the curtailment in the stack plot
+- `load::Bool`: To plot the load line in the plot
+- `stair::Bool`: Make a stair plot instead of a stack plot
 - `generator_mapping_file` = "file_path" : file path to yaml definig generator category by fuel and primemover
 """
 function fuel_plot(res::Union{IS.Results, Array}, sys::PSY.System; kwargs...)
@@ -196,14 +199,18 @@ and assigns each fuel type a specific color.
 ```julia
 res = solve_op_problem!(OpProblem)
 generator_dict = make_fuel_dictionary(sys, mapping)
-fuel_plot(res, generator_dict)
+plot = fuel_plot(res, generator_dict)
 ```
 
 # Accepted Key Words
 - `display::Bool`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "html"`: set a different format for saving a PlotlyJS plot
 - `seriescolor::Array`: Set different colors for the plots
-- `reserves::Bool`: if reserves = true, the researves will be plotted with the active power
+- `title::String = "Title"`: Set a title for the plots
+- `curtailment::Bool`: To plot the curtailment in the stack plot
+- `load::Bool`: To plot the load line in the plot
+- `stair::Bool`: Make a stair plot instead of a stack plot
 - `title::String = "Title"`: Set a title for the plots
 """
 
@@ -285,14 +292,15 @@ the results variables dictionary, and makes a bar plot for all of the variables.
 
 ```julia
 results = solve_op_problem!(OpProblem)
-bar_plot(results)
+plot = bar_plot(results)
 ```
 
 # Accepted Key Words
 - `display::Bool`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "html"`: set a different format for saving a PlotlyJS plot
 - `seriescolor::Array`: Set different colors for the plots
-- `reserves::Bool`: if reserves = true, the researves will be plotted with the active power
+- `load::Bool`: plot the load line
 - `title::String = "Title"`: Set a title for the plots
 """
 
@@ -333,14 +341,14 @@ the results variables dictionary, and makes a bar plot for all of the variables 
 ```julia
 results1 = solve_op_problem!(OpProblem1)
 results2 = solve_op_problem!(OpProblem2)
-bar_plot([results1; results2])
+plot = bar_plot([results1; results2])
 ```
 
 # Accepted Key Words
 - `display::Bool`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "html"`: set a different format for saving a PlotlyJS plot
 - `seriescolor::Array`: Set different colors for the plots
-- `reserves::Bool`: if reserves = true, the researves will be plotted with the active power
 - `title::String = "Title"`: Set a title for the plots
 """
 
@@ -424,14 +432,15 @@ the results variables dictionary, and makes a stack plot for all of the variable
 
 ```julia
 results = solve_op_problem!(OpProblem)
-stack_plot(results)
+plot = stack_plot(results)
 ```
 
 # Accepted Key Words
 - `display::Bool`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "png"`: Set a different default format for saving PlotlyJS
 - `seriescolor::Array`: Set different colors for the plots
-- `reserves::Bool`: if reserves = true, the researves will be plotted with the active power
+- `stair::Bool`: make a stair plot instead of a stack plot
 - `title::String = "Title"`: Set a title for the plots
 """
 
@@ -469,14 +478,14 @@ results variables dictionary, and makes a stack plot for all of the variables pe
 ```julia
 results1 = solve_op_problem!(OpProblem1)
 results2 = solve_op_problem!(OpProblem2)
-stack_plot([results1; results2])
+plot = stack_plot([results1; results2])
 ```
 
 # Accepted Key Words
 - `display::Bool`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "html"`: set a different format for saving a PlotlyJS plot
 - `seriescolor::Array`: Set different colors for the plots
-- `reserves::Bool`: if reserves = true, the researves will be plotted with the active power
 - `title::String = "Title"`: Set a title for the plots
 """
 
@@ -521,14 +530,14 @@ the results variables dictionary, and makes a stack plot for all of the variable
 ```julia
 results = solve_op_problem!(OpProblem)
 variables = [:var1, :var2, :var3]
-stack_plot(results, variables)
+plot = stack_plot(results, variables)
 ```
 
 # Accepted Key Words
 - `display::Bool`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "html"`: set a different format for saving a PlotlyJS plot
 - `seriescolor::Array`: Set different colors for the plots
-- `reserves::Bool`: if reserves = true, the researves will be plotted with the active power
 - `title::String = "Title"`: Set a title for the plots
 """
 
@@ -603,6 +612,33 @@ function _make_bar_ylabel(base_power::Float64)
     end
     return ylabel
 end
+
+"""
+    stair_plot(results)
+
+This function makes a stair plot for each variable, as well as all of the variables.
+The same methods for stack_plot apply to stair_plot.
+
+# Arguments
+
+- `res::Results = results`: results to be plotted
+
+# Example
+
+```julia
+res = solve_op_problem!(OpProblem)
+plot = stair_plot(res)
+```
+
+# Accepted Key Words
+- `display::Bool`: set to false to prevent the plots from displaying
+- `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "html"`: set a different format for saving a PlotlyJS plot
+- `seriescolor::Array`: Set different colors for the plots
+- `title::String = "Title"`: Set a title for the plots
+- `curtailment::Bool`: To plot the curtailment in the stack plot
+- `load::Bool`: To plot the load line in the plot
+"""
 
 function stair_plot(res::IS.Results; kwargs...)
     set_display = get(kwargs, :set_display, true)
@@ -718,6 +754,33 @@ function _shorten_time(results::IS.Results, horizon::Int64, init_time::Dates.Dat
     )
 end
 
+"""
+    plot_demand(results)
+
+This function makes a plot of the demand in the system.
+
+# Arguments
+
+- `res::Results = results`: results to be plotted
+
+# Example
+
+```julia
+res = solve_op_problem!(OpProblem)
+plot = plot_demand(res)
+```
+
+# Accepted Key Words
+- `display::Bool`: set to false to prevent the plots from displaying
+- `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "html"`: set a different format for saving a PlotlyJS plot
+- `seriescolor::Array`: Set different colors for the plots
+- `title::String = "Title"`: Set a title for the plots
+- `horizon::Int64 = 12`: To plot a shorter window of time than the full results
+- `initial_time::DateTime`: To start the plot at a different time other than the results initial time
+- `aggregate::String = "System", "PowerLoad", or "Bus"`: aggregate the demand other than by generator
+"""
+
 function plot_demand(res::IS.Results; kwargs...)
     results = _filter_parameters(res)
     if isempty(IS.get_parameters(results))
@@ -731,6 +794,33 @@ function plot_demand(res::IS.Results; kwargs...)
     end
     return _demand_plot_internal(results, backend; kwargs...)
 end
+
+"""
+    plot_demand([results_1, results_2])
+
+This function makes a plot of the demand in the system.
+
+# Arguments
+
+- `results_array::Array`: Array of results to be plotted
+
+# Example
+
+```julia
+res = solve_op_problem!(OpProblem)
+plot = plot_demand([res, res])
+```
+
+# Accepted Key Words
+- `display::Bool`: set to false to prevent the plots from displaying
+- `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "html"`: set a different format for saving a PlotlyJS plot
+- `seriescolor::Array`: Set different colors for the plots
+- `title::String = "Title"`: Set a title for the plots
+- `horizon::Int64 = 12`: To plot a shorter window of time than the full results
+- `initial_time::DateTime`: To start the plot at a different time other than the results initial time
+- `aggregate::String = "System", "PowerLoad", or "Bus"`: aggregate the demand other than by generator
+"""
 
 function plot_demand(results::Array; kwargs...)
     newer_results = []
@@ -814,6 +904,32 @@ function make_demand_plot_data(
     return parameters
 end
 
+"""
+    plot_demand(system)
+
+This function makes a plot of the demand in the system.
+
+# Arguments
+
+- `sys::PSY.System`: the system to be plotted
+
+# Example
+
+```julia
+plot = plot_demand(sys)
+```
+
+# Accepted Key Words
+- `display::Bool`: set to false to prevent the plots from displaying
+- `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "html"`: set a different format for saving a PlotlyJS plot
+- `seriescolor::Array`: Set different colors for the plots
+- `title::String = "Title"`: Set a title for the plots
+- `horizon::Int64 = 12`: To plot a shorter window of time than the full results
+- `initial_time::DateTime`: To start the plot at a different time other than the results initial time
+- `aggregate::String = "System", "PowerLoad", or "Bus"`: aggregate the demand other than by generator
+"""
+
 function plot_demand(system::PSY.System; kwargs...)
     aggregation = get(kwargs, :aggregate, PSY.PowerLoad)
     parameters = make_demand_plot_data(system, aggregation; kwargs...)
@@ -821,6 +937,31 @@ function plot_demand(system::PSY.System; kwargs...)
     return _demand_plot_internal(parameters, system.basepower, Plots.backend(); kwargs...)
 end
 
+"""
+    plot_demand([system_1, system_2])
+
+This function makes a plot of the demand in the system.
+
+# Arguments
+
+- `system::PSY.system`: Array of systems to be plotted
+
+# Example
+
+```julia
+plot = plot_demand([sys, sys])
+```
+
+# Accepted Key Words
+- `display::Bool`: set to false to prevent the plots from displaying
+- `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "html"`: set a different format for saving a PlotlyJS plot
+- `seriescolor::Array`: Set different colors for the plots
+- `title::String = "Title"`: Set a title for the plots
+- `horizon::Int64 = 12`: To plot a shorter window of time than the full results
+- `initial_time::DateTime`: To start the plot at a different time other than the results initial time
+- `aggregate::String = "System", "PowerLoad", or "Bus"`: aggregate the demand other than by generator
+"""
 function plot_demand(systems::Array{PSY.System}; kwargs...)
     parameter_list = []
     basepowers = []
@@ -841,6 +982,36 @@ end
 
 ############################### Reserve Plot ################################
 
+
+"""
+    plot_reserves(results)
+
+This function makes a stack plot of the reserves in results.
+
+# Arguments
+
+- `results::IS.Results`: The results to be plotted
+ or
+- `Array::Array{IS.Results}`: An array of multiple results to be plotted
+
+# Example
+
+```julia
+plot = plot_reserves(results)
+```
+or
+
+```julia
+plot = plot_reserves([results, results])
+```
+# Accepted Key Words
+- `display::Bool`: set to false to prevent the plots from displaying
+- `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "html"`: set a different format for saving a PlotlyJS plot
+- `seriescolor::Array`: Set different colors for the plots
+- `title::String = "Title"`: Set a title for the plots
+- `stair::Bool`: Makes a stair plot instead
+"""
 function plot_reserves(res::Union{IS.Results, Array}; kwargs...)
     backend = Plots.backend()
     plot_list = _reserve_plot(res, backend; kwargs...)
@@ -849,6 +1020,32 @@ end
 
 ################################# Plotting a Single Variable ##########################
 
+"""
+    plot_variable(results, variable_name)
+
+This function makes a plot of a specific variable
+
+# Arguments
+
+- `res::Results = results`: results to be plotted
+- `variable::Union{String, Symbol}`: The variable name to be plotted
+
+# Example
+
+```julia
+res = solve_op_problem!(OpProblem)
+plot = plot_variable(res, variable)
+```
+
+# Accepted Key Words
+- `display::Bool`: set to false to prevent the plots from displaying
+- `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "html"`: set a different format for saving a PlotlyJS plot
+- `seriescolor::Array`: Set different colors for the plots
+- `title::String = "Title"`: Set a title for the plots
+- `curtailment::Bool`: plot the curtailment with the variable
+- `load::Bool`: plot the load with the variable
+"""
 function plot_variable(res::IS.Results, variable_name::Union{Symbol, String}; kwargs...)
     var = Symbol(variable_name)
     if !(var in keys(IS.get_variables(res)))
@@ -874,6 +1071,34 @@ function plot_variable(res::IS.Results, variable_name::Union{Symbol, String}; kw
     end
 end
 
+"""
+    plot_variable(plot, results, variable_name)
+
+This function overlays the plot of a specific variable onto an existing plot
+
+# Arguments
+
+- `plot::Union{Plots.plot, PlotlyJS.SyncPlot}`: the existing plot to be overlayed
+- `res::Results = results`: results to be plotted
+- `variable::Union{String, Symbol}`: The variable name to be plotted
+
+# Example
+
+```julia
+res = solve_op_problem!(OpProblem)
+plot = plot_variable(res, variable)
+plot_2 = plot_variable(plot, res, variable_2)
+```
+
+# Accepted Key Words
+- `display::Bool`: set to false to prevent the plots from displaying
+- `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "html"`: set a different format for saving a PlotlyJS plot
+- `seriescolor::Array`: Set different colors for the plots
+- `title::String = "Title"`: Set a title for the plots
+- `curtailment::Bool`: plot the curtailment with the variable
+- `load::Bool`: plot the load with the variable
+"""
 function plot_variable(
     plot::Any,
     res::IS.Results,
@@ -905,6 +1130,33 @@ function plot_variable(
     end
 end
 
+"""
+    plot_dataframe(variable, time_range)
+
+This function makes a plot of a specific dataframe and time range, not necessarily from the results
+
+# Arguments
+
+- `variable::DataFrames.DataFrame`: The dataframe to be plotted
+- `time_range::Union{Array, DataFrame}`: The time range to be plotted
+
+# Example
+
+```julia
+variable = IS.get_variables(results)[variable_name]
+time_Range = IS.get_time_stamp(results)
+plot = plot_dataframe(variable, time_range)
+```
+
+# Accepted Key Words
+- `display::Bool`: set to false to prevent the plots from displaying
+- `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "html"`: set a different format for saving a PlotlyJS plot
+- `seriescolor::Array`: Set different colors for the plots
+- `title::String = "Title"`: Set a title for the plots
+- `curtailment::Bool`: plot the curtailment with the variable
+- `load::Bool`: plot the load with the variable
+"""
 function plot_dataframe(
     variable::DataFrames.DataFrame,
     time_range::Union{DataFrames.DataFrame, Array};
@@ -916,6 +1168,37 @@ function plot_dataframe(
     return plot
 end
 
+"""
+    plot_dataframe(plot, variable, time_range)
+
+This function overlays the plot of a specific dataframe, over that of another plot
+
+# Arguments
+
+- `plot::Union{Plots.plot, PlotlyJS.SyncPlot}`: the existing plot to be overlayed
+- `variable::DataFrames.DataFrame`: The dataframe to be plotted
+- `time_range::Union{Array, DataFrame}`: The time range to be plotted
+
+# Example
+
+```julia
+variable = IS.get_variables(results)[variable_name]
+time_Range = IS.get_time_stamp(results)
+plot = plot_dataframe(variable, time_range)
+
+variable_2 = IS.get_variables(results)[variable_name_2]
+plot_2 = plot_dataframe(plot, variable_2, time_range)
+```
+
+# Accepted Key Words
+- `display::Bool`: set to false to prevent the plots from displaying
+- `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "html"`: set a different format for saving a PlotlyJS plot
+- `seriescolor::Array`: Set different colors for the plots
+- `title::String = "Title"`: Set a title for the plots
+- `curtailment::Bool`: plot the curtailment with the variable
+- `load::Bool`: plot the load with the variable
+"""
 function plot_dataframe(
     p::Any,
     variable::DataFrames.DataFrame,
