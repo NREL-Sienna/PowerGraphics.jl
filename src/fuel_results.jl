@@ -114,7 +114,7 @@ function make_fuel_dictionary(sys::PSY.System, mapping::Dict{NamedTuple, String}
 
     for gen in generators
         fuel = hasmethod(PSY.get_fuel, Tuple{typeof(gen)}) ? PSY.get_fuel(gen) : nothing
-        category = get_generator_category(fuel, PSY.get_primemover(gen), mapping)
+        category = get_generator_category(fuel, PSY.get_prime_mover(gen), mapping)
         push!(gen_categories["$category"], (string(typeof(gen)), (PSY.get_name(gen))))
     end
     [delete!(gen_categories, "$k") for (k, v) in gen_categories if isempty(v)]
@@ -141,7 +141,7 @@ function _aggregate_data(res::IS.Results, generators::Dict)
                 data = all_results[tuple[1]]
                 colname =
                     typeof(names(data)[1]) == String ? "$(tuple[2])" : Symbol(tuple[2])
-                generator_df = hcat(generator_df, data[:, colname], makeunique = false)
+                generator_df = hcat(generator_df, data[:, colname], makeunique = true)
             end
         end
         fuel_dataframes[fuel] = generator_df

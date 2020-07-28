@@ -885,7 +885,7 @@ function make_demand_plot_data(
                 PSY.Deterministic,
                 load,
                 initial_time,
-                "get_maxactivepower",
+                "get_max_active_power",
                 horizon,
             )
             push!(load_values, values(f))
@@ -934,7 +934,7 @@ function plot_demand(system::PSY.System; kwargs...)
     aggregation = get(kwargs, :aggregate, PSY.PowerLoad)
     parameters = make_demand_plot_data(system, aggregation; kwargs...)
     backend = Plots.backend()
-    return _demand_plot_internal(parameters, system.basepower, Plots.backend(); kwargs...)
+    return _demand_plot_internal(parameters, PSY.get_base_power(system), Plots.backend(); kwargs...)
 end
 
 """
@@ -967,7 +967,7 @@ function plot_demand(systems::Array{PSY.System}; kwargs...)
     basepowers = []
     aggregation = get(kwargs, :aggregate, PSY.PowerLoad)
     for system in systems
-        push!(basepowers, system.basepower)
+        push!(basepowers, PSY.get_base_power(system))
         push!(parameter_list, make_demand_plot_data(system, aggregation; kwargs...))
     end
     backend = Plots.backend()
@@ -1052,7 +1052,7 @@ function plot_variable(res::IS.Results, variable_name::Union{Symbol, String}; kw
         @warn "$var not found in results variables. Existing variables are \n$(keys(IS.get_variables(res)))"
     else
         curtailment = get(kwargs, :curtailment, false)
-        variables = Dict(variable_name => IS.get_variables(res)[var])
+        variables = Dict(var => IS.get_variables(res)[var])
         variables = curtailment ? _filter_curtailment(res, variables) : variables
         variable = variables[var]
         if :Curtailment in keys(variables)
@@ -1063,7 +1063,7 @@ function plot_variable(res::IS.Results, variable_name::Union{Symbol, String}; kw
             variable,
             time_range,
             IS.get_base_power(res),
-            variable_name,
+            var,
             Plots.backend();
             kwargs...,
         )
@@ -1110,7 +1110,7 @@ function plot_variable(
         @warn "$var not found in results variables. Existing variables are \n$(keys(IS.get_variables(res)))"
     else
         curtailment = get(kwargs, :curtailment, false)
-        variables = Dict(variable_name => IS.get_variables(res)[var])
+        variables = Dict(var => IS.get_variables(res)[var])
         variables = curtailment ? _filter_curtailment(res, variables) : variables
         variable = variables[var]
         if :Curtailment in keys(variables)
@@ -1122,7 +1122,7 @@ function plot_variable(
             variable,
             time_range,
             IS.get_base_power(res),
-            variable_name,
+            var,
             Plots.backend();
             kwargs...,
         )

@@ -118,7 +118,7 @@ function build_c_sys5(; kwargs...)
                 add_forecast!(
                     c_sys5,
                     l,
-                    Deterministic("get_maxactivepower", load_timeseries_DA[t][ix]),
+                    Deterministic("get_max_active_power", load_timeseries_DA[t][ix]),
                 )
             end
         end
@@ -147,7 +147,7 @@ function build_c_sys5_ml(; kwargs...)
                 add_forecast!(
                     c_sys5_ml,
                     l,
-                    Deterministic("get_maxactivepower", load_timeseries_DA[t][ix]),
+                    Deterministic("get_max_active_power", load_timeseries_DA[t][ix]),
                 )
             end
         end
@@ -175,7 +175,7 @@ function build_c_sys14(; kwargs...)
             add_forecast!(
                 c_sys14,
                 l,
-                Deterministic("get_maxactivepower", timeseries_DA14[ix]),
+                Deterministic("get_max_active_power", timeseries_DA14[ix]),
             )
         end
     end
@@ -203,14 +203,14 @@ function build_c_sys5_re(; kwargs...)
                 add_forecast!(
                     c_sys5_re,
                     l,
-                    Deterministic("get_maxactivepower", load_timeseries_DA[t][ix]),
+                    Deterministic("get_max_active_power", load_timeseries_DA[t][ix]),
                 )
             end
             for (ix, r) in enumerate(get_components(RenewableGen, c_sys5_re))
                 add_forecast!(
                     c_sys5_re,
                     r,
-                    Deterministic("get_rating", ren_timeseries_DA[t][ix]),
+                    Deterministic("get_max_active_power", ren_timeseries_DA[t][ix]),
                 )
             end
         end
