@@ -678,7 +678,7 @@ end
 
 function _demand_plot_internal(
     parameters::DataFrames.DataFrame,
-    basepower::Float64,
+    base_power::Float64,
     backend::Any;
     kwargs...,
 )
@@ -690,7 +690,7 @@ function _demand_plot_internal(
     time_range = parameters[:, :timestamp]
     interval = time_range[2] - time_range[1]
     time_interval = IS.convert_compound_period(interval * length(time_range))
-    ylabel = _make_ylabel(basepower)
+    ylabel = _make_ylabel(base_power)
     plot_list = Dict()
     title = get(kwargs, :title, "PowerLoad")
     DataFrames.select!(parameters, DataFrames.Not(:timestamp))
@@ -721,7 +721,7 @@ end
 
 function _demand_plot_internal(
     parameter_list::Array,
-    basepower::Array,
+    base_power::Array,
     backend::Any;
     kwargs...,
 )
@@ -737,7 +737,7 @@ function _demand_plot_internal(
     plots = []
     title = get(kwargs, :title, "PowerLoad")
     for i in 1:length(parameter_list)
-        ylabel = _make_ylabel(basepower[i])
+        ylabel = _make_ylabel(base_power[i])
         DataFrames.select!(parameter_list[i], DataFrames.Not(:timestamp))
         labels = string.(names(parameter_list[i]))
         data = cumsum(convert(Matrix, parameter_list[i]), dims = 2)

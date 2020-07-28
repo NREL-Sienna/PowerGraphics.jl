@@ -969,14 +969,14 @@ plot = plot_demand([sys, sys])
 """
 function plot_demand(systems::Array{PSY.System}; kwargs...)
     parameter_list = []
-    basepowers = []
+    base_powers = []
     aggregation = get(kwargs, :aggregate, PSY.PowerLoad)
     for system in systems
-        push!(basepowers, PSY.get_base_power(system))
+        push!(base_powers, PSY.get_base_power(system))
         push!(parameter_list, make_demand_plot_data(system, aggregation; kwargs...))
     end
     backend = Plots.backend()
-    return _demand_plot_internal(parameter_list, basepowers, backend; kwargs...)
+    return _demand_plot_internal(parameter_list, base_powers, backend; kwargs...)
 end
 
 ################################## Plot Forecasts ###########################

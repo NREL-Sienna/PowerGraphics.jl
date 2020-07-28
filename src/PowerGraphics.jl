@@ -1,5 +1,5 @@
 isdefined(Base, :__precompile__) && __precompile__()
-@info "PowerGrahics.jl loads Plots.jl. Precompile might take a while"
+@info "PowerGraphics.jl loads Plots.jl. Precompile might take a while"
 module PowerGraphics
 
 export get_stacked_aggregation_data
