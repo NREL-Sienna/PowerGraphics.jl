@@ -144,7 +144,7 @@ function _aggregate_data(res::IS.Results, generators::Dict)
                 DataFrames.insertcols!(
                     generator_df,
                     (colname => data[:, colname]),
-                    makeunique = false,
+                    makeunique = true,
                 )
             end
         end

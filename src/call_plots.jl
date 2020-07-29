@@ -1056,7 +1056,7 @@ function plot_variable(res::IS.Results, variable_name::Union{Symbol, String}; kw
         @warn "$var not found in results variables. Existing variables are \n$(keys(IS.get_variables(res)))"
     else
         curtailment = get(kwargs, :curtailment, false)
-        variables = Dict(variable_name => IS.get_variables(res)[var])
+        variables = Dict(var => IS.get_variables(res)[var])
         variables = curtailment ? _filter_curtailment(res, variables) : variables
         variable = variables[var]
         if :Curtailment in keys(variables)
@@ -1067,7 +1067,7 @@ function plot_variable(res::IS.Results, variable_name::Union{Symbol, String}; kw
             variable,
             time_range,
             IS.get_base_power(res),
-            variable_name,
+            var,
             Plots.backend();
             kwargs...,
         )
@@ -1114,7 +1114,7 @@ function plot_variable(
         @warn "$var not found in results variables. Existing variables are \n$(keys(IS.get_variables(res)))"
     else
         curtailment = get(kwargs, :curtailment, false)
-        variables = Dict(variable_name => IS.get_variables(res)[var])
+        variables = Dict(var => IS.get_variables(res)[var])
         variables = curtailment ? _filter_curtailment(res, variables) : variables
         variable = variables[var]
         if :Curtailment in keys(variables)
@@ -1126,7 +1126,7 @@ function plot_variable(
             variable,
             time_range,
             IS.get_base_power(res),
-            variable_name,
+            var,
             Plots.backend();
             kwargs...,
         )
