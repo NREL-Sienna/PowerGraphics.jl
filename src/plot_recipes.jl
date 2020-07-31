@@ -29,7 +29,7 @@ function _fuel_plot_internal(
     save_fig::Any,
     set_display::Bool,
     title::String,
-    ylabel::String,
+    ylabel::NamedTuple{(:stack, :bar),Tuple{String,String}},
     interval::Float64;
     kwargs...,
 )
@@ -52,7 +52,7 @@ function _fuel_plot_internal(
             stack_data;
             seriescolor = seriescolor,
             title = title,
-            ylabel = ylabel,
+            ylabel = ylabel.stack,
             xlabel = "$time_interval",
             lab = labels,
             xtick = [time_range[1], last(time_range)],
@@ -88,7 +88,7 @@ function _fuel_plot_internal(
             [3.5; 5.5],
             [bar_data; bar_data];
             seriescolor = seriescolor,
-            ylabel = ylabel,
+            ylabel = ylabel.bar,
             xlabel = "$time_interval",
             xticks = false,
             xlims = (1, 8),
