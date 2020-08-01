@@ -29,7 +29,7 @@ function _fuel_plot_internal(
     save_fig::Any,
     set_display::Bool,
     title::String,
-    ylabel::NamedTuple{(:stack, :bar),Tuple{String,String}},
+    ylabel::NamedTuple{(:stack, :bar), Tuple{String, String}},
     interval::Float64;
     kwargs...,
 )
