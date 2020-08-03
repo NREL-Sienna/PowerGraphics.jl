@@ -458,6 +458,7 @@ function plotly_fuel_stack_gen(
         )
     end
     if get(kwargs, :load, false) == true
+        @show stacked_gen.parameters
         push!(
             traces,
             Plots.PlotlyJS.scatter(;
@@ -1132,15 +1133,21 @@ function _fuel_plot_internal(
     save_fig::Any,
     set_display::Bool,
     title::String,
-    ylabel::String,
+    ylabel::NamedTuple{(:stack, :bar), Tuple{String, String}},
     interval::Float64;
     kwargs...,
 )
     stair = get(kwargs, :stair, false)
     stack_title = stair ? "$(title) Stair" : stack_title = "$(title) Stack"
-    stacks = plotly_fuel_stack_gen(stack, seriescolor, stack_title, ylabel; kwargs...)
-    bars =
-        plotly_fuel_bar_gen(bar, seriescolor, "$(title) Bar", ylabel, interval; kwargs...)
+    stacks = plotly_fuel_stack_gen(stack, seriescolor, stack_title, ylabel.stack; kwargs...)
+    bars = plotly_fuel_bar_gen(
+        bar,
+        seriescolor,
+        "$(title) Bar",
+        ylabel.bar,
+        interval;
+        kwargs...,
+    )
     return PlotList(Dict(:Fuel_Stack => stacks, :Fuel_Bar => bars))
 end
 
