@@ -458,7 +458,6 @@ function plotly_fuel_stack_gen(
         )
     end
     if get(kwargs, :load, false) == true
-        @show stacked_gen.parameters
         push!(
             traces,
             Plots.PlotlyJS.scatter(;
