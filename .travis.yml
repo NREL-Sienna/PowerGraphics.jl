@@ -4,24 +4,24 @@ language: julia
 matrix:
   include:
     - os: linux
-      julia: 1.4
+      julia: 1.5
       env: TESTCMD="xvfb-run julia"
     - os: linux
       julia: nightly
       env: TESTCMD="xvfb-run julia"
     - os: windows
-      julia: 1.4
+      julia: 1.5
     - os: windows
       julia: nightly
     - os: osx
-      julia: 1.4
+      julia: 1.5
       env: TESTCMD="julia"
     - os: osx
       julia: nightly
       env: TESTCMD="julia"
   allow_failures:
     - os: windows
-      julia: 1.4
+      julia: 1.5
     - os: windows
       julia: nightly
     - os: osx
