@@ -1066,7 +1066,7 @@ function plot_variable(res::IS.Results, variable_name::Union{Symbol, String}; kw
     else
         curtailment = get(kwargs, :curtailment, false)
         variables = Dict(var => IS.get_variables(res)[var])
-        variables =_filter_curtailment(res, variables, curtailment)
+        variables = _filter_curtailment(res, variables, curtailment)
         variable = variables[var]
         if :Curtailment in keys(variables)
             variable[:, :Curtailment] .= sum(Matrix(variables[:Curtailment]))
