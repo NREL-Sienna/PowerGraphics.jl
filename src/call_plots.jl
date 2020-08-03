@@ -895,11 +895,13 @@ function make_demand_plot_data(
                 horizon,
             )
             push!(load_values, values(f))
-            parameters = DataFrames.join(
+            parameters = DataFrames.outerjoin(
                 parameters,
                 DataFrames.DataFrame(timestamp = TimeSeries.timestamp(f)),
                 on = :timestamp,
-                kind = :outer,
+                makeunique = false,
+                indicator = nothing,
+                validate = (false, false),
             )
         end
         load_values = length(loads) == 1 ? load_values[1] :
