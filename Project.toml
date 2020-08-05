@@ -1,7 +1,7 @@
 name = "PowerGraphics"
 uuid = "5f7eddb3-86b1-49e8-a95a-ddc0f45eea41"
 authors = ["Lily Hanig", "Clayton Barrows", "Jose Daniel Lara"]
-version = "0.5.0"
+version = "0.5.1"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
@@ -20,9 +20,9 @@ YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
 CSV = "~0.7"
 Colors = "~0.12"
 DataFrames = "0.21"
-InfrastructureSystems = "~0.14"
+InfrastructureSystems = "~0.15"
 Plots = "1"
-PowerSystems = "~0.24"
+PowerSystems = "~0.25"
 Reexport = "0.2"
 Requires = "1.0"
 TimeSeries = "~v0.18"
