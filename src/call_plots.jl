@@ -7,16 +7,15 @@ function _filter_variables(results::IS.Results; kwargs...)
             filter_variables[key] = var
         end
     end
+
     curtailment = get(kwargs, :curtailment, false)
-    filter_variables =
-        curtailment ? _filter_curtailment(results, filter_variables) : filter_variables
+    filter_variables = _filter_curtailment(results, filter_variables, curtailment)
     load = get(kwargs, :load, false)
     if load && (:P__PowerLoad in keys(results.parameter_values))
         filter_parameters[:P__PowerLoad] = results.parameter_values[:P__PowerLoad]
     elseif load
         @warn "PowerLoad not found in results parameters."
     end
-
     new_results = Results(
         IS.get_base_power(results),
         filter_variables,
@@ -54,13 +53,15 @@ function _filter_reserves(results::IS.Results, reserves::Bool)
     end
 end
 
-function _filter_curtailment(results::IS.Results, filter_results::Dict)
+function _filter_curtailment(results::IS.Results, filter_results::Dict, curtailment::Bool)
     for (key, parameter) in IS.get_parameters(results)
         param = "$key"
         name = split(param, "_")[end]
-        if !(key in keys(IS.get_variables(results))) && name in SUPPORTEDGENPARAMS
+        !(name in SUPPORTEDGENPARAMS) && continue
+
+        if !(key in keys(IS.get_variables(results))) || !curtailment
             filter_results[key] = parameter
-        elseif (key in keys(IS.get_variables(results))) && name in SUPPORTEDGENPARAMS
+        else
             if Symbol("Curtailment") in keys(filter_results)
                 hcat(
                     filter_results[Symbol("Curtailment")],
@@ -1065,7 +1066,7 @@ function plot_variable(res::IS.Results, variable_name::Union{Symbol, String}; kw
     else
         curtailment = get(kwargs, :curtailment, false)
         variables = Dict(var => IS.get_variables(res)[var])
-        variables = curtailment ? _filter_curtailment(res, variables) : variables
+        variables = _filter_curtailment(res, variables, curtailment)
         variable = variables[var]
         if :Curtailment in keys(variables)
             variable[:, :Curtailment] .= sum(Matrix(variables[:Curtailment]))
@@ -1123,7 +1124,7 @@ function plot_variable(
     else
         curtailment = get(kwargs, :curtailment, false)
         variables = Dict(var => IS.get_variables(res)[var])
-        variables = curtailment ? _filter_curtailment(res, variables) : variables
+        variables = _filter_curtailment(res, variables, curtailment)
         variable = variables[var]
         if :Curtailment in keys(variables)
             variable[:, :Curtailment] .= sum(Matrix(variables[:Curtailment]))
