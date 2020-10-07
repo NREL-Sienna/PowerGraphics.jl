@@ -60,7 +60,7 @@ function plotly_stack_gen(
     traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
     gens = collect(keys(IS.get_variables(res)))
     params = collect(keys(res.parameter_values))
-    time_range = IS.get_time_stamp(res)[:, 1]
+    time_range = IS.get_timestamp(res)[:, 1]
     stack = []
     plot_stack = Dict()
     for (k, v) in IS.get_variables(res)
@@ -191,7 +191,7 @@ function plotly_stack_gen(
     for i in 1:length(results)
         gens = collect(keys(IS.get_variables(results[i])))
         params = collect(keys(results[i].parameter_values))
-        time_range = IS.get_time_stamp(results[i])[:, 1]
+        time_range = IS.get_timestamp(results[i])[:, 1]
         stack = []
         for (k, v) in IS.get_variables(results[i])
             stack = vcat(stack, [sum(convert(Matrix, v), dims = 2)])
@@ -257,7 +257,7 @@ function plotly_stack_gen(
             r_plots = []
             for i in 1:length(reserve_list)
                 i == 1 ? leg = true : leg = false
-                time_range = IS.get_time_stamp(results[i])[:, 1]
+                time_range = IS.get_timestamp(results[i])[:, 1]
                 r_data = []
                 r_gens = []
                 r_traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
@@ -337,7 +337,7 @@ function plotly_stack_plots(
                 traces,
                 Plots.PlotlyJS.scatter(;
                     name = gens[gen],
-                    x = results.time_stamp[:, 1],
+                    x = results.timestamp[:, 1],
                     y = convert(Matrix, var)[:, gen],
                     stackgroup = "one",
                     mode = "lines",
@@ -388,7 +388,7 @@ function plotly_stack_plots(results::Array, seriescolor::Array, ylabel::String; 
                     Plots.PlotlyJS.scatter(;
                         name = gens[gen],
                         showlegend = leg,
-                        x = results[1, res].time_stamp[:, 1],
+                        x = results[1, res].timestamp[:, 1],
                         y = convert(Matrix, var)[:, gen],
                         stackgroup = "one",
                         mode = "lines",
@@ -739,7 +739,7 @@ function plotly_bar_gen(
     reserves::Any;
     kwargs...,
 )
-    time_range = IS.get_time_stamp(res)[:, 1]
+    time_range = IS.get_timestamp(res)[:, 1]
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     format = get(kwargs, :format, "png")
@@ -873,7 +873,7 @@ function plotly_bar_gen(
     reserve_list::Any;
     kwargs...,
 )
-    time_range = IS.get_time_stamp(results[1])[:, 1]
+    time_range = IS.get_timestamp(results[1])[:, 1]
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     format = get(kwargs, :format, "png")
@@ -1017,7 +1017,7 @@ function plotly_bar_plots(
 )
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
-    time_range = results[1].time_stamp
+    time_range = results[1].timestamp
     time_span = IS.convert_compound_period(
         convert(Dates.TimePeriod, time_range[2, 1] - time_range[1, 1]) *
         size(time_range, 1),
@@ -1080,7 +1080,7 @@ function plotly_bar_plots(
 )
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
-    time_range = IS.get_time_stamp(res)
+    time_range = IS.get_timestamp(res)
     time_span = IS.convert_compound_period(
         convert(Dates.TimePeriod, time_range[2, 1] - time_range[1, 1]) *
         size(time_range, 1),
@@ -1171,7 +1171,7 @@ function _demand_plot_internal(res::IS.Results, backend::Plots.PlotlyJSBackend; 
                 traces,
                 Plots.PlotlyJS.scatter(;
                     name = param_names[i],
-                    x = res.time_stamp[:, 1],
+                    x = res.timestamp[:, 1],
                     y = parameters[:, param_names[i]],
                     stackgroup = "one",
                     mode = "lines",
@@ -1226,7 +1226,7 @@ function _demand_plot_internal(results::Array, backend::Plots.PlotlyJSBackend; k
                     traces,
                     Plots.PlotlyJS.scatter(;
                         name = p_names[i],
-                        x = results[n].time_stamp[:, 1],
+                        x = results[n].timestamp[:, 1],
                         y = parameters[:, p_names[i]],
                         stackgroup = "one",
                         mode = "lines",
@@ -1387,7 +1387,7 @@ function _reserve_plot(res::IS.Results, backend::Plots.PlotlyJSBackend; kwargs..
     line_shape = get(kwargs, :stair, false) ? "hv" : "linear"
     save_fig = get(kwargs, :save, nothing)
     ylabel = _make_ylabel(IS.get_base_power(res))
-    time_range = IS.get_time_stamp(res)[:, 1]
+    time_range = IS.get_timestamp(res)[:, 1]
     format = get(kwargs, :format, "png")
     plot_list = Dict()
     isnothing(reserves) && @error "No reserves found in results."

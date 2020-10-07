@@ -3,7 +3,7 @@ mutable struct Results <: IS.Results
     variable_values::Dict{Symbol, DataFrames.DataFrame}
     total_cost::Dict
     optimizer_log::Dict
-    time_stamp::DataFrames.DataFrame
+    timestamp::DataFrames.DataFrame
     dual_values::Dict{Symbol, Any}
     parameter_values::Dict{Symbol, DataFrames.DataFrame}
 end
@@ -11,7 +11,7 @@ end
 IS.get_variables(r::Results) = r.variable_values
 IS.get_total_cost(r::Results) = r.total_cost
 IS.get_optimizer_log(r::Results) = r.optimizer_log
-IS.get_time_stamp(r::Results) = r.time_stamp
+IS.get_timestamp(r::Results) = r.timestamp
 IS.get_base_power(r::Results) = r.base_power
 IS.get_parameters(r::Results) = r.parameter_values
 
@@ -62,7 +62,7 @@ plot(ThermalStandard)
 
 function get_stacked_plot_data(res::IS.Results, variable::String; kwargs...)
 
-    time_range = IS.get_time_stamp(res)[!, :Range]
+    time_range = IS.get_timestamp(res)[!, :Range]
     variable = IS.get_variables(res)[Symbol(variable)]
     data_matrix = convert(Matrix, variable)
     labels = collect(names(variable))
@@ -97,7 +97,7 @@ plot(ThermalStandard)
 
 function get_bar_plot_data(res::IS.Results, variable::String; kwargs...)
 
-    time_range = IS.get_time_stamp(res)[!, :Range]
+    time_range = IS.get_timestamp(res)[!, :Range]
     variable = IS.get_variables(res)[Symbol(variable)]
     alphabetical = sort!(names(variable))
     data = convert(Matrix, variable)
@@ -132,7 +132,7 @@ plot(stack)
 
 function get_stacked_generation_data(res::IS.Results; kwargs...)
 
-    time_range = IS.get_time_stamp(res)[!, :Range]
+    time_range = IS.get_timestamp(res)[!, :Range]
     labels = collect(keys(IS.get_variables(res)))
     variable = IS.get_variables(res)[Symbol(labels[1])]
     data_matrix = sum(convert(Matrix, variable), dims = 2)
@@ -186,7 +186,7 @@ plot(stack)
 
 function get_bar_gen_data(res::IS.Results)
 
-    time_range = IS.get_time_stamp(res)[!, :Range]
+    time_range = IS.get_timestamp(res)[!, :Range]
     labels = collect(keys(IS.get_variables(res)))
     variable = IS.get_variables(res)[Symbol(labels[1])]
     data_matrix = sum(convert(Matrix, variable), dims = 2)
@@ -262,7 +262,7 @@ function sort_data(res::IS.Results; kwargs...)
         sorted_variables,
         IS.get_optimizer_log(res),
         IS.get_total_cost(res),
-        IS.get_time_stamp(res),
+        IS.get_timestamp(res),
         res.dual_values,
         res.parameter_values,
     )

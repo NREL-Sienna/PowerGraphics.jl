@@ -21,7 +21,7 @@ function _filter_variables(results::IS.Results; kwargs...)
         filter_variables,
         IS.get_optimizer_log(results),
         IS.get_total_cost(results),
-        IS.get_time_stamp(results),
+        IS.get_timestamp(results),
         results.dual_values,
         filter_parameters,
     )
@@ -92,7 +92,7 @@ function _filter_parameters(results::IS.Results)
         IS.get_variables(results),
         IS.get_optimizer_log(results),
         IS.get_total_cost(results),
-        IS.get_time_stamp(results),
+        IS.get_timestamp(results),
         results.dual_values,
         filter_parameters,
     )
@@ -114,7 +114,7 @@ function fuel_plot(
         res_var,
         IS.get_optimizer_log(res),
         IS.get_total_cost(res),
-        IS.get_time_stamp(res),
+        IS.get_timestamp(res),
         res.dual_values,
         res.parameter_values,
     )
@@ -139,7 +139,7 @@ function fuel_plot(
             res_var,
             IS.get_optimizer_log(res),
             IS.get_total_cost(res),
-            IS.get_time_stamp(res),
+            IS.get_timestamp(res),
             res.dual_values,
             res.parameter_values,
         )
@@ -232,7 +232,7 @@ function fuel_plot(res::IS.Results, generator_dict::Dict; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    time_interval = IS.get_time_stamp(res)[2, 1] - IS.get_time_stamp(res)[1, 1]
+    time_interval = IS.get_timestamp(res)[2, 1] - IS.get_timestamp(res)[1, 1]
     interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
     return _fuel_plot_internal(
         stack,
@@ -270,7 +270,7 @@ function fuel_plot(results::Array, generator_dict::Dict; kwargs...)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
     time_interval =
-        IS.get_time_stamp(results[1])[2, 1] - IS.get_time_stamp(results[1])[1, 1]
+        IS.get_timestamp(results[1])[2, 1] - IS.get_timestamp(results[1])[1, 1]
     interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
     return _fuel_plot_internal(
         stack,
@@ -321,7 +321,7 @@ function bar_plot(res::IS.Results; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    time_interval = IS.get_time_stamp(res)[2, 1] - IS.get_time_stamp(res)[1, 1]
+    time_interval = IS.get_timestamp(res)[2, 1] - IS.get_timestamp(res)[1, 1]
     interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
     return _bar_plot_internal(
         res,
@@ -375,7 +375,7 @@ function bar_plot(results::Array; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    time_interval = IS.get_time_stamp(res[1])[2, 1] - IS.get_time_stamp(res[1])[1, 1]
+    time_interval = IS.get_timestamp(res[1])[2, 1] - IS.get_timestamp(res[1])[1, 1]
     interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
     return _bar_plot_internal(
         res,
@@ -398,7 +398,7 @@ function bar_plot(res::IS.Results, variables::Array; kwargs...)
         res_var,
         IS.get_optimizer_log(res),
         IS.get_total_cost(res),
-        IS.get_time_stamp(res),
+        IS.get_timestamp(res),
         res.dual_values,
         res.parameter_values,
     )
@@ -417,7 +417,7 @@ function bar_plot(results::Array, variables::Array; kwargs...)
             res_var,
             IS.get_optimizer_log(res),
             IS.get_total_cost(res),
-            IS.get_time_stamp(res),
+            IS.get_timestamp(res),
             res.dual_values,
             res.parameter_values,
         )
@@ -564,7 +564,7 @@ function stack_plot(res::IS.Results, variables::Array; kwargs...)
         res_var,
         IS.get_optimizer_log(res),
         IS.get_total_cost(res),
-        IS.get_time_stamp(res),
+        IS.get_timestamp(res),
         res.dual_values,
         res_param,
     )
@@ -589,7 +589,7 @@ function stack_plot(results::Array, variables::Array; kwargs...)
             res_var,
             IS.get_optimizer_log(res),
             IS.get_total_cost(res),
-            IS.get_time_stamp(res),
+            IS.get_timestamp(res),
             res.dual_values,
             res_param,
         )
@@ -707,7 +707,7 @@ function stair_plot(res::IS.Results, variables::Array; kwargs...)
         res_var,
         IS.get_optimizer_log(res),
         IS.get_total_cost(res),
-        IS.get_time_stamp(res),
+        IS.get_timestamp(res),
         res.dual_values,
         res.parameter_values,
     )
@@ -726,7 +726,7 @@ function stair_plot(results::Array, variables::Array; kwargs...)
             res_var,
             IS.get_optimizer_log(res),
             IS.get_total_cost(res),
-            IS.get_time_stamp(res),
+            IS.get_timestamp(res),
             res.dual_values,
             res.parameter_values,
         )
@@ -737,7 +737,7 @@ end
 ################################### DEMAND #################################
 
 function _shorten_time(results::IS.Results, horizon::Int64, init_time::Dates.DateTime)
-    time_range = IS.get_time_stamp(results)[:, 1]
+    time_range = IS.get_timestamp(results)[:, 1]
     resolution = Dates.Hour(time_range[2] - time_range[1])
     parameters = IS.get_parameters(results)
     times = collect(init_time:resolution:(init_time + resolution * horizon))
@@ -1071,7 +1071,7 @@ function plot_variable(res::IS.Results, variable_name::Union{Symbol, String}; kw
         if :Curtailment in keys(variables)
             variable[:, :Curtailment] .= sum(Matrix(variables[:Curtailment]))
         end
-        time_range = IS.get_time_stamp(res)[:, 1]
+        time_range = IS.get_timestamp(res)[:, 1]
         plots = _variable_plots_internal(
             variable,
             time_range,
@@ -1129,7 +1129,7 @@ function plot_variable(
         if :Curtailment in keys(variables)
             variable[:, :Curtailment] .= sum(Matrix(variables[:Curtailment]))
         end
-        time_range = IS.get_time_stamp(res)[:, 1]
+        time_range = IS.get_timestamp(res)[:, 1]
         plots = _variable_plots_internal(
             plot,
             variable,
@@ -1157,7 +1157,7 @@ This function makes a plot of a specific dataframe and time range, not necessari
 
 ```julia
 variable = IS.get_variables(results)[variable_name]
-time_Range = IS.get_time_stamp(results)
+time_Range = IS.get_timestamp(results)
 plot = plot_dataframe(variable, time_range)
 ```
 
@@ -1196,7 +1196,7 @@ This function overlays the plot of a specific dataframe, over that of another pl
 
 ```julia
 variable = IS.get_variables(results)[variable_name]
-time_Range = IS.get_time_stamp(results)
+time_Range = IS.get_timestamp(results)
 plot = plot_dataframe(variable, time_range)
 
 variable_2 = IS.get_variables(results)[variable_name_2]

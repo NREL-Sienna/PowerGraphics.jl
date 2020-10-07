@@ -27,14 +27,14 @@ objective_value = Dict()
 dual_values = Dict{Symbol, Any}()
 base_power = 100.0
 right_now = round(Dates.now(), Dates.Hour)
-time_stamp =
+timestamp =
     DataFrames.DataFrame(:Range => right_now:Dates.Hour(1):(right_now + Dates.Hour(4)))
 res = PG.Results(
     base_power,
     variables,
     optimizer_log,
     objective_value,
-    time_stamp,
+    timestamp,
     dual_values,
     parameters,
 )
