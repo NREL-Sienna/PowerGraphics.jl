@@ -138,7 +138,7 @@ function _bar_plot_internal(
     title = get(kwargs, :title, " ")
     ylabel = _make_bar_ylabel(IS.get_base_power(res))
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
-    time_range = IS.get_time_stamp(res)[:, 1]
+    time_range = IS.get_timestamp(res)[:, 1]
     time_interval =
         IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
     bar_data = []
@@ -239,7 +239,7 @@ function _bar_plot_internal(
     ylabel = _make_bar_ylabel(IS.get_base_power(results[1]))
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
     variables = IS.get_variables(results[1])
-    time_range = IS.get_time_stamp(results[1])[:, 1]
+    time_range = IS.get_timestamp(results[1])[:, 1]
     time_interval =
         IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
     bars = []
@@ -368,7 +368,7 @@ function _stack_plot_internal(
     ylabel = _make_ylabel(IS.get_base_power(res))
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
     linetype = get(kwargs, :stair, false) ? :steppost : :line
-    time_range = IS.get_time_stamp(res)[:, 1]
+    time_range = IS.get_timestamp(res)[:, 1]
     time_interval =
         IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
     stack_data = []
@@ -473,7 +473,7 @@ function _stack_plot_internal(
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
     linetype = get(kwargs, :stair, false) ? :steppost : :line
     variables = IS.get_variables(results[1])
-    time_range = IS.get_time_stamp(results[1])[:, 1]
+    time_range = IS.get_timestamp(results[1])[:, 1]
     time_interval =
         IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
     stacks = []
@@ -599,7 +599,7 @@ function _demand_plot_internal(res::IS.Results, backend::Any; kwargs...)
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
     save_fig = get(kwargs, :save, nothing)
     set_display = get(kwargs, :display, true)
-    time_range = res.time_stamp[:, 1]
+    time_range = res.timestamp[:, 1]
     interval = time_range[2] - time_range[1]
     time_interval = IS.convert_compound_period(interval * length(time_range))
     ylabel = _make_ylabel(IS.get_base_power(res))
@@ -638,7 +638,7 @@ function _demand_plot_internal(results::Array{}, backend::Any; kwargs...)
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
     save_fig = get(kwargs, :save, nothing)
     set_display = get(kwargs, :display, true)
-    time_range = results[1].time_stamp[:, 1]
+    time_range = results[1].timestamp[:, 1]
     interval = time_range[2] - time_range[1]
     time_interval = IS.convert_compound_period(interval * length(time_range))
     ylabel = _make_ylabel(IS.get_base_power(results[1]))
@@ -766,7 +766,7 @@ end
 
 function _reserve_plot(res::IS.Results, backend::Any; kwargs...)
     reserves = _filter_reserves(res, true)
-    time_range = IS.get_time_stamp(res)[:, 1]
+    time_range = IS.get_timestamp(res)[:, 1]
     time_interval =
         IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)

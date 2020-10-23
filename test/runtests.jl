@@ -8,7 +8,6 @@ import InfrastructureSystems: Deterministic, Probabilistic, ScenarioBased, Forec
 using PowerSystems
 using PowerGraphics
 using PlotlyJS
-using ORCA
 using PowerSimulations
 using GLPK
 using Weave
