@@ -23,7 +23,6 @@ report(results, out_path, template)
 - `backend::Plots.backend() = plotlyjs()`: sets the plots backend, default is gr()
 """
 function report(res::IS.Results, out_path::String, design_template::String; kwargs...)
-
     doctype = get(kwargs, :doctype, "md2pdf")
     backend = get(kwargs, :backend, Plots.gr())
     !isfile(design_template) &&
@@ -36,7 +35,6 @@ function report(res::IS.Results, out_path::String, design_template::String; kwar
         doctype = doctype,
         args = args,
     )
-
 end
 
 """
@@ -75,7 +73,6 @@ function report(
     design_template::String;
     kwargs...,
 )
-
     doctype = get(kwargs, :doctype, "md2pdf")
     backend = get(kwargs, :backend, Plots.gr())
     !isfile(design_template) &&
@@ -93,7 +90,6 @@ function report(
         doctype = doctype,
         args = args,
     )
-
 end
 
 """
@@ -132,7 +128,6 @@ function report(
     design_template::String;
     kwargs...,
 )
-
     doctype = get(kwargs, :doctype, "md2pdf")
     backend = get(kwargs, :backend, gr())
     !isfile(design_template) &&
@@ -150,5 +145,4 @@ function report(
         doctype = doctype,
         args = args,
     )
-
 end

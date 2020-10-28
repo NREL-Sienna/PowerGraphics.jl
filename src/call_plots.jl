@@ -269,8 +269,7 @@ function fuel_plot(results::Array, generator_dict::Dict; kwargs...)
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    time_interval =
-        IS.get_timestamp(results[1])[2, 1] - IS.get_timestamp(results[1])[1, 1]
+    time_interval = IS.get_timestamp(results[1])[2, 1] - IS.get_timestamp(results[1])[1, 1]
     interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
     return _fuel_plot_internal(
         stack,
@@ -842,7 +841,6 @@ function plot_demand(results::Array; kwargs...)
         if isempty(IS.get_parameters(new_res))
             @warn "No parameters provided."
         end
-
     end
     backend = Plots.backend()
     save_fig = get(kwargs, :save, nothing)
@@ -905,7 +903,8 @@ function make_demand_plot_data(
                 validate = (false, false),
             )
         end
-        load_values = length(loads) == 1 ? load_values[1] :
+        load_values =
+            length(loads) == 1 ? load_values[1] :
             dropdims(sum(Matrix(reduce(hcat, load_values)), dims = 2), dims = 2)
         parameters[:, Symbol(colname)] = load_values
     end

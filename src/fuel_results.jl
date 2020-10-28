@@ -53,7 +53,8 @@ function get_generator_mapping(filename = nothing)
     mappings = Dict{NamedTuple, String}()
     for (gen_type, vals) in genmap
         for val in vals
-            pm = isnothing(val["primemover"]) ? nothing :
+            pm =
+                isnothing(val["primemover"]) ? nothing :
                 uppercase(string(val["primemover"]))
             key = (fuel = val["fuel"], primemover = pm)
             if haskey(mappings, key)

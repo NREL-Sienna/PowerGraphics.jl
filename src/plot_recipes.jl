@@ -783,7 +783,8 @@ function _reserve_plot(res::IS.Results, backend::Any; kwargs...)
         end
         data = hcat(data...)
         stack_data = get(kwargs, :stack, false) ? cumsum(data, dims = 2) : data
-        fillrange = get(kwargs, :stack, false) ?
+        fillrange =
+            get(kwargs, :stack, false) ?
             fillrange = hcat(zeros(length(time_range)), stack_data) : nothing
         r_plot = Plots.plot(
             time_range,
@@ -870,7 +871,8 @@ function _dataframe_plots_internal(
     plot_list = Dict()
     data = convert(Matrix, variable)
     plot_data = get(kwargs, :stack, false) ? cumsum(data, dims = 2) : data
-    fillrange = get(kwargs, :stack, false) ?
+    fillrange =
+        get(kwargs, :stack, false) ?
         fillrange = hcat(zeros(length(time_range)), plot_data) : nothing
     linetype = get(kwargs, :stair, false) ? :steppost : :line
     title = get(kwargs, :title, " ")
@@ -909,7 +911,8 @@ function _dataframe_plots_internal(
     plot_list = Dict()
     data = convert(Matrix, variable)
     plot_data = get(kwargs, :stack, false) ? cumsum(data, dims = 2) : data
-    fillrange = get(kwargs, :stack, false) ?
+    fillrange =
+        get(kwargs, :stack, false) ?
         fillrange = hcat(zeros(length(time_range)), plot_data) : nothing
     linetype = get(kwargs, :stair, false) ? :steppost : :line
     title = get(kwargs, :title, " ")

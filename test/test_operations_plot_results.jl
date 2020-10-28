@@ -608,7 +608,6 @@ function test_plots(file_path::String)
             "multi-PlotlyJS_Stair.png",
         ]
     end
-
 end
 try
     test_plots(path)
