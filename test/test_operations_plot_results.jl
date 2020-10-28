@@ -16,6 +16,7 @@ function test_plots(file_path::String)
 
     @testset "test plot production" begin
         path = mkdir(joinpath(file_path, "plots"))
+        c_sys5_re = build_system("c_sys5_re")
         PG.bar_plot(res; save = path, display = false, title = "Title_Bar")
         PG.stack_plot(res; save = path, display = false, title = "Title_Stack")
         PG.stair_plot(res; save = path, display = false, title = "Title_Stair")
@@ -48,6 +49,7 @@ function test_plots(file_path::String)
     end
 
     @testset "test fewer variable plot production" begin
+        c_sys5_re = build_system("c_sys5_re")
         path = mkdir(joinpath(file_path, "variables"))
         variables = [:P__ThermalStandard]
         PG.bar_plot(res, variables; save = path, display = false, title = "Title_Bar")
@@ -84,6 +86,7 @@ function test_plots(file_path::String)
     end
 
     @testset "test multi-plot production" begin
+        c_sys5_re = build_system("c_sys5_re")
         path = mkdir(joinpath(file_path, "multi-plots"))
         PG.bar_plot([res; res]; save = path, display = false, title = "Title_Bar")
         PG.stack_plot([res; res]; save = path, display = false, title = "Title_Stack")
@@ -121,6 +124,7 @@ function test_plots(file_path::String)
     end
 
     @testset "test multi-plot variable production" begin
+        c_sys5_re = build_system("c_sys5_re")
         path = mkdir(joinpath(file_path, "multi-plots-variables"))
         variables = [:P__ThermalStandard]
         PG.bar_plot(
@@ -184,6 +188,7 @@ function test_plots(file_path::String)
         ))
     end
     @testset "Test Demand Plots" begin
+        c_sys5_re = build_system("c_sys5_re")
         path = mkdir(joinpath(file_path, "demand"))
         PG.plot_demand(res; title = "Plot", save = path)
         PG.plot_demand([res, res]; title = "Multi-Plot", save = path)
@@ -218,6 +223,7 @@ function test_plots(file_path::String)
         ]
     end
     @testset "Test Fuel plot with system" begin
+        c_sys5_re = build_system("c_sys5_re")
         path = mkdir(joinpath(file_path, "fuel"))
         PG.fuel_plot(res, c_sys5; title = "Fuel", save = path, format = "png")
         PG.fuel_plot(
@@ -261,6 +267,7 @@ function test_plots(file_path::String)
 
     Plots.plotlyjs()
     @testset "test plotlyjs production" begin
+        c_sys5_re = build_system("c_sys5_re")
         path = mkdir(joinpath(file_path, "jsplots"))
         PG.bar_plot(res; save = path, display = false, title = "Title_Bar", format = "png")
         PG.stack_plot(
@@ -313,6 +320,7 @@ function test_plots(file_path::String)
     end
 
     @testset "test fewer variable plotlyjs production" begin
+        c_sys5_re = build_system("c_sys5_re")
         path = mkdir(joinpath(file_path, "variables_plotlyjs"))
         variables = [:P__ThermalStandard]
         PG.bar_plot(
@@ -382,6 +390,7 @@ function test_plots(file_path::String)
     end
 
     @testset "test multi-plotlyjs production" begin
+        c_sys5_re = build_system("c_sys5_re")
         path = mkdir(joinpath(file_path, "multi-plotlyjs"))
         PG.bar_plot(
             [res; res];
@@ -448,6 +457,7 @@ function test_plots(file_path::String)
     end
 
     @testset "test multi-plotlyjs variable production" begin
+        c_sys5_re = build_system("c_sys5_re")
         path = mkdir(joinpath(file_path, "multi-plotlyjs-variables"))
         variables = [:P__ThermalStandard]
         PG.bar_plot(
@@ -505,6 +515,7 @@ function test_plots(file_path::String)
         ))
     end
     @testset "Test PlotlyJS Fuel plot with system" begin
+        c_sys5_re = build_system("c_sys5_re")
         path = mkdir(joinpath(file_path, "plotly-fuel"))
         #    maps = PG.get_generator_mapping()
         #    generators = PG.make_fuel_dictionary()
@@ -549,6 +560,7 @@ function test_plots(file_path::String)
         ]
     end
     @testset "Test PlotlyJS Demand Plots" begin
+        c_sys5_re = build_system("c_sys5_re")
         path = mkdir(joinpath(file_path, "plotly-multi-plots"))
         PG.plot_demand(res; title = "PlotlyJS", save = path, format = "png")
         PG.plot_demand(

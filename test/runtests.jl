@@ -3,6 +3,7 @@ using TestSetExtensions
 using Logging
 using Dates
 using DataFrames
+using DataStructures
 import InfrastructureSystems
 import InfrastructureSystems: Deterministic, Probabilistic, Scenarios, Forecast
 using PowerSystems
