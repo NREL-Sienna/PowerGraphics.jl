@@ -2,7 +2,7 @@ path = joinpath(pwd(), "plots")
 !isdir(path) && mkdir(path)
 
 function test_plots(file_path::String)
-    include("get_test_data.jl")
+    include("test_data/get_test_data.jl")
     variables = [:P__ThermalStandard]
     @testset "test results sorting" begin
         namez = collect(names(IS.get_variables(res)[:P__ThermalStandard]))

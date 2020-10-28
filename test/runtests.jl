@@ -4,7 +4,7 @@ using Logging
 using Dates
 using DataFrames
 import InfrastructureSystems
-import InfrastructureSystems: Deterministic, Probabilistic, ScenarioBased, Forecast
+import InfrastructureSystems: Deterministic, Probabilistic, Scenarios, Forecast
 using PowerSystems
 using PowerGraphics
 using PlotlyJS
@@ -72,7 +72,7 @@ function get_logging_level(env_name::String, default)
 end
 
 function run_tests()
-    include("get_test_data.jl")
+    include("test_data/get_test_data.jl")
     console_level = get_logging_level("PS_CONSOLE_LOG_LEVEL", "Error")
     console_logger = ConsoleLogger(stderr, console_level)
     file_level = get_logging_level("PS_LOG_LEVEL", "Info")
