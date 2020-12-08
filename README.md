@@ -1,6 +1,5 @@
 # PowerGraphics
 
-[![Build Status](https://travis-ci.com/NREL-SIIP/PowerGraphics.jl.svg?branch=master)](https://travis-ci.com/NREL-SIIP/PowerGraphics.jl)
 [![codecov](https://codecov.io/gh/nrel-siip/PowerGraphics.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/nrel-siip/PowerGraphics.jl)
 
 PowerGraphics.jl is a Julia package for plotting results from [PowerSimulations.jl](https://github.com/NREL/PowerSimulations.jl).
