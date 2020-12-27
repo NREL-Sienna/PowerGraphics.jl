@@ -12,6 +12,8 @@ using PlotlyJS
 using PowerSimulations
 using GLPK
 using Weave
+using TimeSeries
+using DataStructures
 
 const PG = PowerGraphics
 const IS = InfrastructureSystems
