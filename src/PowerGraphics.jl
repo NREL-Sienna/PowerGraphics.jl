@@ -26,11 +26,14 @@ import Colors
 import DataFrames
 import YAML
 Reexport.@reexport using Plots
+import DataStructures: OrderedDict, SortedDict
 import PowerSystems
 import InfrastructureSystems
+import PowerSimulations
 
 const PSY = PowerSystems
 const IS = InfrastructureSystems
+const PSI = PowerSimulations
 
 include("process_results.jl")
 include("definitions.jl")

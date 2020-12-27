@@ -16,10 +16,92 @@ function test_plots(file_path::String)
 
     @testset "test plot production" begin
         path = mkdir(joinpath(file_path, "plots"))
-        c_sys5_re = build_system("c_sys5_re")
-        PG.bar_plot(res; save = path, display = false, title = "Title_Bar")
-        PG.stack_plot(res; save = path, display = false, title = "Title_Stack")
-        PG.stair_plot(res; save = path, display = false, title = "Title_Stair")
+        #c_sys5_re = build_system("c_sys5_re")
+        GLPK_optimizer = optimizer_with_attributes(GLPK.Optimizer, "msg_lev" => GLPK.GLP_MSG_OFF)
+        c_sys5_hy_uc = build_system("c_sys5_hy_uc")
+        c_sys5_hy_ed = build_system("c_sys5_hy_ed")
+
+        branches = Dict()
+        services = Dict()
+        devices = Dict(
+            :Generators => DeviceModel(ThermalStandard, ThermalStandardUnitCommitment),
+            :Ren => DeviceModel(RenewableDispatch, RenewableFullDispatch),
+            :Loads => DeviceModel(PowerLoad, StaticPowerLoad),
+            :ILoads => DeviceModel(InterruptibleLoad, DispatchablePowerLoad),
+            :HydroEnergyReservoir =>
+                DeviceModel(HydroEnergyReservoir, HydroDispatchReservoirStorage),
+        )
+        template_hydro_st_uc =
+            OperationsProblemTemplate(CopperPlatePowerModel, devices, branches, services)
+
+        devices = Dict(
+            :Generators => DeviceModel(ThermalStandard, ThermalDispatch),
+            :Ren => DeviceModel(RenewableDispatch, RenewableFullDispatch),
+            :Loads => DeviceModel(PowerLoad, StaticPowerLoad),
+            :ILoads => DeviceModel(InterruptibleLoad, DispatchablePowerLoad),
+            :HydroEnergyReservoir =>
+                DeviceModel(HydroEnergyReservoir, HydroDispatchReservoirStorage),
+        )
+        template_hydro_st_ed =
+            OperationsProblemTemplate(CopperPlatePowerModel, devices, branches, services)
+        stages_definition = Dict(
+            "UC" => Stage(
+                GenericOpProblem,
+                template_hydro_st_uc,
+                c_sys5_hy_uc,
+                GLPK_optimizer,
+            ),
+            "ED" => Stage(
+                GenericOpProblem,
+                template_hydro_st_ed,
+                c_sys5_hy_ed,
+                GLPK_optimizer,
+                constraint_duals = [:CopperPlateBalance],
+            ),
+        )
+
+        sequence_cache = SimulationSequence(
+            step_resolution = Hour(24),
+            order = Dict(1 => "UC", 2 => "ED"),
+            feedforward_chronologies = Dict(("UC" => "ED") => Synchronize(periods = 24)),
+            horizons = Dict("UC" => 24, "ED" => 12),
+            intervals = Dict(
+                "UC" => (Hour(24), Consecutive()),
+                "ED" => (Hour(1), Consecutive()),
+            ),
+            feedforward = Dict(
+                ("ED", :devices, :Generators) => SemiContinuousFF(
+                    binary_source_stage = PSI.ON,
+                    affected_variables = [PSI.ACTIVE_POWER],
+                ),
+                ("ED", :devices, :HydroEnergyReservoir) => IntegralLimitFF(
+                    variable_source_stage = PSI.ACTIVE_POWER,
+                    affected_variables = [PSI.ACTIVE_POWER],
+                ),
+            ),
+            cache = Dict(
+                ("UC",) => TimeStatusChange(PSY.ThermalStandard, PSI.ON),
+                ("UC", "ED") => StoredEnergy(PSY.HydroEnergyReservoir, PSI.ENERGY),
+            ),
+            ini_cond_chronology = InterStageChronology(),
+        )
+        sim = Simulation(
+            name = "results_sim",
+            steps = 2,
+            stages = stages_definition,
+            stages_sequence = sequence_cache,
+            simulation_folder = file_path,
+        )
+        build!(sim)
+        execute!(sim)
+
+        results = SimulationResults(sim)
+        results_uc = get_stage_results(results, "UC")
+        results_ed = get_stage_results(results, "ED")
+
+        PG.bar_plot(results_uc; save = path, display = false, title = "Title_Bar")
+        PG.stack_plot(results_uc; save = path, display = false, title = "Title_Stack")
+        PG.stack_plot(results_uc; save = path, display = false, title = "Title_Stair", stair = true)
         PG.fuel_plot(res, c_sys5_re; save = path, display = false)
         PG.fuel_plot(res, c_sys5_re; save = path, stair = true, display = false)
         list = readdir(path)

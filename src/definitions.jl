@@ -76,6 +76,8 @@ DOWN_RESERVES = ["VariableReserve_ReserveDown", "StaticReserve_ReserveDown"]
 OVERGENERATION_VARIABLE = :γ⁻__P
 UNSERVEDENERGY_VARIABLE = :γ⁺__P
 
+LOAD_PARAMETER = :P__max_active_power__PowerLoad
+
 GENERATOR_MAPPING_FILE = joinpath(
     dirname(dirname(pathof(PowerGraphics))),
     "report_templates",

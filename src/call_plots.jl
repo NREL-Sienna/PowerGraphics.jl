@@ -1,29 +1,29 @@
-function _filter_variables(results::IS.Results; kwargs...)
-    filter_variables = Dict()
-    filter_parameters = Dict()
-    results = _filter_parameters(results)
-    for (key, var) in IS.get_variables(results)
-        if startswith("$key", "P__") | any(key .== [:γ⁻__P, :γ⁺__P])
-            filter_variables[key] = var
-        end
-    end
+function _filter_results(results::IS.Results; kwargs...)
+    var_names = get(kwargs, :names, PSI.get_existing_variables(results))
+    filter_variables = [key for key in var_names if startswith("$key", "P__") | any(key .== [:γ⁻__P, :γ⁺__P])]
+    filter_parameters = [key for key in PSI.get_existing_parameters(results) if startswith("$key", "P__")]
+
+    load = get(kwargs, :load, false)
+    parameter_values = _filter_parameters(results, filter_parameters, load)
+    variable_values = PSI.read_realized_variables(results, names = filter_variables)
 
     curtailment = get(kwargs, :curtailment, false)
-    filter_variables = _filter_curtailment(results, filter_variables, curtailment)
-    load = get(kwargs, :load, false)
-    if load && (:P__PowerLoad in keys(results.parameter_values))
-        filter_parameters[:P__PowerLoad] = results.parameter_values[:P__PowerLoad]
-    elseif load
-        @warn "PowerLoad not found in results parameters."
+    if curtailment
+        curtailment_parameters = _curtailment_parameters(filter_parameters, filter_variables)
+        _filter_curtailment!(variable_values, parameter_values, curtailment_parameters)
     end
+    if load && !haskey(IS.get_parameters(results), LOAD_PARAMETER)
+        @warn "$LOAD_PARAMETER not found in results parameters."
+    end
+    timestamps = DataFrames.DataFrame(:DateTime => PSI.get_realized_timestamps(results))
     new_results = Results(
-        IS.get_base_power(results),
-        filter_variables,
-        IS.get_optimizer_log(results),
-        IS.get_total_cost(results),
-        IS.get_timestamp(results),
-        results.dual_values,
-        filter_parameters,
+        results.base_power,
+        variable_values, #variables
+        Dict(), #total_cost
+        Dict(), #optimiizer_log
+        timestamps, #timestamp
+        Dict{Symbol, DataFrames.DataFrame}(), #dual
+        parameter_values,
     )
     return new_results
 end
@@ -53,50 +53,52 @@ function _filter_reserves(results::IS.Results, reserves::Bool)
     end
 end
 
-function _filter_curtailment(results::IS.Results, filter_results::Dict, curtailment::Bool)
-    for (key, parameter) in IS.get_parameters(results)
-        param = "$key"
-        name = split(param, "_")[end]
-        !(name in SUPPORTEDGENPARAMS) && continue
+function _curtailment_parameters(parameters::Vector{Symbol}, variables::Vector{Symbol})
+    curtailment_parameters = Vector{NamedTuple{(:parameter, :variable),Tuple{Symbol,Symbol}}}()
+    for var in variables
+        var_param = Symbol(replace(string(var), "P__" => "P__max_active_power__"))
+        if var_param in parameters
+            push!(curtailment_parameters, (parameter = var_param, variable = var))
+        end
+    end
+    return curtailment_parameters
+end
 
-        if !(key in keys(IS.get_variables(results))) || !curtailment
-            filter_results[key] = parameter
+function _filter_curtailment!(variable_values::Dict, parameter_values::Dict, curtailment_parameters::Vector{NamedTuple{(:parameter, :variable),Tuple{Symbol,Symbol}}})
+    for curtailment in curtailment_parameters
+        if !haskey(variable_values, curtailment.variable)
+            variable_values[curtailment.variable] = parameter_values[curtailment.parameter]
         else
-            if Symbol("Curtailment") in keys(filter_results)
+            if haskey(variable_values, :Curtailment)
                 hcat(
-                    filter_results[Symbol("Curtailment")],
-                    (parameter .- IS.get_variables(results)[key]),
+                    variable_values[:Curtailment],
+                    (parameter .- vars[key]),
                 )
             else
-                filter_results[Symbol("Curtailment")] =
-                    (parameter .- IS.get_variables(results)[key])
+                variable_values[:Curtailment] =
+                    parameter_values[curtailment.parameter] .- variable_values[curtailment.variable]
             end
         end
     end
-    return filter_results
 end
 
-function _filter_parameters(results::IS.Results)
-    filter_parameters = Dict()
-    for (key, parameter) in IS.get_parameters(results)
-        new_key = replace(replace("$key", "parameter_" => ""), "_" => "__")
+function _filter_parameters(results::IS.Results, filter_parameters::Vector{Symbol}, load::Bool)
+    positive_parameters = Vector{Symbol}()
+    negative_parameters = Vector{Symbol}()
+    for key in filter_parameters
         param = split("$key", "_")[end]
-        if startswith(new_key, "P") && param in SUPPORTEDGENPARAMS
-            filter_parameters[Symbol(new_key)] = parameter
-        elseif startswith(new_key, "P") && param in SUPPORTEDLOADPARAMS
-            filter_parameters[Symbol(new_key)] = parameter .* -1.0
+        if param in SUPPORTEDGENPARAMS
+            push!(positive_parameters, key)
+        elseif load && (param in SUPPORTEDLOADPARAMS)
+            push!(positive_parameters, key)
+            push!(negative_parameters, key)
         end
     end
-    new_results = Results(
-        IS.get_base_power(results),
-        IS.get_variables(results),
-        IS.get_optimizer_log(results),
-        IS.get_total_cost(results),
-        IS.get_timestamp(results),
-        results.dual_values,
-        filter_parameters,
-    )
-    return new_results
+    parameter_values = PSI.read_realized_parameters(results, names = positive_parameters)
+    for param in negative_parameters
+        parameter_values[param] = parameter_values[param] .* -1.0
+    end
+    return parameter_values
 end
 
 function fuel_plot(
@@ -308,29 +310,13 @@ plot = bar_plot(results)
 - `seriescolor::Array`: Set different colors for the plots
 - `load::Bool`: plot the load line
 - `title::String = "Title"`: Set a title for the plots
+- `reserve::Bool`: add reserve plot
+- `variables::Union{Nothing, Vector{Symbol}}` = nothing : specific variables to plot
+
 """
 
-function bar_plot(res::IS.Results; kwargs...)
-    backend = Plots.backend()
-    set_display = get(kwargs, :display, true)
-    save_fig = get(kwargs, :save, nothing)
-    reserve = get(kwargs, :reserves, false)
-    reserves = _filter_reserves(res, reserve)
-    res = _filter_variables(res; kwargs...)
-    if isnothing(backend)
-        throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
-    end
-    time_interval = IS.get_timestamp(res)[2, 1] - IS.get_timestamp(res)[1, 1]
-    interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
-    return _bar_plot_internal(
-        res,
-        backend,
-        save_fig,
-        set_display,
-        interval,
-        reserves;
-        kwargs...,
-    )
+function bar_plot(results::IS.Results; kwargs...)
+    return bar_plot([results]; kwargs)
 end
 
 """
@@ -356,6 +342,9 @@ plot = bar_plot([results1; results2])
 - `format::String = "html"`: set a different format for saving a PlotlyJS plot
 - `seriescolor::Array`: Set different colors for the plots
 - `title::String = "Title"`: Set a title for the plots
+- `reserve::Bool`: add reserve plot
+- `load::Bool`: plot the load line
+- `names::Union{Nothing, Vector{Symbol}}` = nothing : specific variables to plot
 """
 
 function bar_plot(results::Array; kwargs...)
@@ -363,66 +352,30 @@ function bar_plot(results::Array; kwargs...)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     reserve = get(kwargs, :reserves, false)
-    reserve_list = []
-    res = []
+
+    reserves = []
+    pg_results = []
     for result in results
-        reserve_list = vcat(reserve_list, _filter_reserves(result, reserve))
-        res = vcat(res, _filter_variables(result; kwargs...))
+        push!(reserves, _filter_reserves(result, reserve))
+        push!(pg_results, _filter_results(result; kwargs...))
     end
-    #res = hcat(res...)
-    #reserve_list = hcat(reserve_list...)
+
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    time_interval = IS.get_timestamp(res[1])[2, 1] - IS.get_timestamp(res[1])[1, 1]
+
+    time_interval = IS.get_timestamp(pg_results[1])[2, 1] - IS.get_timestamp(pg_results[1])[1, 1]
     interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
-    return _bar_plot_internal(
-        res,
+    plots = _bar_plot_internal(
+        pg_results,
         backend,
         save_fig,
         set_display,
         interval,
-        reserve_list;
+        reserves;
         kwargs...,
     )
-end
-
-function bar_plot(res::IS.Results, variables::Array; kwargs...)
-    res_var = Dict()
-    for variable in variables
-        res_var[variable] = IS.get_variables(res)[variable]
-    end
-    results = Results(
-        IS.get_base_power(res),
-        res_var,
-        IS.get_optimizer_log(res),
-        IS.get_total_cost(res),
-        IS.get_timestamp(res),
-        res.dual_values,
-        res.parameter_values,
-    )
-    return bar_plot(results; kwargs...)
-end
-
-function bar_plot(results::Array, variables::Array; kwargs...)
-    new_results = []
-    for res in results
-        res_var = Dict()
-        for variable in variables
-            res_var[variable] = IS.get_variables(res)[variable]
-        end
-        results = Results(
-            IS.get_base_power(res),
-            res_var,
-            IS.get_optimizer_log(res),
-            IS.get_total_cost(res),
-            IS.get_timestamp(res),
-            res.dual_values,
-            res.parameter_values,
-        )
-        new_results = vcat(new_results, results)
-    end
-    return bar_plot(new_results; kwargs...)
+    return plots
 end
 
 """
@@ -448,26 +401,12 @@ plot = stack_plot(results)
 - `seriescolor::Array`: Set different colors for the plots
 - `stair::Bool`: make a stair plot instead of a stack plot
 - `title::String = "Title"`: Set a title for the plots
+- `load::Bool`: plot the load line
+- `names::Union{Nothing, Vector{Symbol}}` = nothing : specific variables to plot
 """
 
 function stack_plot(res::IS.Results; kwargs...)
-    set_display = get(kwargs, :set_display, true)
-    backend = Plots.backend()
-    save_fig = get(kwargs, :save, nothing)
-    reserve = get(kwargs, :reserves, false)
-    reserves = _filter_reserves(res, reserve)
-    results = _filter_variables(res; kwargs...)
-    if isnothing(backend)
-        throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
-    end
-    return _stack_plot_internal(
-        results,
-        backend,
-        save_fig,
-        set_display,
-        reserves;
-        kwargs...,
-    )
+    return stack_plot([res]; kwargs...)
 end
 
 """
@@ -492,109 +431,41 @@ plot = stack_plot([results1; results2])
 - `save::String = "file_path"`: set a file path to save the plots
 - `format::String = "html"`: set a different format for saving a PlotlyJS plot
 - `seriescolor::Array`: Set different colors for the plots
+- `stair::Bool`: make a stair plot instead of a stack plot
 - `title::String = "Title"`: Set a title for the plots
+- `load::Bool`: plot the load line
+- `names::Union{Nothing, Vector{Symbol}}` = nothing : specific variables to plot
+
 """
 
 function stack_plot(results::Array{}; kwargs...)
-    set_display = get(kwargs, :set_display, true)
     backend = Plots.backend()
+    set_display = get(kwargs, :set_display, true)
     save_fig = get(kwargs, :save, nothing)
-    reserves = get(kwargs, :reserves, false)
-    reserve_list = []
-    new_results = []
-    for res in results
-        reserve_list = vcat(reserve_list, _filter_reserves(res, reserves))
-        new_results = vcat(new_results, _filter_variables(res; kwargs...))
+    reserve = get(kwargs, :reserves, false)
+    if get(kwargs, :stair, false)
+        kwargs = hcat(kwargs..., :stairs => "hv")
+        kwargs = hcat(kwargs..., :linetype => :steppost)
     end
-    #new_results = hcat(new_results...)
-    #reserves_list = hcat(reserves_list...)
+
+    reserves = []
+    pg_results = []
+    for result in results
+        push!(reserves, _filter_reserves(result, reserve))
+        push!(pg_results, _filter_results(result; kwargs...))
+    end
+
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
     return _stack_plot_internal(
-        new_results,
+        pg_results,
         backend,
         save_fig,
         set_display,
-        reserve_list;
+        reserves;
         kwargs...,
     )
-end
-
-"""
-     stack_plot(results::IS.Results, variables::Array)
-
-This function plots a stack plot for the generators in each variable within
-the results variables dictionary, and makes a stack plot for all of the variables in the array.
-
-# Arguments
-- `res::IS.Results = results`: results to be plotted
-- `variables::Array`: list of variables to be plotted in the results
-
-# Examples
-
-```julia
-results = solve_op_problem!(OpProblem)
-variables = [:var1, :var2, :var3]
-plot = stack_plot(results, variables)
-```
-
-# Accepted Key Words
-- `display::Bool`: set to false to prevent the plots from displaying
-- `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
-- `seriescolor::Array`: Set different colors for the plots
-- `title::String = "Title"`: Set a title for the plots
-"""
-
-function stack_plot(res::IS.Results, variables::Array; kwargs...)
-    res_var = Dict()
-    res_param = Dict()
-    for variable in variables
-        ending = last(split("$variable", "_"))
-        parameter = Symbol("parameter_P_$ending")
-        res_var[variable] = IS.get_variables(res)[variable]
-        if parameter in keys(IS.get_parameters(res))
-            res_param[parameter] = IS.get_parameters(res)[parameter]
-        end
-    end
-    results = Results(
-        IS.get_base_power(res),
-        res_var,
-        IS.get_optimizer_log(res),
-        IS.get_total_cost(res),
-        IS.get_timestamp(res),
-        res.dual_values,
-        res_param,
-    )
-    return stack_plot(results; kwargs...)
-end
-
-function stack_plot(results::Array, variables::Array; kwargs...)
-    new_results = []
-    for res in results
-        res_var = Dict()
-        res_param = Dict()
-        for variable in variables
-            ending = last(split("$variable", "_"))
-            parameter = Symbol("parameter_P_$ending")
-            res_var[variable] = IS.get_variables(res)[variable]
-            if parameter in keys(IS.get_parameters(res))
-                res_param[parameter] = IS.get_parameters(res)[parameter]
-            end
-        end
-        results = Results(
-            IS.get_base_power(res),
-            res_var,
-            IS.get_optimizer_log(res),
-            IS.get_total_cost(res),
-            IS.get_timestamp(res),
-            res.dual_values,
-            res_param,
-        )
-        new_results = vcat(new_results, results)
-    end
-    return stack_plot(new_results; kwargs...)
 end
 
 function _make_ylabel(base_power::Float64)
@@ -619,120 +490,6 @@ function _make_bar_ylabel(base_power::Float64)
     return ylabel
 end
 
-"""
-    stair_plot(results)
-
-This function makes a stair plot for each variable, as well as all of the variables.
-The same methods for stack_plot apply to stair_plot.
-
-# Arguments
-
-- `res::Results = results`: results to be plotted
-
-# Example
-
-```julia
-res = solve_op_problem!(OpProblem)
-plot = stair_plot(res)
-```
-
-# Accepted Key Words
-- `display::Bool`: set to false to prevent the plots from displaying
-- `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
-- `seriescolor::Array`: Set different colors for the plots
-- `title::String = "Title"`: Set a title for the plots
-- `curtailment::Bool`: To plot the curtailment in the stack plot
-- `load::Bool`: To plot the load line in the plot
-"""
-
-function stair_plot(res::IS.Results; kwargs...)
-    set_display = get(kwargs, :set_display, true)
-    backend = Plots.backend()
-    save_fig = get(kwargs, :save, nothing)
-    reserve = get(kwargs, :reserves, false)
-    reserves = _filter_reserves(res, reserve)
-    res = _filter_variables(res; kwargs...)
-    if isnothing(backend)
-        throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
-    end
-    return _stack_plot_internal(
-        res,
-        backend,
-        save_fig,
-        set_display,
-        reserves;
-        stairs = "hv",
-        linetype = :steppost,
-        kwargs...,
-    )
-end
-
-function stair_plot(results::Array; kwargs...)
-    set_display = get(kwargs, :set_display, true)
-    backend = Plots.backend()
-    save_fig = get(kwargs, :save, nothing)
-    reserves = get(kwargs, :reserves, false)
-    new_results = []
-    reserves_list = []
-    for res in results
-        reserves_list = vcat(reserves_list, _filter_reserves(res, reserves))
-        new_results = vcat(new_results, _filter_variables(res; kwargs...))
-    end
-    #reserves_list = hcat(reserves_list...)
-    #new_results = hcat(new_results...)
-    if isnothing(backend)
-        throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
-    end
-    return _stack_plot_internal(
-        new_results,
-        backend,
-        save_fig,
-        set_display,
-        reserves_list;
-        stairs = "hv",
-        linetype = :steppost,
-        kwargs...,
-    )
-end
-
-function stair_plot(res::IS.Results, variables::Array; kwargs...)
-    res_var = Dict()
-    for variable in variables
-        res_var[variable] = IS.get_variables(res)[variable]
-    end
-    results = Results(
-        IS.get_base_power(res),
-        res_var,
-        IS.get_optimizer_log(res),
-        IS.get_total_cost(res),
-        IS.get_timestamp(res),
-        res.dual_values,
-        res.parameter_values,
-    )
-    return stair_plot(results; kwargs...)
-end
-
-function stair_plot(results::Array, variables::Array; kwargs...)
-    new_results = []
-    for res in results
-        res_var = Dict()
-        for variable in variables
-            res_var[variable] = IS.get_variables(res)[variable]
-        end
-        results = Results(
-            IS.get_base_power(res),
-            res_var,
-            IS.get_optimizer_log(res),
-            IS.get_total_cost(res),
-            IS.get_timestamp(res),
-            res.dual_values,
-            res.parameter_values,
-        )
-        new_results = vcat(new_results, results)
-    end
-    return stair_plot(new_results; kwargs...)
-end
 ################################### DEMAND #################################
 
 function _shorten_time(results::IS.Results, horizon::Int64, init_time::Dates.DateTime)
