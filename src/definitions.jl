@@ -52,6 +52,8 @@ CATEGORY_DEFAULT = getfield.(get_palette(), :category)
 
 VARIABLE_TYPES = ["P", "Spin", "Reg", "Flex"]
 
+SUPPORTEDVARPREFIX = "P__"
+SUPPORTEDPARAMPREFIX = "P__max_active_power__"
 SUPPORTEDGENPARAMS = [
     "RenewableDispatch",
     "RenewableFix",
@@ -60,7 +62,9 @@ SUPPORTEDGENPARAMS = [
     "ThermalStandard",
 ]
 
-SUPPORTEDLOADPARAMS = ["PowerLoad"]
+SUPPORTEDLOADPARAMS = ["PowerLoad", "InterruptibleLoad"]
+
+NEGATIVE_PARAMETERS = ["PowerLoad"]
 
 SUPPORTEDSERVICEPARAMS = [
     "VariableReserve_ReserveUp",
@@ -75,8 +79,11 @@ DOWN_RESERVES = ["VariableReserve_ReserveDown", "StaticReserve_ReserveDown"]
 
 OVERGENERATION_VARIABLE = :γ⁻__P
 UNSERVEDENERGY_VARIABLE = :γ⁺__P
+SLACKVARS = [OVERGENERATION_VARIABLE, UNSERVEDENERGY_VARIABLE]
 
 LOAD_PARAMETER = :P__max_active_power__PowerLoad
+ILOAD_PARAMETER = :P__max_active_power__InterruptibleLoad
+ILOAD_VARIABLE = :P__InterruptibleLoad
 
 GENERATOR_MAPPING_FILE = joinpath(
     dirname(dirname(pathof(PowerGraphics))),

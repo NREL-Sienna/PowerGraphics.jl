@@ -155,7 +155,7 @@ function _aggregate_data(res::IS.Results, generators::Dict)
 end
 
 """
-    stack = get_stacked_aggregation_data(res::IS.Results, generators::Dict)
+    stack = get_stacked_aggregation_data(res::IS.Results, generator_dict::Dict)
 
 This function aggregates the data into a struct type StackedGeneration
 so that the results can be plotted using the StackedGeneration recipe.
@@ -175,15 +175,15 @@ gr()
 fuel_plot(res, system)
 ```
 """
-function get_stacked_aggregation_data(res::IS.Results, generators::Dict)
+function get_stacked_aggregation_data(result::IS.Results, generator_dict::Dict)
     # order at the top
-    category_aggs = _aggregate_data(res, generators)
-    if Symbol("Curtailment") in keys(IS.get_variables(res))
-        category_aggs["Curtailment"] = IS.get_variables(res)[Symbol("Curtailment")]
+    category_aggs = _aggregate_data(result, generator_dict)
+    if haskey(IS.get_variables(result), Symbol("Curtailment"))
+        category_aggs["Curtailment"] = IS.get_variables(result)[Symbol("Curtailment")]
     end
-    time_range = IS.get_timestamp(res)[!, :Range]
+    time_range = IS.get_timestamp(result)[!, :DateTime]
     labels = collect(keys(category_aggs))
-    p_labels = collect(keys(res.parameter_values))
+    p_labels = collect(keys(result.parameter_values))
     new_labels = intersect(CATEGORY_DEFAULT, labels)
     unmatched = setdiff(labels, new_labels)
     !isempty(unmatched) &&
@@ -192,7 +192,7 @@ function get_stacked_aggregation_data(res::IS.Results, generators::Dict)
     parameters = []
     p_legend = []
     for label in p_labels
-        parameter = sum(Matrix(res.parameter_values[label]), dims = 2)
+        parameter = sum(Matrix(result.parameter_values[label]), dims = 2)
         push!(parameters, parameter)
         push!(p_legend, string(label))
     end
@@ -208,14 +208,20 @@ function get_stacked_aggregation_data(res::IS.Results, generators::Dict)
     end
 
     # TODO: thee following is a hacky way to add the unserved energy slacks to plots
-    if UNSERVEDENERGY_VARIABLE in keys(res.variable_values)
+    if UNSERVEDENERGY_VARIABLE in keys(result.variable_values)
         push!(legend, "Unserved Energy")
-        push!(agg_var, sum(Matrix(res.variable_values[UNSERVEDENERGY_VARIABLE]), dims = 2))
+        push!(
+            agg_var,
+            sum(Matrix(result.variable_values[UNSERVEDENERGY_VARIABLE]), dims = 2),
+        )
     end
     # TODO: thee following is a hacky way to add the over generation slacks to plots
-    if OVERGENERATION_VARIABLE in keys(res.variable_values)
+    if OVERGENERATION_VARIABLE in keys(result.variable_values)
         push!(legend, "Over Generation")
-        push!(agg_var, sum(Matrix(res.variable_values[OVERGENERATION_VARIABLE]), dims = 2))
+        push!(
+            agg_var,
+            sum(Matrix(result.variable_values[OVERGENERATION_VARIABLE]), dims = 2),
+        )
     end
     legend = reduce(hcat, legend)
     data_matrix = reduce(hcat, agg_var)
@@ -226,7 +232,7 @@ function get_stacked_aggregation_data(res::IS.Results, generators::Dict)
 end
 
 """
-    bar = get_bar_aggregation_data(results::IS.Results, generators::Dict)
+    bar = get_bar_aggregation_data(results::IS.Results, generator_dict::Dict)
 
 This function aggregates the data into a struct type StackedGeneration
 so that the results can be plotted using the StackedGeneration recipe.

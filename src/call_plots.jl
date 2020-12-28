@@ -1,21 +1,78 @@
-function _filter_results(results::IS.Results; kwargs...)
-    var_names = get(kwargs, :names, PSI.get_existing_variables(results))
-    filter_variables = [key for key in var_names if startswith("$key", "P__") | any(key .== [:γ⁻__P, :γ⁺__P])]
-    filter_parameters = [key for key in PSI.get_existing_parameters(results) if startswith("$key", "P__")]
+function _get_matching_param(var_name)
+    return Symbol(replace(string(var_name), SUPPORTEDVARPREFIX => SUPPORTEDPARAMPREFIX))
+end
 
+function _get_matching_var(param_name)
+    return Symbol(replace(string(param_name), SUPPORTEDPARAMPREFIX => SUPPORTEDVARPREFIX))
+end
+
+function _filter_results(results::IS.Results; kwargs...)
+    names = get(kwargs, :names, nothing)
     load = get(kwargs, :load, false)
-    parameter_values = _filter_parameters(results, filter_parameters, load)
-    variable_values = PSI.read_realized_variables(results, names = filter_variables)
+    initial_time = get(kwargs, :initial_time, nothing)
+    len = get(kwargs, :horizon, nothing)
+
+    existing_var_names = PSI.get_existing_variables(results)
+    existing_param_names = PSI.get_existing_parameters(results)
+
+    if isnothing(names)
+        var_names = existing_var_names
+        param_names = existing_param_names
+    else
+        var_names = names
+        load && ILOAD_VARIABLE in existing_var_names && push!(var_names, ILOAD_VARIABLE)
+        param_names =
+            [v for v in _get_matching_param.(var_names) if v in existing_param_names]
+        load && LOAD_PARAMETER in existing_param_names && push!(param_names, LOAD_PARAMETER)
+    end
+
+    filter_variables = [
+        key
+        for
+        key in var_names if startswith("$key", SUPPORTEDVARPREFIX) | any(key .== SLACKVARS)
+    ]
+
+    filter_parameters =
+        [key for key in param_names if startswith("$key", SUPPORTEDPARAMPREFIX)]
+
+    parameter_values =
+        _filter_parameters(results, filter_parameters, load, initial_time, len)
+    variable_values = PSI.read_realized_variables(
+        results;
+        names = filter_variables,
+        len = len,
+        initial_time = initial_time,
+    )
+
+    # fixed output should be added to plots when there exists a parameter of the form
+    # :P__max_active_power__SUPPORTEDGENPARAMS but there is no corresponding
+    # :P__SUPPORTEDGENPARAMS variable
+    for param in filter_parameters
+        endswith(string(param), string(LOAD_PARAMETER)) && continue
+        if startswith(string(param), SUPPORTEDPARAMPREFIX)
+            var_name = _get_matching_var(param)
+            if !haskey(variable_values, var_name)
+                variable_values[var_name] = parameter_values[param]
+            end
+        end
+    end
 
     curtailment = get(kwargs, :curtailment, false)
     if curtailment
-        curtailment_parameters = _curtailment_parameters(filter_parameters, filter_variables)
+        curtailment_parameters =
+            _curtailment_parameters(filter_parameters, filter_variables)
         _filter_curtailment!(variable_values, parameter_values, curtailment_parameters)
     end
     if load && !haskey(IS.get_parameters(results), LOAD_PARAMETER)
         @warn "$LOAD_PARAMETER not found in results parameters."
     end
-    timestamps = DataFrames.DataFrame(:DateTime => PSI.get_realized_timestamps(results))
+    timestamps = DataFrames.DataFrame(
+        :DateTime => PSI.get_realized_timestamps(
+            results;
+            initial_time = initial_time,
+            len = len,
+        ),
+    )
     new_results = Results(
         results.base_power,
         variable_values, #variables
@@ -54,7 +111,8 @@ function _filter_reserves(results::IS.Results, reserves::Bool)
 end
 
 function _curtailment_parameters(parameters::Vector{Symbol}, variables::Vector{Symbol})
-    curtailment_parameters = Vector{NamedTuple{(:parameter, :variable),Tuple{Symbol,Symbol}}}()
+    curtailment_parameters =
+        Vector{NamedTuple{(:parameter, :variable), Tuple{Symbol, Symbol}}}()
     for var in variables
         var_param = Symbol(replace(string(var), "P__" => "P__max_active_power__"))
         if var_param in parameters
@@ -64,95 +122,61 @@ function _curtailment_parameters(parameters::Vector{Symbol}, variables::Vector{S
     return curtailment_parameters
 end
 
-function _filter_curtailment!(variable_values::Dict, parameter_values::Dict, curtailment_parameters::Vector{NamedTuple{(:parameter, :variable),Tuple{Symbol,Symbol}}})
+function _filter_curtailment!(
+    variable_values::Dict,
+    parameter_values::Dict,
+    curtailment_parameters::Vector{
+        NamedTuple{(:parameter, :variable), Tuple{Symbol, Symbol}},
+    },
+)
     for curtailment in curtailment_parameters
         if !haskey(variable_values, curtailment.variable)
             variable_values[curtailment.variable] = parameter_values[curtailment.parameter]
         else
+            curt =
+                parameter_values[curtailment.parameter] .-
+                variable_values[curtailment.variable]
             if haskey(variable_values, :Curtailment)
-                hcat(
-                    variable_values[:Curtailment],
-                    (parameter .- vars[key]),
-                )
+                variable_values[:Curtailment] = hcat(variable_values[:Curtailment], curt)
             else
-                variable_values[:Curtailment] =
-                    parameter_values[curtailment.parameter] .- variable_values[curtailment.variable]
+                variable_values[:Curtailment] = curt
             end
         end
     end
 end
 
-function _filter_parameters(results::IS.Results, filter_parameters::Vector{Symbol}, load::Bool)
-    positive_parameters = Vector{Symbol}()
+function _filter_parameters(
+    results::IS.Results,
+    filter_parameters::Vector{Symbol},
+    load::Bool,
+    initial_time,
+    len,
+)
+    parameters = Vector{Symbol}()
     negative_parameters = Vector{Symbol}()
     for key in filter_parameters
         param = split("$key", "_")[end]
         if param in SUPPORTEDGENPARAMS
-            push!(positive_parameters, key)
+            push!(parameters, key)
         elseif load && (param in SUPPORTEDLOADPARAMS)
-            push!(positive_parameters, key)
-            push!(negative_parameters, key)
+            push!(parameters, key)
+            param in NEGATIVE_PARAMETERS && push!(negative_parameters, key)
         end
     end
-    parameter_values = PSI.read_realized_parameters(results, names = positive_parameters)
+    parameter_values = PSI.read_realized_parameters(
+        results;
+        names = parameters,
+        len = len,
+        initial_time = initial_time,
+    )
     for param in negative_parameters
         parameter_values[param] = parameter_values[param] .* -1.0
     end
     return parameter_values
 end
 
-function fuel_plot(
-    res::IS.Results,
-    variables::Array,
-    genterator_data::Union{Dict, PSY.System};
-    kwargs...,
-)
-    res_var = Dict()
-    for variable in variables
-        res_var[variable] = IS.get_variables(res)[variable]
-    end
-    results = Results(
-        IS.get_base_power(res),
-        res_var,
-        IS.get_optimizer_log(res),
-        IS.get_total_cost(res),
-        IS.get_timestamp(res),
-        res.dual_values,
-        res.parameter_values,
-    )
-    plots = fuel_plot(results, genterator_data; kwargs...)
-    return plots
-end
-
-function fuel_plot(
-    results::Array,
-    variables::Array,
-    genterator_data::Union{Dict, PSY.System};
-    kwargs...,
-)
-    new_results = []
-    for res in results
-        res_var = Dict()
-        for variable in variables
-            res_var[variable] = IS.get_variables(res)[variable]
-        end
-        results = Results(
-            IS.get_base_power(res),
-            res_var,
-            IS.get_optimizer_log(res),
-            IS.get_total_cost(res),
-            IS.get_timestamp(res),
-            res.dual_values,
-            res.parameter_values,
-        )
-        new_results = vcat(new_results, results)
-    end
-    plots = fuel_plot(new_results, genterator_data; kwargs...)
-    return plots
-end
-
 """
-    fuel_plot(results, system)
+    fuel_plot(results)
 
 This function makes a stack plot of the results by fuel type
 and assigns each fuel type a specific color.
@@ -160,13 +184,12 @@ and assigns each fuel type a specific color.
 # Arguments
 
 - `res::Results = results`: results to be plotted
-- `system::PSY.System`: The power systems system
 
 # Example
 
 ```julia
 res = solve_op_problem!(OpProblem)
-plot = fuel_plot(res, sys)
+plot = fuel_plot(res)
 ```
 
 # Accepted Key Words
@@ -179,10 +202,15 @@ plot = fuel_plot(res, sys)
 - `load::Bool`: To plot the load line in the plot
 - `stair::Bool`: Make a stair plot instead of a stack plot
 - `generator_mapping_file` = "file_path" : file path to yaml definig generator category by fuel and primemover
+- `variables::Union{Nothing, Vector{Symbol}}` = nothing : specific variables to plot
 """
-function fuel_plot(res::Union{IS.Results, Array}, sys::PSY.System; kwargs...)
-    ref = make_fuel_dictionary(sys; kwargs...)
-    return fuel_plot(res, ref; kwargs...)
+function fuel_plot(result::IS.Results; kwargs...)
+    return fuel_plot([result]; kwargs...)
+end
+
+function fuel_plot(results::Array; kwargs...)
+    generator_dict = make_fuel_dictionary(PSI.get_system(results[1]); kwargs...)
+    return fuel_plot(results, generator_dict; kwargs...)
 end
 
 """
@@ -193,7 +221,7 @@ and assigns each fuel type a specific color.
 
 # Arguments
 
-- `res::IS.Results = results`: results to be plotted
+- `res::Vector{IS.Results}`: results to be plotted
 - `generators::Dict`: the dictionary of fuel type and an array
  of the generators per fuel type, or some other specified category order
 
@@ -215,63 +243,35 @@ plot = fuel_plot(res, generator_dict)
 - `load::Bool`: To plot the load line in the plot
 - `stair::Bool`: Make a stair plot instead of a stack plot
 - `title::String = "Title"`: Set a title for the plots
+- `variables::Union{Nothing, Vector{Symbol}}` = nothing : specific variables to plot
+
 """
-
-function fuel_plot(res::IS.Results, generator_dict::Dict; kwargs...)
-    set_display = get(kwargs, :display, true)
-    save_fig = get(kwargs, :save, nothing)
-    res = _filter_variables(res; kwargs...)
-    stack = get_stacked_aggregation_data(res, generator_dict)
-    bar = get_bar_aggregation_data(res, generator_dict)
-    backend = Plots.backend()
-    default_colors = match_fuel_colors(stack, bar, backend, FUEL_DEFAULT)
-    seriescolor = get(kwargs, :seriescolor, default_colors)
-    ylabel = (
-        stack = _make_ylabel(IS.get_base_power(res)),
-        bar = _make_bar_ylabel(IS.get_base_power(res)),
-    )
-    title = get(kwargs, :title, "Fuel")
-    if isnothing(backend)
-        throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
-    end
-    time_interval = IS.get_timestamp(res)[2, 1] - IS.get_timestamp(res)[1, 1]
-    interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
-    return _fuel_plot_internal(
-        stack,
-        bar,
-        seriescolor,
-        backend,
-        save_fig,
-        set_display,
-        title,
-        ylabel,
-        interval;
-        kwargs...,
-    )
-end
-
 function fuel_plot(results::Array, generator_dict::Dict; kwargs...)
-    set_display = get(kwargs, :display, true)
+    backend = Plots.backend()
+    set_display = get(kwargs, :set_display, true)
     save_fig = get(kwargs, :save, nothing)
+
     stack = StackedGeneration[]
     bar = BarGeneration[]
+    base_powers = []
+    base_power = nothing
+    time_interval = nothing
     for result in results
-        new_res = _filter_variables(result; kwargs...)
-        push!(stack, get_stacked_aggregation_data(new_res, generator_dict))
-        push!(bar, get_bar_aggregation_data(new_res, generator_dict))
+        pg_result = _filter_results(result; kwargs...)
+        base_power = IS.get_base_power(pg_result)
+        time_interval =
+            IS.get_timestamp(pg_result)[2, 1] - IS.get_timestamp(pg_result)[1, 1]
+        push!(stack, get_stacked_aggregation_data(pg_result, generator_dict))
+        push!(bar, get_bar_aggregation_data(pg_result, generator_dict))
     end
-    backend = Plots.backend()
     default_colors = match_fuel_colors(stack[1], bar[1], backend, FUEL_DEFAULT)
     seriescolor = get(kwargs, :seriescolor, default_colors)
     title = get(kwargs, :title, "Fuel")
-    ylabel = (
-        stack = _make_ylabel(IS.get_base_power(results[1])),
-        bar = _make_bar_ylabel(IS.get_base_power(results[1])),
-    )
+
+    ylabel = (stack = _make_ylabel(base_power), bar = _make_bar_ylabel(base_power))
     if isnothing(backend)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
-    time_interval = IS.get_timestamp(results[1])[2, 1] - IS.get_timestamp(results[1])[1, 1]
     interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
     return _fuel_plot_internal(
         stack,
@@ -316,7 +316,7 @@ plot = bar_plot(results)
 """
 
 function bar_plot(results::IS.Results; kwargs...)
-    return bar_plot([results]; kwargs)
+    return bar_plot([results]; kwargs...)
 end
 
 """
@@ -364,7 +364,8 @@ function bar_plot(results::Array; kwargs...)
         throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
     end
 
-    time_interval = IS.get_timestamp(pg_results[1])[2, 1] - IS.get_timestamp(pg_results[1])[1, 1]
+    time_interval =
+        IS.get_timestamp(pg_results[1])[2, 1] - IS.get_timestamp(pg_results[1])[1, 1]
     interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
     plots = _bar_plot_internal(
         pg_results,
@@ -544,18 +545,8 @@ plot = plot_demand(res)
 - `aggregate::String = "System", "PowerLoad", or "Bus"`: aggregate the demand other than by generator
 """
 
-function plot_demand(res::IS.Results; kwargs...)
-    results = _filter_parameters(res)
-    if isempty(IS.get_parameters(results))
-        @warn "No parameters provided."
-    end
-    backend = Plots.backend()
-    horizon = get(kwargs, :horizon, nothing)
-    initial_time = get(kwargs, :initial_time, nothing)
-    if !isnothing(horizon) && !isnothing(initial_time)
-        results = _shorten_time(results, horizon, initial_time)
-    end
-    return _demand_plot_internal(results, backend; kwargs...)
+function plot_demand(result::IS.Results; kwargs...)
+    return plot_demand([result]; kwargs...)
 end
 
 """
@@ -586,23 +577,22 @@ plot = plot_demand([res, res])
 """
 
 function plot_demand(results::Array; kwargs...)
-    newer_results = []
-    for res in results
-        new_res = _filter_parameters(res)
-        horizon = get(kwargs, :horizon, nothing)
-        initial_time = get(kwargs, :initial_time, nothing)
-        if !isnothing(horizon) && !isnothing(initial_time)
-            new_res = _shorten_time(new_res, horizon, initial_time)
-        end
-        newer_results = vcat(newer_results, new_res)
-        if isempty(IS.get_parameters(new_res))
+    backend = Plots.backend()
+    set_display = get(kwargs, :set_display, true)
+    save_fig = get(kwargs, :save, nothing)
+
+    demand_results = []
+    for result in results
+        pg_result =
+            _filter_results(result, names = Vector{Symbol}(), load = true; kwargs...)
+        if isempty(IS.get_parameters(pg_result))
             @warn "No parameters provided."
         end
+        push!(demand_results, pg_result)
     end
-    backend = Plots.backend()
-    save_fig = get(kwargs, :save, nothing)
-    return _demand_plot_internal(newer_results, backend; kwargs...)
+    return _demand_plot_internal(demand_results, backend; kwargs...)
 end
+
 function _get_loads(system::PSY.System, bus::PSY.Bus)
     return [
         load
@@ -634,21 +624,22 @@ function make_demand_plot_data(
     if isempty(aggregation_components)
         throw(ArgumentError("System does not have type $aggregation."))
     end
-    horizon = get(kwargs, :horizon, PSY.get_forecasts_horizon(system))
-    initial_time = get(kwargs, :initial_time, PSY.get_forecasts_initial_time(system))
+    horizon = get(kwargs, :horizon, PSY.get_forecast_horizon(system))
+    initial_time = get(kwargs, :initial_time, PSY.get_forecast_initial_timestamp(system))
     parameters = DataFrames.DataFrame(timestamp = Dates.DateTime[])
+    PSY.set_units_base_system!(system, "SYSTEM_BASE")
     for agg in aggregation_components
         loads = _get_loads(system, agg)
         length(loads) == 0 && continue
         colname = aggregation == PSY.System ? "System" : PSY.get_name(agg)
         load_values = []
         for load in loads
-            f = PSY.get_forecast_values(
+            f = PSY.get_time_series_array(
                 PSY.Deterministic,
                 load,
-                initial_time,
-                "get_max_active_power",
-                horizon,
+                "max_active_power",
+                start_time = initial_time,
+                len = horizon,
             )
             push!(load_values, values(f))
             parameters = DataFrames.outerjoin(
@@ -696,15 +687,7 @@ plot = plot_demand(sys)
 """
 
 function plot_demand(system::PSY.System; kwargs...)
-    aggregation = get(kwargs, :aggregate, PSY.PowerLoad)
-    parameters = make_demand_plot_data(system, aggregation; kwargs...)
-    backend = Plots.backend()
-    return _demand_plot_internal(
-        parameters,
-        PSY.get_base_power(system),
-        Plots.backend();
-        kwargs...,
-    )
+    return plot_demand([system]; kwargs...)
 end
 
 """

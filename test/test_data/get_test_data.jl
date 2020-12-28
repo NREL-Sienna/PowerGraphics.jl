@@ -1,5 +1,9 @@
-const BASE_DIR = string(dirname(dirname(pathof(PowerGraphics))))
-const DATA_DIR = joinpath(BASE_DIR, "test/test_data")
+const DATA_DIR = joinpath(BASE_DIR, "test", "test_data")
+const TEST_OUTPUTS = joinpath(BASE_DIR, "test", "test_results")
+!isdir(TEST_OUTPUTS) && mkdir(TEST_OUTPUTS)
+const TEST_RESULT_DIR = joinpath(TEST_OUTPUTS, "results")
+!isdir(TEST_RESULT_DIR) && mkdir(TEST_RESULT_DIR)
+
 include(joinpath(DATA_DIR, "data_5bus_pu.jl"))
 include(joinpath(DATA_DIR, "data_14bus_pu.jl"))
 include(joinpath(DATA_DIR, "results_data.jl"))

@@ -21,6 +21,20 @@ function _check_matching_variables(results::Array)
 end
 
 ###################################### GR FUEL PLOT ##############################
+
+function _get_load_line_data(parameters, labels)
+    loads = []
+    load_names = []
+    for (ix, param) in enumerate(labels)
+        if Symbol(param) in [LOAD_PARAMETER, ILOAD_PARAMETER]
+            push!(loads, parameters[:, ix])
+            push!(load_names, param)
+        end
+    end
+    load = cumsum(hcat(loads...), dims = 2)
+    return load, permutedims(load_names)
+end
+
 function _fuel_plot_internal(
     stack::Union{StackedGeneration, Array{StackedGeneration}},
     bar::Union{BarGeneration, Array{BarGeneration}},
@@ -61,13 +75,13 @@ function _fuel_plot_internal(
             linetype = linetype,
             legend = :outerright,
         )
-        if !isempty(stack.p_labels)
-            load = cumsum(stack.parameters, dims = 2)
+        (load, load_names) = _get_load_line_data(stack.parameters, stack.p_labels)
+        if !isempty(load)
             Plots.plot!(
                 time_range,
                 load;
                 seriescolor = :black,
-                lab = "PowerLoad",
+                lab = load_names,
                 legend = :outerright,
                 linestyle = :dash,
                 linewidth = 2.5,
@@ -98,13 +112,13 @@ function _fuel_plot_internal(
             legend = :outerright,
             fillrange = bar_base_data,
         )
-        if !isempty(bar.p_labels)
-            load = cumsum(bar.parameters, dims = 2) ./ interval
+        (load, load_names) = _get_load_line_data(bar.parameters, bar.p_labels)
+        if !isempty(load)
             Plots.plot!(
                 [3.5; 5.5],
-                [load; load];
+                [load; load] ./ interval;
                 seriescolor = :black,
-                lab = "PowerLoad",
+                lab = load_names,
                 linestyle = :dash,
                 linewidth = 2.5,
                 legend = :outerright,
@@ -388,7 +402,7 @@ function _stack_plot_internal(
 end
 
 ######################################### DEMAND ########################
-
+#=
 function _demand_plot_internal(res::IS.Results, backend::Any; kwargs...)
     stair = get(kwargs, :stair, false)
     linetype = stair ? :steppost : :line
@@ -427,26 +441,28 @@ function _demand_plot_internal(res::IS.Results, backend::Any; kwargs...)
     end
     return PlotList(plot_list)
 end
+=#
 
-function _demand_plot_internal(results::Array{}, backend::Any; kwargs...)
+function _demand_plot_internal(results::Vector, backend::Any; kwargs...)
     stair = get(kwargs, :stair, false)
     linetype = stair ? :steppost : :line
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
     save_fig = get(kwargs, :save, nothing)
     set_display = get(kwargs, :display, true)
-    time_range = results[1].timestamp[:, 1]
-    interval = time_range[2] - time_range[1]
-    time_interval = IS.convert_compound_period(interval * length(time_range))
-    ylabel = _make_ylabel(IS.get_base_power(results[1]))
     plot_list = Dict()
-    for (key, parameters) in results[1].parameter_values
-        labels = string.(names(parameters))
-        plots = []
-        title = get(kwargs, :title, "$key")
-        for i in 1:length(results)
-            params = results[i].parameter_values[key]
-            data = cumsum(convert(Matrix, params), dims = 2)
-            p = Plots.plot(
+    all_plots = []
+    for (ix, result) in enumerate(results)
+        time_range = result.timestamp[:, 1]
+        interval = time_range[2] - time_range[1]
+        time_interval = IS.convert_compound_period(interval * length(time_range))
+        ylabel = _make_ylabel(IS.get_base_power(result))
+        p = Plots.plot()
+        for (key, parameter) in result.parameter_values
+            labels = string.(names(parameter))
+            title = get(kwargs, :title, "$key") #WTF?
+            data = convert(Matrix, parameter)
+            Plots.plot!(
+                p,
                 time_range,
                 data;
                 seriescolor = seriescolor,
@@ -459,19 +475,20 @@ function _demand_plot_internal(results::Array{}, backend::Any; kwargs...)
                 legend = :outerright,
                 linetype = linetype,
             )
-            plots = vcat(plots, p)
         end
-        p = Plots.plot(plots...; layout = (length(results), 1))
         set_display && display(p)
-        title = replace(title, " " => "_")
-        !isnothing(save_fig) && Plots.savefig(p, joinpath(save_fig, "$title.png"))
-        plot_list[key] = p
+        push!(all_plots, p)
     end
+    plot_list = Dict(:demand => Plots.plot(all_plots...; layout = (length(results), 1)))
+    title = replace(title, " " => "_")
+    !isnothing(save_fig) &&
+        Plots.savefig(plot_list[:demand], joinpath(save_fig, "$title.png"))
+
     return PlotList(plot_list)
 end
 
 ####################### Demand Plot System ################################
-
+#=
 function _demand_plot_internal(
     parameters::DataFrames.DataFrame,
     base_power::Float64,
@@ -514,6 +531,7 @@ function _demand_plot_internal(
     plot_list[Symbol(title)] = p
     return PlotList(plot_list)
 end
+=#
 
 function _demand_plot_internal(
     parameter_list::Array,
@@ -536,7 +554,7 @@ function _demand_plot_internal(
         ylabel = _make_ylabel(base_power[i])
         DataFrames.select!(parameter_list[i], DataFrames.Not(:timestamp))
         labels = string.(names(parameter_list[i]))
-        data = cumsum(convert(Matrix, parameter_list[i]), dims = 2)
+        data = convert(Matrix, parameter_list[i])
         p = Plots.plot(
             time_range,
             data;
