@@ -86,6 +86,9 @@ function _filter_results(results::IS.Results; kwargs...)
 end
 
 function _filter_reserves(results::IS.Results, reserves::Bool)
+    #TODO: This isn't implemented
+    return nothing
+    #=
     filter_up_reserves = Dict()
     filter_down_reserves = Dict()
     if reserves
@@ -108,6 +111,7 @@ function _filter_reserves(results::IS.Results, reserves::Bool)
     else
         return nothing
     end
+    =#
 end
 
 function _curtailment_parameters(parameters::Vector{Symbol}, variables::Vector{Symbol})
@@ -493,31 +497,6 @@ end
 
 ################################### DEMAND #################################
 
-function _shorten_time(results::IS.Results, horizon::Int64, init_time::Dates.DateTime)
-    time_range = IS.get_timestamp(results)[:, 1]
-    resolution = Dates.Hour(time_range[2] - time_range[1])
-    parameters = IS.get_parameters(results)
-    times = collect(init_time:resolution:(init_time + resolution * horizon))
-    new_time_range = DataFrames.DataFrame(:Range => times)
-    new_params = Dict()
-    init_spot = findall(x -> x == init_time, time_range)[1]
-    if isempty(init_spot)
-        throw(IS.InvalidValue("$init_time is not in the time_range."))
-    end
-    for (k, p) in parameters
-        new_params[k] = p[init_spot:(init_spot + horizon), :]
-    end
-    return Results(
-        IS.get_base_power(results),
-        IS.get_variables(results),
-        IS.get_optimizer_log(results),
-        IS.get_total_cost(results),
-        new_time_range,
-        results.dual_values,
-        new_params,
-    )
-end
-
 """
     plot_demand(results)
 
@@ -773,13 +752,13 @@ end
 ################################# Plotting a Single Variable ##########################
 
 """
-    plot_variable(results, variable_name)
+    plot_variable(result, variable_name)
 
 This function makes a plot of a specific variable
 
 # Arguments
 
-- `res::Results = results`: results to be plotted
+- `result::Results = result`: results to be plotted
 - `variable::Union{String, Symbol}`: The variable name to be plotted
 
 # Example
@@ -798,29 +777,8 @@ plot = plot_variable(res, variable)
 - `curtailment::Bool`: plot the curtailment with the variable
 - `load::Bool`: plot the load with the variable
 """
-function plot_variable(res::IS.Results, variable_name::Union{Symbol, String}; kwargs...)
-    var = Symbol(variable_name)
-    if !(var in keys(IS.get_variables(res)))
-        @warn "$var not found in results variables. Existing variables are \n$(keys(IS.get_variables(res)))"
-    else
-        curtailment = get(kwargs, :curtailment, false)
-        variables = Dict(var => IS.get_variables(res)[var])
-        variables = _filter_curtailment(res, variables, curtailment)
-        variable = variables[var]
-        if :Curtailment in keys(variables)
-            variable[:, :Curtailment] .= sum(Matrix(variables[:Curtailment]))
-        end
-        time_range = IS.get_timestamp(res)[:, 1]
-        plots = _variable_plots_internal(
-            variable,
-            time_range,
-            IS.get_base_power(res),
-            var,
-            Plots.backend();
-            kwargs...,
-        )
-        return plots
-    end
+function plot_variable(result::IS.Results, variable_name::Union{Symbol, String}; kwargs...)
+    return plot_variable(Plots.plot(), result, variable_name; kwargs...)
 end
 
 """
@@ -853,51 +811,45 @@ plot_2 = plot_variable(plot, res, variable_2)
 """
 function plot_variable(
     plot::Any,
-    res::IS.Results,
+    result::IS.Results,
     variable_name::Union{Symbol, String};
     kwargs...,
 )
     var = Symbol(variable_name)
-    if !(var in keys(IS.get_variables(res)))
-        @warn "$var not found in results variables. Existing variables are \n$(keys(IS.get_variables(res)))"
-    else
-        curtailment = get(kwargs, :curtailment, false)
-        variables = Dict(var => IS.get_variables(res)[var])
-        variables = _filter_curtailment(res, variables, curtailment)
-        variable = variables[var]
-        if :Curtailment in keys(variables)
-            variable[:, :Curtailment] .= sum(Matrix(variables[:Curtailment]))
-        end
-        time_range = IS.get_timestamp(res)[:, 1]
-        plots = _variable_plots_internal(
-            plot,
-            variable,
-            time_range,
-            IS.get_base_power(res),
-            var,
-            Plots.backend();
-            kwargs...,
-        )
-        return plots
-    end
+    pg_result = _filter_results(result, names = [var]; kwargs...)
+    variable = pg_result.variable_values[var]
+    time_range = IS.get_timestamp(pg_result)[:, 1]
+    plots = _variable_plots_internal(
+        plot,
+        variable,
+        time_range,
+        IS.get_base_power(pg_result),
+        var,
+        Plots.backend();
+        kwargs...,
+    )
+    return plots
 end
 
+################################# Plotting a Single DataFrame ##########################
+
 """
-    plot_dataframe(variable, time_range)
+    plot_dataframe(df, time_range)
 
 This function makes a plot of a specific dataframe and time range, not necessarily from the results
 
 # Arguments
 
-- `variable::DataFrames.DataFrame`: The dataframe to be plotted
+- `df::DataFrames.DataFrame`: The dataframe to be plotted
 - `time_range::Union{Array, DataFrame}`: The time range to be plotted
 
 # Example
 
 ```julia
-variable = IS.get_variables(results)[variable_name]
-time_Range = IS.get_timestamp(results)
-plot = plot_dataframe(variable, time_range)
+var_name = :P__ThermalStandard
+df = PSI.read_realized_variables(results, names = [var_name])[var_name]
+time_range = PSI.get_realized_timestamps(results)
+plot = plot_dataframe(df, time_range)
 ```
 
 # Accepted Key Words
@@ -911,13 +863,10 @@ plot = plot_dataframe(variable, time_range)
 """
 function plot_dataframe(
     variable::DataFrames.DataFrame,
-    time_range::Union{DataFrames.DataFrame, Array};
+    time_range::Union{DataFrames.DataFrame, Array, StepRange};
     kwargs...,
 )
-    time_range = typeof(time_range) == DataFrames.DataFrame ? time_range[:, 1] : time_range
-    backend = Plots.backend()
-    plot = _dataframe_plots_internal(variable, time_range, backend; kwargs...)
-    return plot
+    return plot_dataframe(Plots.plot(), variable, time_range; kwargs...)
 end
 
 """
@@ -954,10 +903,11 @@ plot_2 = plot_dataframe(plot, variable_2, time_range)
 function plot_dataframe(
     p::Any,
     variable::DataFrames.DataFrame,
-    time_range::Union{DataFrames.DataFrame, Array};
+    time_range::Union{DataFrames.DataFrame, Array, StepRange};
     kwargs...,
 )
-    time_range = typeof(time_range) == DataFrames.DataFrame ? time_range[:, 1] : time_range
+    time_range =
+        typeof(time_range) == DataFrames.DataFrame ? time_range[:, 1] : collect(time_range)
     backend = Plots.backend()
     p = _dataframe_plots_internal(p, variable, time_range, backend; kwargs...)
     return p

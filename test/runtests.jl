@@ -106,7 +106,7 @@ try
 finally
     # Guarantee that the global logger is reset.
     @info("removing test files")
-    rm(TEST_OUTPUTS, recursive = true)
+    #rm(TEST_OUTPUTS, recursive = true)
     global_logger(logger)
     nothing
 end

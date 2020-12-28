@@ -77,10 +77,13 @@ function test_gr_plots(file_path::String)
         @test isempty(setdiff(expected_files, list))
         # extra results created
         @test isempty(setdiff(list, expected_files))
+
+        @info("removing test files")
+        rm(path, recursive = true)
     end
 
     @testset "test fewer variable GR plot production" begin
-        path = joinpath(file_path, "variables")
+        path = joinpath(file_path, "select_vars")
         !isdir(path) && mkdir(path)
         variables = [:P__ThermalStandard]
         PG.bar_plot(
@@ -128,6 +131,9 @@ function test_gr_plots(file_path::String)
         @test isempty(setdiff(expected_files, list))
         # extra results created
         @test isempty(setdiff(list, expected_files))
+
+        @info("removing test files")
+        rm(path, recursive = true)
     end
 
     @testset "test multi GR plot production" begin
@@ -175,6 +181,9 @@ function test_gr_plots(file_path::String)
         @test isempty(setdiff(expected_files, list))
         # extra results created
         @test isempty(setdiff(list, expected_files))
+
+        @info("removing test files")
+        rm(path, recursive = true)
     end
 
     @testset "Test demand GR plot production" begin
@@ -216,11 +225,66 @@ function test_gr_plots(file_path::String)
         @test isempty(setdiff(expected_files, list))
         # extra results created
         @test isempty(setdiff(list, expected_files))
+
+        @info("removing test files")
+        rm(path, recursive = true)
+    end
+
+    @testset "Test variable GR plot production" begin
+        path = joinpath(file_path, "variable")
+        !isdir(path) && mkdir(path)
+
+        p = PG.plot_variable(results_ed, :P__ThermalStandard; title = "Plot", save = path)
+        PG.plot_variable(
+            p,
+            results_uc,
+            :P__RenewableDispatch;
+            title = "Plot-RE",
+            save = path,
+        )
+        PG.plot_variable(
+            results_uc,
+            :P__HydroEnergyReservoir;
+            initial_time = Dates.DateTime("2024-01-02T15:00:00"),
+            title = "Plot-short",
+            save = path,
+        )
+
+        list = readdir(path)
+        expected_files = ["Plot-RE.png", "Plot.png", "Plot-short.png"]
+        # expected results not created
+        @test isempty(setdiff(expected_files, list))
+        # extra results created
+        @test isempty(setdiff(list, expected_files))
+
+        @info("removing test files")
+        rm(path, recursive = true)
+    end
+
+    @testset "Test dataframe GR plot production" begin
+        path = joinpath(file_path, "dataframe")
+        !isdir(path) && mkdir(path)
+
+        var_name = :P__ThermalStandard
+        df = PSI.read_realized_variables(results_uc, names = [var_name])[var_name]
+        time_range = PSI.get_realized_timestamps(results_uc)
+        plot = plot_dataframe(df, time_range; title = "Plot", save = path)
+        param_name = :In__inflow__HydroEnergyReservoir
+        df = PSI.read_realized_parameters(results_uc, names = [param_name])[param_name]
+        plot_dataframe(plot, df, time_range; title = "Plot-2", save = path)
+        list = readdir(path)
+        expected_files = ["Plot-2.png", "Plot.png"]
+        # expected results not created
+        @test isempty(setdiff(expected_files, list))
+        # extra results created
+        @test isempty(setdiff(list, expected_files))
+
+        @info("removing test files")
+        rm(path, recursive = true)
     end
 end
 try
     test_gr_plots(file_path)
 finally
-    @info("removing test files")
-    rm(file_path, recursive = true)
+    nothing
 end

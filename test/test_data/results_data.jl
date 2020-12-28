@@ -42,12 +42,14 @@ res = PG.Results(
 generators = Dict("Coal" => [:one; :two], "Wind" => [:three])
 
 function run_test_sim(result_dir::String)
-    sim_path = joinpath(result_dir, "results_sim")
+    sim_name = "results_sim"
+    sim_path = joinpath(result_dir, sim_name)
     if ispath(sim_path)
         executions = tryparse.(Int, readdir(sim_path))
         sim = joinpath(sim_path, string(maximum(executions)))
+        @info "Reading results from last execution" sim
     else
-        mkpath(sim_path)
+        mkpath(result_dir)
         GLPK_optimizer =
             optimizer_with_attributes(GLPK.Optimizer, "msg_lev" => GLPK.GLP_MSG_OFF)
         c_sys5_hy_uc = build_system("c_sys5_hy_uc")
@@ -124,7 +126,7 @@ function run_test_sim(result_dir::String)
             steps = 2,
             stages = stages_definition,
             stages_sequence = sequence_cache,
-            simulation_folder = sim_path,
+            simulation_folder = result_dir,
         )
         build!(sim)
         execute!(sim)

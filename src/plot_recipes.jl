@@ -623,29 +623,6 @@ function _reserve_plot(res::IS.Results, backend::Any; kwargs...)
 end
 
 function _variable_plots_internal(
-    variable::DataFrames.DataFrame,
-    time_range::Array,
-    base_power::Float64,
-    variable_name::Symbol,
-    backend::Any;
-    kwargs...,
-)
-    seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
-    save_fig = get(kwargs, :save, nothing)
-    title = get(kwargs, :title, "$variable_name")
-    y_label = _make_ylabel(base_power)
-    p = _dataframe_plots_internal(
-        variable,
-        time_range,
-        backend;
-        y_label = y_label,
-        title = title,
-        kwargs...,
-    )
-    return p
-end
-
-function _variable_plots_internal(
     plot::Any,
     variable::DataFrames.DataFrame,
     time_range::Array,
@@ -671,45 +648,6 @@ function _variable_plots_internal(
 end
 
 function _dataframe_plots_internal(
-    variable::DataFrames.DataFrame,
-    time_range::Array,
-    backend::Any;
-    kwargs...,
-)
-    seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
-    save_fig = get(kwargs, :save, nothing)
-    unit = get(kwargs, :y_label, nothing)
-    y_label = isnothing(unit) ? "Generation per unit" : unit
-    time_interval =
-        IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
-    plot_list = Dict()
-    data = convert(Matrix, variable)
-    plot_data = get(kwargs, :stack, false) ? cumsum(data, dims = 2) : data
-    fillrange =
-        get(kwargs, :stack, false) ?
-        fillrange = hcat(zeros(length(time_range)), plot_data) : nothing
-    linetype = get(kwargs, :stair, false) ? :steppost : :line
-    title = get(kwargs, :title, " ")
-    p = Plots.plot(
-        time_range,
-        plot_data;
-        seriescolor = seriescolor,
-        ylabel = y_label,
-        xlabel = "$time_interval",
-        xtick = [time_range[1], last(time_range)],
-        grid = false,
-        lab = hcat(string.(names(variable))...),
-        title = title,
-        legend = :outerright,
-        linetype = linetype,
-        fillrange = fillrange,
-    )
-    title = title == " " ? "Generation" : title
-    !isnothing(save_fig) && Plots.savefig(p, joinpath(save_fig, "$(title).png"))
-    return p
-end
-
-function _dataframe_plots_internal(
     plot::Union{Plots.Plot, Nothing},
     variable::DataFrames.DataFrame,
     time_range::Array,
@@ -730,7 +668,6 @@ function _dataframe_plots_internal(
         fillrange = hcat(zeros(length(time_range)), plot_data) : nothing
     linetype = get(kwargs, :stair, false) ? :steppost : :line
     title = get(kwargs, :title, " ")
-    @show plot
     p = Plots.plot!(
         time_range,
         plot_data;
