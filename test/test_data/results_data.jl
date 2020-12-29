@@ -52,11 +52,14 @@ function run_test_sim(result_dir::String)
         mkpath(result_dir)
         GLPK_optimizer =
             optimizer_with_attributes(GLPK.Optimizer, "msg_lev" => GLPK.GLP_MSG_OFF)
-        c_sys5_hy_uc = build_system("c_sys5_hy_uc")
+        c_sys5_hy_uc = build_system("c_sys5_hy_uc", add_reserves = true)
         c_sys5_hy_ed = build_system("c_sys5_hy_ed")
 
         branches = Dict()
-        services = Dict()
+        services = Dict(
+            :ReserveDown => ServiceModel(VariableReserve{ReserveDown}, RangeReserve),
+            :ReserveUp => ServiceModel(VariableReserve{ReserveUp}, RangeReserve),
+        )
         devices = Dict(
             :Generators => DeviceModel(ThermalStandard, ThermalStandardUnitCommitment),
             :Ren => DeviceModel(RenewableDispatch, RenewableFullDispatch),
@@ -79,7 +82,7 @@ function run_test_sim(result_dir::String)
             :HydroROR => DeviceModel(HydroDispatch, FixedOutput),
         )
         template_hydro_st_ed =
-            OperationsProblemTemplate(CopperPlatePowerModel, devices, branches, services)
+            OperationsProblemTemplate(CopperPlatePowerModel, devices, branches, Dict())
         stages_definition = Dict(
             "UC" => Stage(
                 GenericOpProblem,

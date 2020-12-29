@@ -13,6 +13,7 @@ function test_gr_plots(file_path::String)
             title = "Title_Bar",
             load = true,
             curtailment = true,
+            reserves = true,
         )
         PG.stack_plot(
             results_uc;
@@ -21,6 +22,7 @@ function test_gr_plots(file_path::String)
             title = "Title_Stack",
             load = true,
             curtailment = true,
+            reserves = true,
         )
         PG.stack_plot(
             [results_uc];
@@ -30,6 +32,7 @@ function test_gr_plots(file_path::String)
             stair = true,
             load = true,
             curtailment = true,
+            reserves = true,
         )
         PG.fuel_plot(
             results_uc;
@@ -38,6 +41,7 @@ function test_gr_plots(file_path::String)
             title = "Fuel_stack",
             load = true,
             curtailment = true,
+            reserves = true,
         )
         PG.fuel_plot(
             [results_ed];
@@ -47,6 +51,7 @@ function test_gr_plots(file_path::String)
             title = "Fuel_stair",
             load = true,
             curtailment = true,
+            reserves = true,
         )
         list = readdir(path)
         expected_files = [
@@ -72,6 +77,8 @@ function test_gr_plots(file_path::String)
             "Curtailment_Bar.png",
             "Curtailment_Stack.png",
             "Curtailment_Stair.png",
+            "Down_Reserves.png",
+            "Up_Reserves.png",
         ]
         # expected results not created
         @test isempty(setdiff(expected_files, list))

@@ -1104,6 +1104,56 @@ function build_c_sys5_hy_uc(; kwargs...)
         end
     end
 
+    if get(kwargs, :add_reserves, false)
+        reserve_uc = reserve5(get_components(ThermalStandard, c_sys5_hy_uc))
+        add_service!(
+            c_sys5_hy_uc,
+            reserve_uc[1],
+            get_components(ThermalStandard, c_sys5_hy_uc),
+        )
+        add_service!(
+            c_sys5_hy_uc,
+            reserve_uc[2],
+            [collect(get_components(ThermalStandard, c_sys5_hy_uc))[end]],
+        )
+        add_service!(
+            c_sys5_hy_uc,
+            reserve_uc[3],
+            get_components(ThermalStandard, c_sys5_hy_uc),
+        )
+        # ORDC Curve
+        add_service!(
+            c_sys5_hy_uc,
+            reserve_uc[4],
+            get_components(ThermalStandard, c_sys5_hy_uc),
+        )
+        for serv in get_components(VariableReserve, c_sys5_hy_uc)
+            forecast_data = SortedDict{Dates.DateTime, TimeArray}()
+            for t in 1:2
+                ini_time = TS.timestamp(Reserve_ts[t])[1]
+                forecast_data[ini_time] = Reserve_ts[t]
+            end
+            add_time_series!(
+                c_sys5_hy_uc,
+                serv,
+                Deterministic("requirement", forecast_data),
+            )
+        end
+        for (ix, serv) in enumerate(get_components(ReserveDemandCurve, c_sys5_hy_uc))
+            forecast_data = SortedDict{Dates.DateTime, Vector{IS.PWL}}()
+            for t in 1:2
+                ini_time = TS.timestamp(ORDC_cost_ts[t])[1]
+                forecast_data[ini_time] = TimeSeries.values(ORDC_cost_ts[t])
+            end
+            resolution = TS.timestamp(ORDC_cost_ts[1])[2] - TS.timestamp(ORDC_cost_ts[1])[1]
+            set_variable_cost!(
+                c_sys5_hy_uc,
+                serv,
+                Deterministic("variable_cost", forecast_data, resolution),
+            )
+        end
+    end
+
     return c_sys5_hy_uc
 end
 

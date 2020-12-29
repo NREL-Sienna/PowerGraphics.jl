@@ -85,33 +85,35 @@ function _filter_results(results::IS.Results; kwargs...)
     return new_results
 end
 
-function _filter_reserves(results::IS.Results, reserves::Bool)
-    #TODO: This isn't implemented
-    return nothing
-    #=
-    filter_up_reserves = Dict()
-    filter_down_reserves = Dict()
-    if reserves
-        for (key, var) in IS.get_variables(results)
-            if occursin("__", "$key")
-                ending = split("$key", "__")[2]
-                if in(ending, UP_RESERVES)
-                    filter_up_reserves[key] = var
-                elseif in(ending, DOWN_RESERVES)
-                    filter_down_reserves[key] = var
-                end
-            end
+function _filter_reserves(results::IS.Results; initial_time = nothing, len = nothing)
+    filter_up_reserves = Vector{Symbol}()
+    filter_down_reserves = Vector{Symbol}()
+    for key in PSI.get_existing_variables(results)
+        if any(endswith.(string(key), UP_RESERVES))
+            push!(filter_up_reserves, key)
+        elseif any(endswith.(string(key), DOWN_RESERVES))
+            push!(filter_down_reserves, key)
         end
-        if isempty(filter_up_reserves) && isempty(filter_down_reserves)
-            @warn "No reserves found in results."
-            return nothing
-        else
-            return Dict("Up" => filter_up_reserves, "Down" => filter_down_reserves)
-        end
-    else
-        return nothing
     end
-    =#
+    if isempty(filter_up_reserves) && isempty(filter_down_reserves)
+        @warn "No reserves found in results."
+        return nothing
+    else
+        return Dict(
+            "Up" => PSI.read_realized_variables(
+                results,
+                names = filter_up_reserves,
+                initial_time = initial_time,
+                len = len,
+            ),
+            "Down" => PSI.read_realized_variables(
+                results,
+                names = filter_down_reserves,
+                initial_time = initial_time,
+                len = len,
+            ),
+        )
+    end
 end
 
 function _curtailment_parameters(parameters::Vector{Symbol}, variables::Vector{Symbol})
@@ -360,7 +362,7 @@ function bar_plot(results::Array; kwargs...)
     reserves = []
     pg_results = []
     for result in results
-        push!(reserves, _filter_reserves(result, reserve))
+        push!(reserves, reserve ? _filter_reserves(result) : nothing)
         push!(pg_results, _filter_results(result; kwargs...))
     end
 
@@ -456,7 +458,7 @@ function stack_plot(results::Array{}; kwargs...)
     reserves = []
     pg_results = []
     for result in results
-        push!(reserves, _filter_reserves(result, reserve))
+        push!(reserves, reserve ? _filter_reserves(result) : nothing)
         push!(pg_results, _filter_results(result; kwargs...))
     end
 
