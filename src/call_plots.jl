@@ -363,11 +363,13 @@ function bar_plot(results::Array; kwargs...)
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     reserve = get(kwargs, :reserves, false)
+    initial_time = get(kwargs, :initial_time, nothing)
+    len = get(kwargs, :horizon, nothing)
 
     reserves = []
     pg_results = []
     for result in results
-        push!(reserves, reserve ? _filter_reserves(result) : nothing)
+        push!(reserves, reserve ? _filter_reserves(result, initial_time = initial_time, len = len) : nothing)
         push!(pg_results, _filter_results(result; kwargs...))
     end
 
@@ -455,6 +457,8 @@ function stack_plot(results::Array{}; kwargs...)
     set_display = get(kwargs, :set_display, true)
     save_fig = get(kwargs, :save, nothing)
     reserve = get(kwargs, :reserves, false)
+    initial_time = get(kwargs, :initial_time, nothing)
+    len = get(kwargs, :horizon, nothing)
     if get(kwargs, :stair, false)
         kwargs = hcat(kwargs..., :stairs => "hv")
         kwargs = hcat(kwargs..., :linetype => :steppost)
@@ -463,7 +467,7 @@ function stack_plot(results::Array{}; kwargs...)
     reserves = []
     pg_results = []
     for result in results
-        push!(reserves, reserve ? _filter_reserves(result) : nothing)
+        push!(reserves, reserve ? _filter_reserves(result, initial_time = initial_time, len = len) : nothing)
         push!(pg_results, _filter_results(result; kwargs...))
     end
 
@@ -718,43 +722,6 @@ end
 function plot_forecast(forecast; kwargs...)
 end
 =#
-
-############################### Reserve Plot ################################
-
-"""
-    plot_reserves(results)
-
-This function makes a stack plot of the reserves in results.
-
-# Arguments
-
-- `results::IS.Results`: The results to be plotted
- or
-- `Array::Array{IS.Results}`: An array of multiple results to be plotted
-
-# Example
-
-```julia
-plot = plot_reserves(results)
-```
-or
-
-```julia
-plot = plot_reserves([results, results])
-```
-# Accepted Key Words
-- `display::Bool`: set to false to prevent the plots from displaying
-- `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
-- `seriescolor::Array`: Set different colors for the plots
-- `title::String = "Title"`: Set a title for the plots
-- `stair::Bool`: Makes a stair plot instead
-"""
-function plot_reserves(res::Union{IS.Results, Array}; kwargs...)
-    backend = Plots.backend()
-    plot_list = _reserve_plot(res, backend; kwargs...)
-    return plot_list
-end
 
 ################################# Plotting a Single Variable ##########################
 

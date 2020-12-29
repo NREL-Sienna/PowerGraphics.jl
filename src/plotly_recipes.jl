@@ -806,63 +806,6 @@ function _demand_plot_internal(
     return PlotList(plot_list)
 end
 
-function _reserve_plot(res::IS.Results, backend::Plots.PlotlyJSBackend; kwargs...)
-    reserves = _filter_reserves(res, true)
-    seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
-    set_display = get(kwargs, :display, true)
-    line_shape = get(kwargs, :stair, false) ? "hv" : "linear"
-    save_fig = get(kwargs, :save, nothing)
-    ylabel = _make_ylabel(IS.get_base_power(res))
-    time_range = IS.get_timestamp(res)[:, 1]
-    format = get(kwargs, :format, "png")
-    plot_list = Dict()
-    isnothing(reserves) && @error "No reserves found in results."
-    for (key, reserve) in reserves
-        stack_data = []
-        stack_gens = []
-        stack_traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
-        for (k, v) in reserve
-            stack_data = vcat(stack_data, [sum(convert(Matrix, v), dims = 2)])
-            stack_gens = vcat(stack_gens, k)
-        end
-        stack_data = hcat(stack_data...)
-        up_seriescolor = set_seriescolor(seriescolor, stack_gens)
-        for gen in 1:size(stack_gens, 1)
-            stackgroup = get(kwargs, :stack, false) ? "one" : "$gen"
-            fillcolor = get(kwargs, :stack, false) ? up_seriescolor[gen] : "transparent"
-            push!(
-                stack_traces,
-                Plots.PlotlyJS.scatter(;
-                    name = stack_gens[gen],
-                    x = time_range,
-                    y = stack_data[:, gen],
-                    stackgroup = stackgroup,
-                    mode = "lines",
-                    line_shape = line_shape,
-                    fill = "tonexty",
-                    line_color = up_seriescolor[gen],
-                    fillcolor = fillcolor,
-                    showlegend = true,
-                ),
-            )
-        end
-        stack_plot = Plots.PlotlyJS.plot(
-            stack_traces,
-            Plots.PlotlyJS.Layout(title = "$(key) Reserves", yaxis_title = ylabel),
-        )
-        set_display && Plots.display(stack_plot)
-        if !isnothing(save_fig)
-            Plots.PlotlyJS.savefig(
-                stack_plot,
-                joinpath(save_fig, "$(key)_Reserves.$format");
-                width = 800,
-                height = 450,
-            )
-        end
-        plot_list[Symbol("$(key)_Reserves")] = stack_plot
-    end
-end
-
 function _variable_plots_internal(
     p::Plots.Plot{Plots.PlotlyJSBackend},
     variable::DataFrames.DataFrame,

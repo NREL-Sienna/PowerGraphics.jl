@@ -498,50 +498,6 @@ function _demand_plot_internal(
     return PlotList(plot_list)
 end
 
-function _reserve_plot(res::IS.Results, backend::Any; kwargs...)
-    reserves = _filter_reserves(res, true)
-    time_range = IS.get_timestamp(res)[:, 1]
-    time_interval =
-        IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
-    seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
-    set_display = get(kwargs, :display, true)
-    linetype = get(kwargs, :stair, false) ? :steppost : :line
-    save_fig = get(kwargs, :save, nothing)
-    ylabel = _make_ylabel(IS.get_base_power(res))
-    plot_list = Dict()
-    isnothing(reserves) && @error "No reserves found in results."
-    for (key, reserve) in reserves
-        data = []
-        for (k, v) in reserve
-            data = vcat(data, [sum(convert(Matrix, v), dims = 2)])
-        end
-        data = hcat(data...)
-        stack_data = get(kwargs, :stack, false) ? cumsum(data, dims = 2) : data
-        fillrange =
-            get(kwargs, :stack, false) ?
-            fillrange = hcat(zeros(length(time_range)), stack_data) : nothing
-        r_plot = Plots.plot(
-            time_range,
-            stack_data;
-            seriescolor = seriescolor,
-            ylabel = ylabel,
-            xlabel = "$time_interval",
-            xtick = [time_range[1], last(time_range)],
-            grid = false,
-            lab = hcat((string.(keys(reserve)))...),
-            title = "$(key) Reserves",
-            legend = :outerright,
-            linetype = linetype,
-            fillrange = fillrange,
-        )
-        set_display && display(r_plot)
-        !isnothing(save_fig) &&
-            Plots.savefig(r_plot, joinpath(save_fig, "Stack_$(key)_Reserves.png"))
-        plot_list[Symbol("Stack_$(key)_Reserves")] = r_plot
-    end
-    return PlotList(plot_list)
-end
-
 function _variable_plots_internal(
     plot::Any,
     variable::DataFrames.DataFrame,

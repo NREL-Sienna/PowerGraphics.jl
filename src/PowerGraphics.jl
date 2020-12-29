@@ -13,7 +13,6 @@ export plot_variable
 export plot_dataframe
 export make_fuel_dictionary
 export fuel_plot
-export plot_reserves
 export match_fuel_colors
 export sort_data
 import Dates
