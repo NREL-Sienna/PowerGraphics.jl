@@ -1,15 +1,24 @@
 file_path = TEST_OUTPUTS
 
-function test_gr_plots(file_path::String)
+function test_plots(file_path::String; backend_pkg::String = "gr")
+    if backend_pkg == "gr"
+        Plots.gr()
+    elseif backend_pkg == "plotlyjs"
+        Plots.plotlyjs()
+    else
+        throw(error("$backend_pkg backend_pkg not supported"))
+    end
+    display = false
+
     (results_uc, results_ed) = run_test_sim(TEST_RESULT_DIR)
 
-    @testset "test GR plot production" begin
-        path = joinpath(file_path, "plots")
+    @testset "test $backend_pkg plot production" begin
+        path = joinpath(file_path, backend_pkg * "_plots")
         !isdir(path) && mkdir(path)
         PG.bar_plot(
             results_uc;
             save = path,
-            display = false,
+            display = display,
             title = "Title_Bar",
             load = true,
             curtailment = true,
@@ -18,7 +27,7 @@ function test_gr_plots(file_path::String)
         PG.stack_plot(
             results_uc;
             save = path,
-            display = false,
+            display = display,
             title = "Title_Stack",
             load = true,
             curtailment = true,
@@ -27,7 +36,7 @@ function test_gr_plots(file_path::String)
         PG.stack_plot(
             [results_uc];
             save = path,
-            display = false,
+            display = display,
             title = "Title_Stair",
             stair = true,
             load = true,
@@ -37,7 +46,7 @@ function test_gr_plots(file_path::String)
         PG.fuel_plot(
             results_uc;
             save = path,
-            display = false,
+            display = display,
             title = "Fuel_stack",
             load = true,
             curtailment = true,
@@ -47,7 +56,7 @@ function test_gr_plots(file_path::String)
             [results_ed];
             save = path,
             stair = true,
-            display = false,
+            display = display,
             title = "Fuel_stair",
             load = true,
             curtailment = true,
@@ -89,22 +98,22 @@ function test_gr_plots(file_path::String)
         rm(path, recursive = true)
     end
 
-    @testset "test fewer variable GR plot production" begin
-        path = joinpath(file_path, "select_vars")
+    @testset "test fewer variable $backend_pkg plot production" begin
+        path = joinpath(file_path, backend_pkg * "_select_vars")
         !isdir(path) && mkdir(path)
         variables = [:P__ThermalStandard]
         PG.bar_plot(
             results_uc;
             names = variables,
             save = path,
-            display = false,
+            display = display,
             title = "Title_Bar",
         )
         PG.stack_plot(
             results_uc;
             names = variables,
             save = path,
-            display = false,
+            display = display,
             title = "Title_Stack",
             load = true,
         )
@@ -112,7 +121,7 @@ function test_gr_plots(file_path::String)
             results_uc;
             names = variables,
             save = path,
-            display = false,
+            display = display,
             stair = true,
             title = "Title_Stair",
         )
@@ -120,7 +129,7 @@ function test_gr_plots(file_path::String)
             results_uc;
             names = variables,
             save = path,
-            display = false,
+            display = display,
             title = "Title_fuel",
         )
         list = readdir(path)
@@ -143,13 +152,13 @@ function test_gr_plots(file_path::String)
         rm(path, recursive = true)
     end
 
-    @testset "test multi GR plot production" begin
-        path = joinpath(file_path, "multi-plots")
+    @testset "test multi $backend_pkg plot production" begin
+        path = joinpath(file_path, backend_pkg * "_multi-plots")
         !isdir(path) && mkdir(path)
         PG.bar_plot(
             [results_uc; results_uc];
             save = path,
-            display = false,
+            display = display,
             title = "Title_Bar",
         )
         PG.stack_plot(
@@ -157,13 +166,13 @@ function test_gr_plots(file_path::String)
             save = path,
             load = true,
             curtailment = true,
-            display = false,
+            display = display,
             title = "Title_Stack",
         )
         PG.fuel_plot(
             [results_uc; results_uc],
             save = path,
-            display = false,
+            display = display,
             title = "Title_fuel",
         )
         list = readdir(path)
@@ -193,28 +202,47 @@ function test_gr_plots(file_path::String)
         rm(path, recursive = true)
     end
 
-    @testset "Test demand GR plot production" begin
-        path = joinpath(file_path, "demand")
+    @testset "Test demand $backend_pkg plot production" begin
+        path = joinpath(file_path, backend_pkg * "_demand")
         !isdir(path) && mkdir(path)
 
-        PG.plot_demand(results_ed; title = "Plot", save = path)
-        PG.plot_demand([results_uc, results_ed]; title = "Multi-Plot", save = path)
-        PG.plot_demand(results_ed; title = "Plot_Stair", stair = true, save = path)
+        PG.plot_demand(results_ed; title = "Plot", save = path, display = display)
+        # TODO: this should create two multi-plots
+        PG.plot_demand(
+            [results_uc, results_ed];
+            title = "Multi-Plot",
+            save = path,
+            display = display,
+        )
+        PG.plot_demand(
+            results_ed;
+            title = "Plot_Stair",
+            stair = true,
+            save = path,
+            display = display,
+        )
         PG.plot_demand(
             results_ed;
             title = "Plot_Shorten",
             save = path,
+            display = display,
             horizon = 6,
             initial_time = Dates.DateTime(2024, 1, 1, 2, 0, 0),
         )
 
         test_sys = get_system(results_uc)
-        PG.plot_demand(test_sys; title = "System", save = path)
-        PG.plot_demand([test_sys, test_sys]; title = "Systems", save = path)
+        PG.plot_demand(test_sys; title = "System", save = path, display = display)
+        PG.plot_demand(
+            [test_sys, test_sys];
+            title = "Systems",
+            save = path,
+            display = display,
+        )
         PG.plot_demand(
             test_sys;
             title = "System_Shorten",
             save = path,
+            display = display,
             horizon = 6,
             initial_time = Dates.DateTime(2024, 1, 2, 0, 0, 0),
         )
@@ -237,17 +265,24 @@ function test_gr_plots(file_path::String)
         rm(path, recursive = true)
     end
 
-    @testset "Test variable GR plot production" begin
-        path = joinpath(file_path, "variable")
+    @testset "Test variable $backend_pkg plot production" begin
+        path = joinpath(file_path, backend_pkg * "_variable")
         !isdir(path) && mkdir(path)
 
-        p = PG.plot_variable(results_ed, :P__ThermalStandard; title = "Plot", save = path)
+        p = PG.plot_variable(
+            results_ed,
+            :P__ThermalStandard;
+            title = "Plot",
+            save = path,
+            display = display,
+        )
         PG.plot_variable(
             p,
             results_uc,
             :P__RenewableDispatch;
             title = "Plot-RE",
             save = path,
+            display = display,
         )
         PG.plot_variable(
             results_uc,
@@ -255,6 +290,7 @@ function test_gr_plots(file_path::String)
             initial_time = Dates.DateTime("2024-01-02T15:00:00"),
             title = "Plot-short",
             save = path,
+            display = display,
         )
 
         list = readdir(path)
@@ -268,17 +304,25 @@ function test_gr_plots(file_path::String)
         rm(path, recursive = true)
     end
 
-    @testset "Test dataframe GR plot production" begin
-        path = joinpath(file_path, "dataframe")
+    @testset "Test dataframe $backend_pkg plot production" begin
+        path = joinpath(file_path, backend_pkg * "_dataframe")
         !isdir(path) && mkdir(path)
 
         var_name = :P__ThermalStandard
         df = PSI.read_realized_variables(results_uc, names = [var_name])[var_name]
         time_range = PSI.get_realized_timestamps(results_uc)
-        plot = plot_dataframe(df, time_range; title = "Plot", save = path)
+        plot =
+            plot_dataframe(df, time_range; title = "Plot", save = path, display = display)
         param_name = :In__inflow__HydroEnergyReservoir
         df = PSI.read_realized_parameters(results_uc, names = [param_name])[param_name]
-        plot_dataframe(plot, df, time_range; title = "Plot-2", save = path)
+        plot_dataframe(
+            plot,
+            df,
+            time_range;
+            title = "Plot-2",
+            save = path,
+            display = display,
+        )
         list = readdir(path)
         expected_files = ["Plot-2.png", "Plot.png"]
         # expected results not created
@@ -291,7 +335,8 @@ function test_gr_plots(file_path::String)
     end
 end
 try
-    test_gr_plots(file_path)
+    test_plots(file_path, backend_pkg = "gr")
+    test_plots(file_path, backend_pkg = "plotlyjs")
 finally
     nothing
 end

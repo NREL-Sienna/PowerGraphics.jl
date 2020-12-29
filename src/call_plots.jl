@@ -181,6 +181,11 @@ function _filter_parameters(
     return parameter_values
 end
 
+function _empty_plot()
+    backend = Plots.backend()
+    return _empty_plot(backend)
+end
+
 """
     fuel_plot(results)
 
@@ -354,7 +359,7 @@ plot = bar_plot([results1; results2])
 """
 
 function bar_plot(results::Array; kwargs...)
-    backend = Plots.backend()
+    plt_backend = Plots.backend()
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     reserve = get(kwargs, :reserves, false)
@@ -375,7 +380,7 @@ function bar_plot(results::Array; kwargs...)
     interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
     plots = _bar_plot_internal(
         pg_results,
-        backend,
+        plt_backend,
         save_fig,
         set_display,
         interval,
@@ -780,7 +785,7 @@ plot = plot_variable(res, variable)
 - `load::Bool`: plot the load with the variable
 """
 function plot_variable(result::IS.Results, variable_name::Union{Symbol, String}; kwargs...)
-    return plot_variable(Plots.plot(), result, variable_name; kwargs...)
+    return plot_variable(_empty_plot(), result, variable_name; kwargs...)
 end
 
 """
@@ -868,7 +873,7 @@ function plot_dataframe(
     time_range::Union{DataFrames.DataFrame, Array, StepRange};
     kwargs...,
 )
-    return plot_dataframe(Plots.plot(), variable, time_range; kwargs...)
+    return plot_dataframe(_empty_plot(), variable, time_range; kwargs...)
 end
 
 """
