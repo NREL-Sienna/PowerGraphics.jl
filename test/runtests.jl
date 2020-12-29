@@ -47,7 +47,7 @@ macro includetests(testarg...)
         tests = $tests
         rootfile = TEST_DIR
         if length(tests) == 0
-            tests = readdir(dirname(rootfile))
+            tests = readdir(rootfile)
             tests = filter(
                 f ->
                     startswith(f, "test_") && endswith(f, ".jl") && f != basename(rootfile),
