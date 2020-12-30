@@ -40,6 +40,7 @@ include("fuel_results.jl")
 include("plot_recipes.jl")
 include("plotly_recipes.jl")
 include("call_plots.jl")
+include("plot_data.jl")
 
 function __init__()
     Requires.@require Weave = "44d3d7a6-8a23-5bf8-98c5-b353f8df5ec9" include("make_report.jl")

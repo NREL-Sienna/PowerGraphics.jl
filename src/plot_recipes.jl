@@ -532,34 +532,72 @@ function _dataframe_plots_internal(
 )
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
     save_fig = get(kwargs, :save, nothing)
-    unit = get(kwargs, :y_label, nothing)
-    y_label = isnothing(unit) ? "Generation per unit" : unit
+    y_label = get(kwargs, :y_label, "")
+    title = get(kwargs, :title, " ")
+    stack = get(kwargs, :stack, false)
+
     time_interval =
         IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
+    interval = Dates.Millisecond(Dates.Hour(1)) / Dates.Millisecond(time_range[2] - time_range[1])
+
     plot_list = Dict()
     data = convert(Matrix, variable)
-    plot_data = get(kwargs, :stack, false) ? cumsum(data, dims = 2) : data
-    fillrange =
-        get(kwargs, :stack, false) ?
-        fillrange = hcat(zeros(length(time_range)), plot_data) : nothing
-    linetype = get(kwargs, :stair, false) ? :steppost : :line
-    title = get(kwargs, :title, " ")
+
     isnothing(plot) && _empty_plot()
-    p = Plots.plot!(
-        time_range,
-        plot_data;
-        seriescolor = seriescolor,
-        ylabel = y_label,
-        xlabel = "$time_interval",
-        xtick = [time_range[1], last(time_range)],
-        grid = false,
-        lab = hcat(string.(names(variable))...),
-        title = title,
-        legend = :outerright,
-        linetype = linetype,
-        fillrange = fillrange,
-    )
-    title = title == " " ? "Generation" : title
+
+    if stack
+        plot_data = cumsum(data, dims = 2)
+        fillrange = hcat(zeros(length(time_range)), plot_data)
+    else
+        plot_data = data
+        fillrange = nothing
+    end
+
+    if get(kwargs, :bar, false)
+        plot_data = sum(plot_data, dims = 1) ./ interval
+        if stack
+            x = nothing
+            plot_data = plot_data[end:-1:1,end:-1:1]
+            legend = :outerright
+            lab = hcat(string.(names(variable))...)[end:-1:1,end:-1:1]
+            n = length(lab)
+            seriescolor = seriescolor[:,n:-1:1]
+
+        else
+            x = names(variable)
+            plot_data = permutedims(plot_data)
+            seriescolor = permutedims(seriescolor)
+            legend = false
+            lab = hcat(string.(names(variable))...)
+        end
+        p = Plots.bar!(
+            x,
+            plot_data;
+            seriescolor = seriescolor,
+            lab = lab,
+            legend = legend,
+            title = title,
+            xlabel = "$time_interval",
+        )
+    else
+        linetype = get(kwargs, :stair, false) ? :steppost : :line
+        p = Plots.plot!(
+            time_range,
+            plot_data;
+            seriescolor = seriescolor,
+            ylabel = y_label,
+            xlabel = "$time_interval",
+            xtick = [time_range[1], last(time_range)],
+            grid = false,
+            lab = hcat(string.(names(variable))...),
+            title = title,
+            legend = :outerright,
+            linetype = linetype,
+            fillrange = fillrange,
+        );
+    end
+    get(kwargs, :set_display, false) && display(p)
+    title = title == " " ? "dataframe" : title
     !isnothing(save_fig) && Plots.savefig(p, joinpath(save_fig, "$(title).png"))
     return p
 end

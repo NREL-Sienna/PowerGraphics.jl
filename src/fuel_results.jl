@@ -207,7 +207,7 @@ function get_stacked_aggregation_data(result::IS.Results, generator_dict::Dict)
         end
     end
 
-    # TODO: thee following is a hacky way to add the unserved energy slacks to plots
+    # TODO: the following is a hacky way to add the unserved energy slacks to plots
     if UNSERVEDENERGY_VARIABLE in keys(result.variable_values)
         push!(legend, "Unserved Energy")
         push!(
@@ -215,7 +215,7 @@ function get_stacked_aggregation_data(result::IS.Results, generator_dict::Dict)
             sum(Matrix(result.variable_values[UNSERVEDENERGY_VARIABLE]), dims = 2),
         )
     end
-    # TODO: thee following is a hacky way to add the over generation slacks to plots
+    # TODO: the following is a hacky way to add the over generation slacks to plots
     if OVERGENERATION_VARIABLE in keys(result.variable_values)
         push!(legend, "Over Generation")
         push!(
