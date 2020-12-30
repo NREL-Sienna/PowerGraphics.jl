@@ -5,7 +5,10 @@ struct PGData
 end
 
 #### Generation Names ####
-function get_generation_variable_names(results::IS.Results; names::Union{Nothing, Vector{Symbol}} = nothing)
+function get_generation_variable_names(
+    results::IS.Results;
+    names::Union{Nothing, Vector{Symbol}} = nothing,
+)
     existing_names = PSI.get_existing_variables(results)
     names = isnothing(names) ? existing_names : [n for n in names if n ∈ existing_names]
     filter_names = Vector{Symbol}()
@@ -22,7 +25,10 @@ function get_generation_variable_names(results::IS.Results; names::Union{Nothing
     return filter_names
 end
 
-function get_generation_parameter_names(results::IS.Results; names::Union{Nothing, Vector{Symbol}} = nothing)
+function get_generation_parameter_names(
+    results::IS.Results;
+    names::Union{Nothing, Vector{Symbol}} = nothing,
+)
     existing_names = PSI.get_existing_parameters(results)
     names = isnothing(names) ? existing_names : [n for n in names if n ∈ existing_names]
     filter_names = Vector{Symbol}()
@@ -38,7 +44,10 @@ function get_generation_parameter_names(results::IS.Results; names::Union{Nothin
 end
 
 #### Load Names ####
-function get_load_variable_names(results::IS.Results; names::Union{Nothing, Vector{Symbol}} = nothing)
+function get_load_variable_names(
+    results::IS.Results;
+    names::Union{Nothing, Vector{Symbol}} = nothing,
+)
     existing_names = PSI.get_existing_variables(results)
     names = isnothing(names) ? existing_names : [n for n in names if n ∈ existing_names]
     filter_names = Vector{Symbol}()
@@ -53,7 +62,10 @@ function get_load_variable_names(results::IS.Results; names::Union{Nothing, Vect
     return filter_names
 end
 
-function get_load_parameter_names(results::IS.Results; names::Union{Nothing, Vector{Symbol}} = nothing)
+function get_load_parameter_names(
+    results::IS.Results;
+    names::Union{Nothing, Vector{Symbol}} = nothing,
+)
     existing_names = PSI.get_existing_parameters(results)
     names = isnothing(names) ? existing_names : [n for n in names if n ∈ existing_names]
     filter_names = Vector{Symbol}()
@@ -69,7 +81,10 @@ function get_load_parameter_names(results::IS.Results; names::Union{Nothing, Vec
 end
 
 #### Service Names ####
-function get_service_variable_names(results::IS.Results; names::Union{Nothing, Vector{Symbol}} = nothing)
+function get_service_variable_names(
+    results::IS.Results;
+    names::Union{Nothing, Vector{Symbol}} = nothing,
+)
     existing_names = PSI.get_existing_variables(results)
     names = isnothing(names) ? existing_names : [n for n in names if n ∈ existing_names]
     filter_names = Vector{Symbol}()
@@ -82,7 +97,10 @@ function get_service_variable_names(results::IS.Results; names::Union{Nothing, V
     return filter_names
 end
 
-function get_service_parameter_names(results::IS.Results; names::Union{Nothing, Vector{Symbol}} = nothing)
+function get_service_parameter_names(
+    results::IS.Results;
+    names::Union{Nothing, Vector{Symbol}} = nothing,
+)
     existing_names = PSI.get_existing_parameters(results)
     names = isnothing(names) ? existing_names : [n for n in names if n ∈ existing_names]
     filter_names = Vector{Symbol}()
@@ -105,7 +123,10 @@ function _get_matching_var(param_name)
     return Symbol(replace(string(param_name), SUPPORTEDPARAMPREFIX => SUPPORTEDVARPREFIX))
 end
 
-function add_fixed_parameters!(variables::Dict{Symbol,DataFrames.DataFrame}, parameters::Dict{Symbol,DataFrames.DataFrame})
+function add_fixed_parameters!(
+    variables::Dict{Symbol, DataFrames.DataFrame},
+    parameters::Dict{Symbol, DataFrames.DataFrame},
+)
     # fixed output should be added to plots when there exists a parameter of the form
     # :P__max_active_power__* but there is no corresponding :P__* variable
     for (param_name, param) in parameters
@@ -163,18 +184,28 @@ function get_generation_data(results::PSI.StageResults; kwargs...)
     var_names = get_generation_variable_names(results; names = names)
     param_names = get_generation_parameter_names(results; names = names)
 
-    variables = PSI.read_realized_variables(results; names = var_names, initial_time = initial_time, len = len)
-    parameters = PSI.read_realized_parameters(results; names = param_names, initial_time = initial_time, len = len)
+    variables = PSI.read_realized_variables(
+        results;
+        names = var_names,
+        initial_time = initial_time,
+        len = len,
+    )
+    parameters = PSI.read_realized_parameters(
+        results;
+        names = param_names,
+        initial_time = initial_time,
+        len = len,
+    )
 
     add_fixed_parameters!(variables, parameters)
 
     if curtailment
-        curtailment_parameters =
-            _curtailment_parameters(param_names, var_names)
+        curtailment_parameters = _curtailment_parameters(param_names, var_names)
         _filter_curtailment!(variables, parameters, curtailment_parameters)
     end
 
-    timestamps = PSI.get_realized_timestamps(results; initial_time = initial_time, len = len )
+    timestamps =
+        PSI.get_realized_timestamps(results; initial_time = initial_time, len = len)
     return PGData(variables, timestamps)
 end
 
@@ -186,12 +217,23 @@ function get_load_data(results::PSI.StageResults; kwargs...)
     var_names = get_load_variable_names(results; names = names)
     param_names = get_load_parameter_names(results; names = names)
 
-    variables = PSI.read_realized_variables(results; names = var_names, initial_time = initial_time, len = len)
-    parameters = PSI.read_realized_parameters(results; names = param_names, initial_time = initial_time, len = len)
+    variables = PSI.read_realized_variables(
+        results;
+        names = var_names,
+        initial_time = initial_time,
+        len = len,
+    )
+    parameters = PSI.read_realized_parameters(
+        results;
+        names = param_names,
+        initial_time = initial_time,
+        len = len,
+    )
 
     add_fixed_parameters!(variables, parameters)
 
-    timestamps = PSI.get_realized_timestamps(results; initial_time = initial_time, len = len )
+    timestamps =
+        PSI.get_realized_timestamps(results; initial_time = initial_time, len = len)
     return PGData(variables, timestamps)
 end
 
@@ -202,8 +244,14 @@ function get_service_data(results::PSI.StageResults; kwargs...)
 
     var_names = get_service_variable_names(results; names = names)
 
-    variables = PSI.read_realized_variables(results; names = var_names, initial_time = initial_time, len = len)
-    timestamps = PSI.get_realized_timestamps(results; initial_time = initial_time, len = len )
+    variables = PSI.read_realized_variables(
+        results;
+        names = var_names,
+        initial_time = initial_time,
+        len = len,
+    )
+    timestamps =
+        PSI.get_realized_timestamps(results; initial_time = initial_time, len = len)
 
     return PGData(variables, timestamps)
 end
@@ -220,13 +268,16 @@ PG.combine_categories(gen_uc.data)
 ```
 
 """
-function combine_categories(data::Union{Dict{Symbol, DataFrames.DataFrame}, Dict{String, DataFrames.DataFrame}}; names::Union{Vector{String}, Vector{Symbol}, Nothing} = nothing, agg::Union{Function, Nothing} = nothing)
-    agg = isnothing(agg) ? x->sum(x, dims = 2) : agg
+function combine_categories(
+    data::Union{Dict{Symbol, DataFrames.DataFrame}, Dict{String, DataFrames.DataFrame}};
+    names::Union{Vector{String}, Vector{Symbol}, Nothing} = nothing,
+    agg::Union{Function, Nothing} = nothing,
+)
+    agg = isnothing(agg) ? x -> sum(x, dims = 2) : agg
     names = isnothing(names) ? keys(data) : names
     data = hcat([agg(Matrix(data[k])) for k in names]...)
     return DataFrames.DataFrame(data, string.(collect(names)))
 end
-
 
 """
 Re-categorizes data according to an aggregation dictionary
@@ -240,7 +291,11 @@ PG.categorize_data(gen_uc.data, aggregation)
 ```
 
 """
-function categorize_data(data::Dict{Symbol, DataFrames.DataFrame}, aggregation::Dict; curtailment = true)
+function categorize_data(
+    data::Dict{Symbol, DataFrames.DataFrame},
+    aggregation::Dict;
+    curtailment = true,
+)
     category_dataframes = Dict{String, DataFrames.DataFrame}()
     var_types = Dict(zip(last.(split.(string.(keys(data)), "_")), keys(data)))
     for (category, list) in aggregation
@@ -249,7 +304,8 @@ function categorize_data(data::Dict{Symbol, DataFrames.DataFrame}, aggregation::
             if haskey(var_types, tuple[1])
                 category_data = data[var_types[tuple[1]]]
                 colname =
-                    typeof(names(category_data)[1]) == String ? "$(tuple[2])" : Symbol(tuple[2])
+                    typeof(names(category_data)[1]) == String ? "$(tuple[2])" :
+                    Symbol(tuple[2])
                 DataFrames.insertcols!(
                     category_df,
                     (colname => category_data[:, colname]),

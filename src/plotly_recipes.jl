@@ -304,7 +304,6 @@ function plotly_fuel_stack_gen(
     return plots
 end
 
-
 ############################# PLOTLYJS BAR ##############################################
 
 function _bar_plot_internal(

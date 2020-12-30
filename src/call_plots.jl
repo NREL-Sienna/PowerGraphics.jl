@@ -183,7 +183,6 @@ function _filter_parameters(
 end
 =#
 
-
 function _empty_plot()
     backend = Plots.backend()
     return _empty_plot(backend)
@@ -449,7 +448,7 @@ plot = plot_demand(res)
 function plot_demand(result::IS.Results; kwargs...)
     return plot_demand(nothing, result; kwargs...)
 end
-function plot_demand(p::Union{Plots.Plot, Nothing} ,result::IS.Results; kwargs...)
+function plot_demand(p::Union{Plots.Plot, Nothing}, result::IS.Results; kwargs...)
     backend = Plots.backend()
     set_display = get(kwargs, :set_display, true)
     save_fig = get(kwargs, :save, nothing)
@@ -457,19 +456,22 @@ function plot_demand(p::Union{Plots.Plot, Nothing} ,result::IS.Results; kwargs..
 
     load = get_load_data(result; kwargs...)
     load_agg = combine_categories(load.data) .* -1.0
-    p = plot_dataframe(p, load_agg, load.time;
-        seriescolor = "black",
+    p = plot_dataframe(
+        p,
+        load_agg,
+        load.time;
+        seriescolor = ["black"],
         linestyle = :dash,
         linewidth = 3,
         y_label = _make_ylabel(result.base_power),
         title = title,
-        kwargs...
-        );
+        kwargs...,
+    )
 
     set_display && display(p)
     if !isnothing(save_fig)
         title = replace(title, " " => "_")
-        Plots.savefig(p1, joinpath(save_fig, "$(title).png"))
+        Plots.savefig(p, joinpath(save_fig, "$(title).png"))
     end
     return p
 end
@@ -493,7 +495,6 @@ function plot_demand(results::Array; kwargs...)
     end
     return PlotList(Dict(:Fuel_Stack => p1))#, :Fuel_Bar => p2))
 end
-
 
 ################################### INPUT DEMAND #################################
 
@@ -617,7 +618,6 @@ end
 """
     plot_variable(results, variable_name)
     plot_variable(plot, results, variable_name)
-
 
 This function makes a plot of a specific variable
 
@@ -754,18 +754,11 @@ plot = plot_dataframe(df, time_range)
 - `stack::Bool`: stack plot traces
 - `bar::Bool` : create bar plot
 """
-function plot_pgdata(
-    pgdata::PGData;
-    kwargs...,
-)
+function plot_pgdata(pgdata::PGData; kwargs...)
     return plot_pgdata(_empty_plot(), pgdata; kwargs...)
 end
 
-function plot_pgdata(
-    p::Any,
-    pgdata::PGData;
-    kwargs...,
-)
+function plot_pgdata(p::Any, pgdata::PGData; kwargs...)
     if get(kwargs, :combine_categories, true)
         agg = get(kwargs, :agg, nothing)
         names = get(kwargs, :names, nothing)
@@ -812,7 +805,7 @@ function plot_fuel(result::IS.Results; kwargs...)
     return plot_fuel(nothing, result; kwargs...)
 end
 
-function plot_fuel(p::Union{Plots.Plot, Nothing} ,result::IS.Results; kwargs...)
+function plot_fuel(p::Union{Plots.Plot, Nothing}, result::IS.Results; kwargs...)
     backend = Plots.backend()
     set_display = get(kwargs, :set_display, true)
     save_fig = get(kwargs, :save, nothing)
@@ -829,13 +822,15 @@ function plot_fuel(p::Union{Plots.Plot, Nothing} ,result::IS.Results; kwargs...)
     fuel_agg = combine_categories(fuel; names = intersect(CATEGORY_DEFAULT, keys(fuel)))
 
     seriescolor = get(kwargs, :seriescolor, match_fuel_colors(fuel_agg, backend))
-    p = plot_dataframe(fuel_agg, gen.time;
+    p = plot_dataframe(
+        fuel_agg,
+        gen.time;
         stack = true,
         seriescolor = seriescolor,
         y_label = _make_ylabel(result.base_power),
         title = title,
-        kwargs...
-        );
+        kwargs...,
+    )
 
     # load line
     p = plot_demand(p, result; kwargs...)
@@ -846,7 +841,7 @@ function plot_fuel(p::Union{Plots.Plot, Nothing} ,result::IS.Results; kwargs...)
     set_display && display(p)
     if !isnothing(save_fig)
         title = replace(title, " " => "_")
-        Plots.savefig(p1, joinpath(save_fig, "$(title).png"))
+        Plots.savefig(p, joinpath(save_fig, "$(title).png"))
     end
     return p
 end

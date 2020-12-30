@@ -91,10 +91,7 @@ GENERATOR_MAPPING_FILE = joinpath(
     "generator_mapping.yaml",
 )
 
-function match_fuel_colors(
-    data::DataFrames.DataFrame,
-    backend::Any
-)
+function match_fuel_colors(data::DataFrames.DataFrame, backend::Any)
     if backend == Plots.PlotlyJSBackend()
         color_range = PLOTLY_FUEL_DEFAULT
     else
@@ -105,18 +102,12 @@ function match_fuel_colors(
     default =
         [(color_fuel[findall(in(["$(names[1])"]), color_fuel.fuels), :][:, :colors])[1]]
     for i in 2:length(names)
-        @debug names[i] (color_fuel[
-            findall(in(["$(names[i])"]), color_fuel.fuels),
-            :,
-        ][
+        @debug names[i] (color_fuel[findall(in(["$(names[i])"]), color_fuel.fuels), :][
             :,
             :colors,
         ])
         specific_color =
-            (color_fuel[findall(in(["$(names[i])"]), color_fuel.fuels), :][
-                :,
-                :colors,
-            ])[1]
+            (color_fuel[findall(in(["$(names[i])"]), color_fuel.fuels), :][:, :colors])[1]
         default = hcat(default, specific_color)
     end
     return default

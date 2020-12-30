@@ -33,8 +33,10 @@ function report(res::IS.Results, out_path::String, design_template::String; kwar
     args = Dict(
         "res" => res,
         "gen" => res.system,
-        "variables" => PSI.read_realized_variables(res; initial_time = initial_time, len = len),
-        "backend" => backend)
+        "variables" =>
+            PSI.read_realized_variables(res; initial_time = initial_time, len = len),
+        "backend" => backend,
+    )
     Weave.weave(
         design_template,
         out_path = out_path,

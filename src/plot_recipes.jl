@@ -539,7 +539,8 @@ function _dataframe_plots_internal(
 
     time_interval =
         IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
-    interval = Dates.Millisecond(Dates.Hour(1)) / Dates.Millisecond(time_range[2] - time_range[1])
+    interval =
+        Dates.Millisecond(Dates.Hour(1)) / Dates.Millisecond(time_range[2] - time_range[1])
 
     plot_list = Dict()
     data = convert(Matrix, variable)
@@ -558,11 +559,11 @@ function _dataframe_plots_internal(
         plot_data = sum(plot_data, dims = 1) ./ interval
         if stack
             x = nothing
-            plot_data = plot_data[end:-1:1,end:-1:1]
+            plot_data = plot_data[end:-1:1, end:-1:1]
             legend = :outerright
-            lab = hcat(string.(names(variable))...)[end:-1:1,end:-1:1]
+            lab = hcat(string.(names(variable))...)[end:-1:1, end:-1:1]
             n = length(lab)
-            seriescolor = seriescolor[:,n:-1:1]
+            seriescolor = seriescolor[:, n:-1:1]
 
         else
             x = names(variable)
@@ -597,8 +598,8 @@ function _dataframe_plots_internal(
             legend = :outerright,
             linetype = linetype,
             fillrange = fillrange,
-            plot_kwargs...
-        );
+            plot_kwargs...,
+        )
     end
     get(kwargs, :set_display, false) && display(p)
     title = title == " " ? "dataframe" : title
