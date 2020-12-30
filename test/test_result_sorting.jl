@@ -1,3 +1,4 @@
+#=
 @testset "test results sorting" begin
     namez = collect(names(IS.get_variables(res)[:P__ThermalStandard]))
     Variabless = Dict(:P__ThermalStandard => [namez[1], namez[2]])
@@ -7,10 +8,10 @@
     @test names(IS.get_variables(sorted)[:P__ThermalStandard]) == sorted_names
     @test names(IS.get_variables(sorted_two)[:P__ThermalStandard]) == sort(namez)
 end
+=#
+(results_uc, results_ed) = run_test_sim(TEST_RESULT_DIR)
 
 @testset "test filter results" begin
-    (results_uc, results_ed) = run_test_sim(TEST_RESULT_DIR)
-
     gen = PG.get_generation_data(results_uc, curtailment = false)
     @test length(gen.data) == 4
     @test length(gen.time) == 48
@@ -34,15 +35,17 @@ end
     @test length(srv.data) == 1
     @test length(srv.time) == 5
 
+end
 
-    result = PG._filter_results(results_uc, names = Vector{Symbol}(), load = true)
-    @test isempty(IS.get_variables(result))
-    @test collect(keys(IS.get_parameters(result))) == [PG.LOAD_PARAMETER]
+@testset "test data aggregation" begin
+    gen = PG.get_generation_data(results_uc)
 
-    result = PG._filter_results(results_ed, names = Vector{Symbol}(), load = true)
-    @test collect(keys(IS.get_variables(result))) == [PG.ILOAD_VARIABLE]
-    @test isempty(symdiff(
-        collect(keys(IS.get_parameters(result))),
-        [PG.LOAD_PARAMETER, PG.ILOAD_PARAMETER],
-    ))
+    cat = PG.make_fuel_dictionary(results_uc.system)
+    @test isempty(symdiff(keys(cat), ["Coal", "Wind", "Hydropower"]))
+
+    fuel = PG.categorize_data(gen.data, cat)
+    @test length(fuel) == 4
+
+    fuel_agg = PG.combine_categories(fuel)
+    @test size(fuel_agg) == (48,4)
 end

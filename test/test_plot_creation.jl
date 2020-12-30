@@ -51,16 +51,21 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         rm(out_path, recursive = true)
     end
 
-    @testset "test $backend_pkg multi-df plot production" begin
-        out_path = joinpath(file_path, backend_pkg * "_multi_df_plots")
+    @testset "test $backend_pkg pgdata plot production" begin
+        out_path = joinpath(file_path, backend_pkg * "_pgdata_plots")
         !isdir(out_path) && mkdir(out_path)
 
-        # loop over multiple df and plot
-        # 1. could merge df's and then plot
-        # 2. coould add to plots
+        PG.plot_pgdata(gen_uc, display = display, title = "pg_data", save = out_path, bar = false, stack = false)
+        PG.plot_pgdata(gen_uc, display = display, title = "pg_data_stack", save = out_path, bar = false, stack = true)
+        PG.plot_pgdata(gen_uc, display = display, title = "pg_data_bar", save = out_path, bar = true, stack = false)
+        PG.plot_pgdata(gen_uc, display = display, title = "pg_data_bar_stack", save = out_path, bar = true, stack = true)
+
         list = readdir(out_path)
         expected_files = [
-
+            "pg_data.png",
+            "pg_data_stack.png",
+            "pg_data_bar.png",
+            "pg_data_bar_stack.png",
         ]
         # expected results not created
         @test isempty(setdiff(expected_files, list))

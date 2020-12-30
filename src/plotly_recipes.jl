@@ -609,7 +609,7 @@ function plotly_bar_plots(
 end
 
 ###################################### PLOTLYJS FUEL ################################
-function _fuel_plot_internal(
+function _plot_fuel_internal(
     stack::Vector{StackedGeneration},
     bar::Vector{BarGeneration},
     seriescolor::Array,

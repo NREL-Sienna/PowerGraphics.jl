@@ -41,7 +41,7 @@ using PowerGraphics
 plotlyjs()
 # where "res" is a PowerSimulations.SimulationResults object,
 # and "sys" is a PowerSystems.System object
-fuel_plot(res, sys)
+plot_fuel(res, sys)
 ```
 
 ## Development

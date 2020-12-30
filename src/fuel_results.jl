@@ -1,5 +1,5 @@
 order = CATEGORY_DEFAULT # TODO: move inside function
-
+#=
 function _get_iterator(sys::PSY.System, results::IS.Results)
     iterators = []
     for (k, v) in IS.get_variables(results)
@@ -39,7 +39,7 @@ function _get_iterator(sys::PSY.System, results::IS.Results)
     end
     return iterators_sorted
 end
-
+=#
 """Return a dict where keys are a tuple of input parameters (fuel, unit_type) and values are
 generator types."""
 function get_generator_mapping(filename = nothing)
@@ -126,7 +126,7 @@ function make_fuel_dictionary(sys::PSY.System; kwargs...)
     mapping = get_generator_mapping(get(kwargs, :generator_mapping_file, nothing))
     return make_fuel_dictionary(sys, mapping)
 end
-
+#=
 function _aggregate_data(res::IS.Results, generators::Dict)
     all_results = Dict()
     var_names = collect(keys(IS.get_variables(res)))
@@ -172,7 +172,7 @@ plot(stack)
 ```julia
 using Plots
 gr()
-fuel_plot(res, system)
+plot_fuel(res, system)
 ```
 """
 function get_stacked_aggregation_data(result::IS.Results, generator_dict::Dict)
@@ -249,7 +249,7 @@ plot(bar)
 ```julia
 using Plots
 gr()
-fuel_plot(res, system)
+plot_fuel(res, system)
 ```
 """
 function get_bar_aggregation_data(res::IS.Results, generators::Dict)
@@ -265,3 +265,4 @@ function get_bar_aggregation_data(res::IS.Results, generators::Dict)
         stack_data.p_labels,
     )
 end
+=#

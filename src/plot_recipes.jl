@@ -23,7 +23,7 @@ end
 function _empty_plot(backend::Any)
     return Plots.plot()
 end
-
+#=
 ###################################### GR FUEL PLOT ##############################
 
 function _get_load_line_data(parameters, labels)
@@ -39,7 +39,7 @@ function _get_load_line_data(parameters, labels)
     return load, permutedims(load_names)
 end
 
-function _fuel_plot_internal(
+function _plot_fuel_internal(
     stack::Vector{StackedGeneration},
     bar::Vector{BarGeneration},
     seriescolor::Array,
@@ -404,7 +404,7 @@ function _stack_plot_internal(
     end
     return PlotList(plot_list)
 end
-
+=#
 ######################################### DEMAND ########################
 
 function _demand_plot_internal(results::Vector, backend::Any; kwargs...)
@@ -497,7 +497,7 @@ function _demand_plot_internal(
     plot_list[Symbol(title)] = p
     return PlotList(plot_list)
 end
-
+#=
 function _variable_plots_internal(
     plot::Any,
     variable::DataFrames.DataFrame,
@@ -522,6 +522,7 @@ function _variable_plots_internal(
     )
     return p
 end
+=#
 
 function _dataframe_plots_internal(
     plot::Union{Plots.Plot, Nothing},
@@ -581,6 +582,8 @@ function _dataframe_plots_internal(
         )
     else
         linetype = get(kwargs, :stair, false) ? :steppost : :line
+        SUPPORTED_EXTRA_PLOT_KWARGS = [:linestyle, :linewidth]
+        plot_kwargs = (k for k in kwargs if k[1] in SUPPORTED_EXTRA_PLOT_KWARGS)
         p = Plots.plot!(
             time_range,
             plot_data;
@@ -594,6 +597,7 @@ function _dataframe_plots_internal(
             legend = :outerright,
             linetype = linetype,
             fillrange = fillrange,
+            plot_kwargs...
         );
     end
     get(kwargs, :set_display, false) && display(p)

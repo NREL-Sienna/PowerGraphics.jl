@@ -207,3 +207,60 @@ function get_service_data(results::PSI.StageResults; kwargs...)
 
     return PGData(variables, timestamps)
 end
+
+#### result combination and aggregation ####
+
+"""
+aggregates and combines data into single DataFrame
+
+# Example
+
+```julia
+PG.combine_categories(gen_uc.data)
+```
+
+"""
+function combine_categories(data::Union{Dict{Symbol, DataFrames.DataFrame}, Dict{String, DataFrames.DataFrame}}; names::Union{Vector{String}, Vector{Symbol}, Nothing} = nothing, agg::Union{Function, Nothing} = nothing)
+    agg = isnothing(agg) ? x->sum(x, dims = 2) : agg
+    names = isnothing(names) ? keys(data) : names
+    data = hcat([agg(Matrix(data[k])) for k in names]...)
+    return DataFrames.DataFrame(data, string.(collect(names)))
+end
+
+
+"""
+Re-categorizes data according to an aggregation dictionary
+* makes no guarantee of complete data collection *
+
+# Example
+
+```julia
+aggregation = PG.make_fuel_dictionary(results_uc.system)
+PG.categorize_data(gen_uc.data, aggregation)
+```
+
+"""
+function categorize_data(data::Dict{Symbol, DataFrames.DataFrame}, aggregation::Dict; curtailment = true)
+    category_dataframes = Dict{String, DataFrames.DataFrame}()
+    var_types = Dict(zip(last.(split.(string.(keys(data)), "_")), keys(data)))
+    for (category, list) in aggregation
+        category_df = DataFrames.DataFrame()
+        for tuple in list
+            if haskey(var_types, tuple[1])
+                category_data = data[var_types[tuple[1]]]
+                colname =
+                    typeof(names(category_data)[1]) == String ? "$(tuple[2])" : Symbol(tuple[2])
+                DataFrames.insertcols!(
+                    category_df,
+                    (colname => category_data[:, colname]),
+                    makeunique = true,
+                )
+            end
+        end
+        category_dataframes[string(category)] = category_df
+    end
+    if curtailment && haskey(data, :Curtailment)
+        category_dataframes["Curtailment"] = data[:Curtailment]
+    end
+    return category_dataframes
+end

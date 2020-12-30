@@ -1,3 +1,4 @@
+#=
 variables = Dict{Symbol, DataFrames.DataFrame}()
 variables[:P__ThermalStandard] = DataFrames.DataFrame(
     :one => [1, 2, 3, 2, 1],
@@ -40,6 +41,7 @@ res = PG.Results(
 )
 
 generators = Dict("Coal" => [:one; :two], "Wind" => [:three])
+=#
 
 function run_test_sim(result_dir::String)
     sim_name = "results_sim"

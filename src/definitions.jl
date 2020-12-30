@@ -92,10 +92,8 @@ GENERATOR_MAPPING_FILE = joinpath(
 )
 
 function match_fuel_colors(
-    stack::StackedGeneration,
-    bar::BarGeneration,
-    backend::Any,
-    default::Array,
+    data::DataFrames.DataFrame,
+    backend::Any
 )
     if backend == Plots.PlotlyJSBackend()
         color_range = PLOTLY_FUEL_DEFAULT
@@ -103,18 +101,19 @@ function match_fuel_colors(
         color_range = FUEL_DEFAULT
     end
     color_fuel = DataFrames.DataFrame(fuels = CATEGORY_DEFAULT, colors = color_range)
+    names = DataFrames.names(data)
     default =
-        [(color_fuel[findall(in(["$(bar.labels[1])"]), color_fuel.fuels), :][:, :colors])[1]]
-    for i in 2:length(bar.labels)
-        @debug bar.labels[i] (color_fuel[
-            findall(in(["$(bar.labels[i])"]), color_fuel.fuels),
+        [(color_fuel[findall(in(["$(names[1])"]), color_fuel.fuels), :][:, :colors])[1]]
+    for i in 2:length(names)
+        @debug names[i] (color_fuel[
+            findall(in(["$(names[i])"]), color_fuel.fuels),
             :,
         ][
             :,
             :colors,
         ])
         specific_color =
-            (color_fuel[findall(in(["$(bar.labels[i])"]), color_fuel.fuels), :][
+            (color_fuel[findall(in(["$(names[i])"]), color_fuel.fuels), :][
                 :,
                 :colors,
             ])[1]
