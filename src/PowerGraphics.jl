@@ -2,22 +2,21 @@ isdefined(Base, :__precompile__) && __precompile__()
 @info "PowerGraphics.jl loads Plots.jl. Precompile might take a while"
 module PowerGraphics
 
-export get_stacked_aggregation_data
-export get_bar_aggregation_data
-export bar_plot
-export stack_plot
 export plot_demand
-export stair_plot
-export report
-export plot_variable
+export plot_demands
 export plot_dataframe
-export make_fuel_dictionary
+export plot_pgdata
 export plot_fuel
-export match_fuel_colors
-export sort_data
-import Dates
+export plot_fuels
+export make_fuel_dictionary
+export report
+export get_generation_data
+export get_load_data
+export get_service_data
+export categorize_data
 
 #I/O Imports
+import Dates
 import TimeSeries
 import Reexport
 import Requires
@@ -46,4 +45,4 @@ function __init__()
     Requires.@require Weave = "44d3d7a6-8a23-5bf8-98c5-b353f8df5ec9" include("make_report.jl")
 end
 
-end
+end #module
