@@ -33,12 +33,12 @@ const PSY = PowerSystems
 const IS = InfrastructureSystems
 const PSI = PowerSimulations
 
-#include("process_results.jl")
 include("definitions.jl")
 include("plot_data.jl")
 include("fuel_results.jl")
 include("plot_recipes.jl")
 #include("plotly_recipes.jl")
+include("make_report.jl")
 include("call_plots.jl")
 
 function __init__()

@@ -25,7 +25,6 @@ const BASE_DIR = dirname(dirname(pathof(PowerGraphics)))
 const TEST_DIR = joinpath(BASE_DIR, "test")
 template_dir = joinpath(BASE_DIR, "report_templates")
 const generic_template = joinpath(template_dir, "generic_report_template.jmd")
-const fuel_template = joinpath(template_dir, "fuel_report_template.jmd")
 
 LOG_LEVELS = Dict(
     "Debug" => Logging.Debug,

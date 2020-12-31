@@ -257,7 +257,7 @@ function plot_fuel(p::Union{Plots.Plot, Nothing}, result::IS.Results; kwargs...)
     title = get(kwargs, :title, "Fuel")
     stack = get(kwargs, :stack, true)
     bar = get(kwargs, :bar, false)
-    kwargs = Dict((k, v) for (k, v) in kwargs if k ∉ [:title, :save])
+    kwargs = Dict((k, v) for (k, v) in kwargs if k ∉ [:title, :save, :set_display])
 
     # Generation stack
     gen = get_generation_data(result; kwargs...)
@@ -267,7 +267,11 @@ function plot_fuel(p::Union{Plots.Plot, Nothing}, result::IS.Results; kwargs...)
     # passing names here enforces order
     # TODO: enable custom sort with kwarg
     fuel_agg = combine_categories(fuel; names = intersect(CATEGORY_DEFAULT, keys(fuel)))
-    y_label = get(kwargs, :y_label, _make_ylabel(result.base_power))
+    y_label = get(
+        kwargs,
+        :y_label,
+        _make_ylabel(get_base_power(result), variable = "", time = bar ? "h" : ""),
+    )
 
     seriescolor = get(kwargs, :seriescolor, match_fuel_colors(fuel_agg, backend))
     p = plot_dataframe(
@@ -277,11 +281,20 @@ function plot_fuel(p::Union{Plots.Plot, Nothing}, result::IS.Results; kwargs...)
         seriescolor = seriescolor,
         y_label = y_label,
         title = title,
+        set_display = false,
         kwargs...,
     )
 
     # load line
-    p = plot_demand(p, result; nofill = true, title = title, y_label = y_label, kwargs...)
+    p = plot_demand(
+        p,
+        result;
+        nofill = true,
+        title = title,
+        y_label = y_label,
+        set_display = false,
+        kwargs...,
+    )
 
     # service stack
     # TODO: how to display this?

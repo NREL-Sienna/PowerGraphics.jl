@@ -30,13 +30,7 @@ function report(res::IS.Results, out_path::String, design_template::String; kwar
 
     !isfile(design_template) &&
         throw(ArgumentError("The provided template file is invalid"))
-    args = Dict(
-        "res" => res,
-        "gen" => res.system,
-        "variables" =>
-            PSI.read_realized_variables(res; initial_time = initial_time, len = len),
-        "backend" => backend,
-    )
+    args = Dict("results" => res, "backend" => backend)
     Weave.weave(
         design_template,
         out_path = out_path,
