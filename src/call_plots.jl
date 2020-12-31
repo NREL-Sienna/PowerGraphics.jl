@@ -4,6 +4,11 @@ function _empty_plot()
     return _empty_plot(backend)
 end
 
+function _empty_plots()
+    backend = Plots.backend()
+    return _empty_plots(backend)
+end
+
 function _make_ylabel(
     base_power::Float64;
     variable::String = "Generation",
@@ -49,11 +54,11 @@ plot = plot_demand(res)
 """
 
 function plot_demand(result::Union{IS.Results, PSY.System}; kwargs...)
-    return plot_demand(nothing, result; kwargs...)
+    return plot_demand(_empty_plot(), result; kwargs...)
 end
 
 function plot_demand(
-    p::Union{Plots.Plot, Nothing},
+    p::Union{Plots.Plot, Plots.PlotlyJS.Plot},
     result::Union{IS.Results, PSY.System};
     kwargs...,
 )
@@ -86,7 +91,7 @@ function plot_demand(
     set_display && display(p)
     if !isnothing(save_fig)
         title = replace(title, " " => "_")
-        Plots.savefig(p, joinpath(save_fig, "$(title).png"))
+        save_plot(p, joinpath(save_fig, "$(title).png"))
     end
     return p
 end
@@ -98,17 +103,19 @@ function plot_demands(results::Array; kwargs...)
     g_title = get(kwargs, :title, "Demand")
     kwargs = ((k, v) for (k, v) in kwargs if k ∉ [:title, :save])
 
-    demand_plots = []
+    plots = _empty_plots()
     for (ix, result) in enumerate(results)
         title = ix == 1 ? g_title : ""
-        p = plot_demand(result; title = title, kwargs)
-        push!(demand_plots, p)
+        p = plot_demand(result; title = title, kwargs...)
+        push!(plots, p)
     end
-    p1 = Plots.plot(demand_plots...; layout = (length(results), 1))
+    p1 =
+        backend == Plots.GRBackend() ? Plots.plot(plots...; layout = (length(results), 1)) :
+        plots
     set_display && display(p1)
     if !isnothing(save_fig)
         title = replace(title, " " => "_")
-        Plots.savefig(p1, joinpath(save_fig, "$(g_title).png"))
+        save_plot(p1, joinpath(save_fig, "$(g_title).png"))
     end
     return PlotList(Dict(:Demand_Stack => p1))#, :Fuel_Bar => p2))
 end
@@ -154,7 +161,7 @@ function plot_dataframe(
 end
 
 function plot_dataframe(
-    p::Any,
+    p::Union{Plots.Plot, Plots.PlotlyJS.Plot},
     variable::DataFrames.DataFrame,
     time_range::Union{DataFrames.DataFrame, Array, StepRange};
     kwargs...,
@@ -202,7 +209,7 @@ function plot_pgdata(pgdata::PGData; kwargs...)
     return plot_pgdata(_empty_plot(), pgdata; kwargs...)
 end
 
-function plot_pgdata(p::Any, pgdata::PGData; kwargs...)
+function plot_pgdata(p::Union{Plots.Plot, Plots.PlotlyJS.Plot}, pgdata::PGData; kwargs...)
     if get(kwargs, :combine_categories, true)
         agg = get(kwargs, :agg, nothing)
         names = get(kwargs, :names, nothing)
@@ -246,10 +253,10 @@ plot = plot_fuel(res)
 """
 
 function plot_fuel(result::IS.Results; kwargs...)
-    return plot_fuel(nothing, result; kwargs...)
+    return plot_fuel(_empty_plot(), result; kwargs...)
 end
 
-function plot_fuel(p::Union{Plots.Plot, Nothing}, result::IS.Results; kwargs...)
+function plot_fuel(p::Union{Plots.Plot, Plots.PlotlyJS.Plot}, result::IS.Results; kwargs...)
     backend = Plots.backend()
     set_display = get(kwargs, :set_display, true)
     save_fig = get(kwargs, :save, nothing)
@@ -302,7 +309,7 @@ function plot_fuel(p::Union{Plots.Plot, Nothing}, result::IS.Results; kwargs...)
     set_display && display(p)
     if !isnothing(save_fig)
         title = replace(title, " " => "_")
-        Plots.savefig(p, joinpath(save_fig, "$(title).png"))
+        save_plot(p, joinpath(save_fig, "$(title).png"))
     end
     return p
 end
@@ -314,17 +321,19 @@ function plot_fuels(results::Array; kwargs...)
     g_title = get(kwargs, :title, "Fuel")
     kwargs = ((k, v) for (k, v) in kwargs if k ∉ [:title, :save])
 
-    stack_plots = []
+    plots = _empty_plots()
     for (ix, result) in enumerate(results)
         title = ix == 1 ? g_title : ""
         p = plot_fuel(result; title = title, kwargs...)
-        push!(stack_plots, p)
+        push!(plots, p)
     end
-    p1 = Plots.plot(stack_plots...; layout = (length(results), 1))
+    p1 =
+        backend == Plots.GRBackend() ? Plots.plot(plots...; layout = (length(results), 1)) :
+        plots
     set_display && display(p1)
     if !isnothing(save_fig)
         title = replace(g_title, " " => "_")
-        Plots.savefig(p1, joinpath(save_fig, "$(g_title).png"))
+        save_plot(p1, joinpath(save_fig, "$(g_title).png"))
     end
     return PlotList(Dict(:Fuel_Stack => p1))#, :Fuel_Bar => p2))
 end

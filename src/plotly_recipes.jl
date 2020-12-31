@@ -11,10 +11,13 @@ function set_seriescolor(seriescolor::Array, gens::Array)
 end
 
 function _empty_plot(backend::Plots.PlotlyJSBackend)
-    traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
-    return Plots.PlotlyJS.plot(traces)
+    return Plots.PlotlyJS.Plot()
 end
 
+function _empty_plots(backend::Any)
+    return Vector{Plots.PlotlyJS.Plot}()
+end
+#=
 ########################################## PLOTLYJS STACK ##########################
 
 function _stack_plot_internal(
@@ -24,7 +27,7 @@ function _stack_plot_internal(
     set_display::Bool,
     reserves::Vector;
     kwargs...,
-)
+    )
     seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
     title = get(kwargs, :title, " ")
     ylabel = _make_ylabel(IS.get_base_power(res[1]))
@@ -40,7 +43,7 @@ function plotly_stack_gen(
     ylabel::String,
     reserve_list::Vector;
     kwargs...,
-)
+    )
     set_display = get(kwargs, :display, true)
     line_shape = get(kwargs, :stair, false) ? "hv" : "linear"
     save_fig = get(kwargs, :save, nothing)
@@ -67,46 +70,46 @@ function plotly_stack_gen(
         i == 1 ? leg = true : leg = false
         for ix in 1:length(gens)
             push!(
-                trace,
-                Plots.PlotlyJS.scatter(;
-                    name = gens[ix],
-                    showlegend = leg,
-                    x = time_range,
-                    y = stack[:, ix],
-                    stackgroup = "one",
-                    mode = "lines",
-                    line_shape = line_shape,
-                    fill = "tonexty",
-                    line_color = seriescolor[ix],
-                    fillcolor = seriescolor[ix],
-                ),
+            trace,
+            Plots.PlotlyJS.scatter(;
+            name = gens[ix],
+            showlegend = leg,
+            x = time_range,
+            y = stack[:, ix],
+            stackgroup = "one",
+            mode = "lines",
+            line_shape = line_shape,
+            fill = "tonexty",
+            line_color = seriescolor[ix],
+            fillcolor = seriescolor[ix],
+            ),
             )
         end
         (load, load_names) = _get_load_line_data(results[i].parameters, results[i].p_labels)
         if !isempty(load)
             for ix in 1:length(load_names)
                 push!(
-                    trace,
-                    Plots.PlotlyJS.scatter(;
-                        name = load_names[ix],
-                        x = time_range,
-                        y = load[:, ix],
-                        showlegend = leg,
-                        stackgroup = "two",
-                        mode = "lines",
-                        line_shape = line_shape,
-                        fill = "tozeroy",
-                        line_color = "black",
-                        line_dash = "dash",
-                        line_width = "3",
-                        fillcolor = "rgba(0, 0, 0, 0)",
-                    ),
+                trace,
+                Plots.PlotlyJS.scatter(;
+                name = load_names[ix],
+                x = time_range,
+                y = load[:, ix],
+                showlegend = leg,
+                stackgroup = "two",
+                mode = "lines",
+                line_shape = line_shape,
+                fill = "tozeroy",
+                line_color = "black",
+                line_dash = "dash",
+                line_width = "3",
+                fillcolor = "rgba(0, 0, 0, 0)",
+                ),
                 )
             end
         end
         p = Plots.PlotlyJS.plot(
-            trace,
-            Plots.PlotlyJS.Layout(title = title, yaxis_title = ylabel),
+        trace,
+        Plots.PlotlyJS.Layout(title = title, yaxis_title = ylabel),
         )
         plots = vcat(plots, p)
     end
@@ -129,24 +132,24 @@ function plotly_stack_gen(
                 r_seriescolor = set_seriescolor(seriescolors, r_gens)
                 for gen in 1:size(r_gens, 1)
                     push!(
-                        r_traces,
-                        Plots.PlotlyJS.scatter(;
-                            name = r_gens[gen],
-                            x = time_range,
-                            y = r_data[:, gen],
-                            stackgroup = "one",
-                            mode = "lines",
-                            showlegend = leg,
-                            line_shape = line_shape,
-                            fill = "tonexty",
-                            line_color = r_seriescolor[gen],
-                            fillcolor = r_seriescolor[gen],
-                        ),
+                    r_traces,
+                    Plots.PlotlyJS.scatter(;
+                    name = r_gens[gen],
+                    x = time_range,
+                    y = r_data[:, gen],
+                    stackgroup = "one",
+                    mode = "lines",
+                    showlegend = leg,
+                    line_shape = line_shape,
+                    fill = "tonexty",
+                    line_color = r_seriescolor[gen],
+                    fillcolor = r_seriescolor[gen],
+                    ),
                     )
                 end
                 r_plot = Plots.PlotlyJS.plot(
-                    r_traces,
-                    Plots.PlotlyJS.Layout(title = "$(key) Reserves", yaxis_title = ylabel),
+                r_traces,
+                Plots.PlotlyJS.Layout(title = "$(key) Reserves", yaxis_title = ylabel),
                 )
                 r_plots = vcat(r_plots, r_plot)
             end
@@ -154,10 +157,10 @@ function plotly_stack_gen(
             set_display && Plots.display(r_plot)
             if !isnothing(save_fig)
                 Plots.PlotlyJS.savefig(
-                    r_plot,
-                    joinpath(save_fig, "$(key)_Reserves.$format");
-                    width = 800,
-                    height = 450,
+                r_plot,
+                joinpath(save_fig, "$(key)_Reserves.$format");
+                width = 800,
+                height = 450,
                 )
             end
             plot_output[Symbol("$(key)_Reserves")] = r_plot
@@ -167,10 +170,10 @@ function plotly_stack_gen(
     title = title == " " ? stack_title : replace(title, " " => "_")
     if !isnothing(save_fig)
         Plots.PlotlyJS.savefig(
-            plots,
-            joinpath(save_fig, "$title.$format");
-            width = 800,
-            height = 450,
+        plots,
+        joinpath(save_fig, "$title.$format");
+        width = 800,
+        height = 450,
         )
     end
     plot_output[Symbol(title)] = plots
@@ -193,28 +196,28 @@ function plotly_stack_plots(results::Array, seriescolor::Array, ylabel::String; 
             for gen in 1:length(gens)
                 leg = res == 1 ? true : false
                 push!(
-                    traces,
-                    Plots.PlotlyJS.scatter(;
-                        name = gens[gen],
-                        showlegend = leg,
-                        x = results[1, res].timestamp[:, 1],
-                        y = convert(Matrix, var)[:, gen],
-                        stackgroup = "one",
-                        mode = "lines",
-                        line_shape = line_shape,
-                        fill = "tonexty",
-                        line_color = seriescolor[gen],
-                        fillcolor = "transparent",
-                    ),
+                traces,
+                Plots.PlotlyJS.scatter(;
+                name = gens[gen],
+                showlegend = leg,
+                x = results[1, res].timestamp[:, 1],
+                y = convert(Matrix, var)[:, gen],
+                stackgroup = "one",
+                mode = "lines",
+                line_shape = line_shape,
+                fill = "tonexty",
+                line_color = seriescolor[gen],
+                fillcolor = "transparent",
+                ),
                 )
             end
             p = Plots.PlotlyJS.plot(
-                traces,
-                Plots.PlotlyJS.Layout(
-                    title = "$key",
-                    yaxis_title = ylabel,
-                    grid = (rows = 3, columns = 1, pattern = "independent"),
-                ),
+            traces,
+            Plots.PlotlyJS.Layout(
+            title = "$key",
+            yaxis_title = ylabel,
+            grid = (rows = 3, columns = 1, pattern = "independent"),
+            ),
             )
             plots = vcat(plots, p)
         end
@@ -224,10 +227,10 @@ function plotly_stack_plots(results::Array, seriescolor::Array, ylabel::String; 
             format = get(kwargs, :format, "png")
             key_title = line_shape == "linear" ? "$(key)_Stack" : "$(key)_Stair"
             Plots.PlotlyJS.savefig(
-                plots,
-                joinpath(save_fig, "$key_title.$format");
-                width = 800,
-                height = 450,
+            plots,
+            joinpath(save_fig, "$key_title.$format");
+            width = 800,
+            height = 450,
             )
         end
         plot_list[key] = plots
@@ -241,7 +244,7 @@ function plotly_fuel_stack_gen(
     title::String,
     ylabel::String;
     kwargs...,
-)
+    )
     line_shape = get(kwargs, :stair, false) ? "hv" : "linear"
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
@@ -253,39 +256,39 @@ function plotly_fuel_stack_gen(
         for gen in 1:length(gens)
             leg = stack == 1 ? true : false
             push!(
-                trace,
-                Plots.PlotlyJS.scatter(;
-                    name = gens[gen],
-                    showlegend = leg,
-                    x = stacks[stack].time_range,
-                    y = stacks[stack].data_matrix[:, gen],
-                    stackgroup = "one",
-                    mode = "lines",
-                    fill = "tonexty",
-                    line_color = seriescolor[gen],
-                    fillcolor = seriescolor[gen],
-                    line_shape = line_shape,
-                ),
+            trace,
+            Plots.PlotlyJS.scatter(;
+            name = gens[gen],
+            showlegend = leg,
+            x = stacks[stack].time_range,
+            y = stacks[stack].data_matrix[:, gen],
+            stackgroup = "one",
+            mode = "lines",
+            fill = "tonexty",
+            line_color = seriescolor[gen],
+            fillcolor = seriescolor[gen],
+            line_shape = line_shape,
+            ),
             )
         end
         if get(kwargs, :load, false) == true
             @show stacks[stack]
             push!(
-                trace,
-                Plots.PlotlyJS.scatter(;
-                    name = "Load",
-                    x = stacks[stack].time_range,
-                    y = stacks[stack].parameters[:, 1],
-                    mode = "lines",
-                    line_color = "black",
-                    line_shape = line_shape,
-                    marker_size = 12,
-                ),
+            trace,
+            Plots.PlotlyJS.scatter(;
+            name = "Load",
+            x = stacks[stack].time_range,
+            y = stacks[stack].parameters[:, 1],
+            mode = "lines",
+            line_color = "black",
+            line_shape = line_shape,
+            marker_size = 12,
+            ),
             )
         end
         p = Plots.PlotlyJS.plot(
-            trace,
-            Plots.PlotlyJS.Layout(title = title, yaxis_title = ylabel),
+        trace,
+        Plots.PlotlyJS.Layout(title = title, yaxis_title = ylabel),
         )
         plots = vcat(plots, p)
     end
@@ -295,10 +298,10 @@ function plotly_fuel_stack_gen(
         format = get(kwargs, :format, "png")
         title = replace(title, " " => "_")
         Plots.PlotlyJS.savefig(
-            plots,
-            joinpath(save_fig, "$title.$format");
-            width = 800,
-            height = 450,
+        plots,
+        joinpath(save_fig, "$title.$format");
+        width = 800,
+        height = 450,
         )
     end
     return plots
@@ -314,13 +317,13 @@ function _bar_plot_internal(
     interval::Float64,
     reserves::Vector;
     kwargs...,
-)
+    )
     seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
     title = get(kwargs, :title, " ")
     ylabel = _make_bar_ylabel(IS.get_base_power(res[1]))
     plots = plotly_bar_plots(res, seriescolor, ylabel, interval; kwargs...)
     gen_plots =
-        plotly_bar_gen(res, seriescolor, title, ylabel, interval, reserves; kwargs...)
+    plotly_bar_gen(res, seriescolor, title, ylabel, interval, reserves; kwargs...)
     return PlotList(merge(plots, gen_plots))
 end
 
@@ -331,12 +334,12 @@ function plotly_fuel_bar_gen(
     ylabel::String,
     interval::Float64;
     kwargs...,
-)
+    )
     time_range = bar_gen[1].time_range
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     time_span = IS.convert_compound_period(
-        convert(Dates.TimePeriod, time_range[2] - time_range[1]) * length(time_range),
+    convert(Dates.TimePeriod, time_range[2] - time_range[1]) * length(time_range),
     )
     seriescolor = set_seriescolor(seriescolor, bar_gen[1].labels)
     plots = []
@@ -348,40 +351,40 @@ function plotly_fuel_bar_gen(
         for gen in 1:length(gens)
             leg = bar == 1 ? true : false
             push!(
-                traces,
-                Plots.PlotlyJS.scatter(;
-                    name = gens[gen],
-                    showlegend = leg,
-                    x = ["$time_span, $(time_range[1])"],
-                    y = (bar_gen[bar].bar_data[:, gen]) ./ interval,
-                    type = "bar",
-                    barmode = "stack",
-                    marker_color = seriescolor[gen],
-                ),
+            traces,
+            Plots.PlotlyJS.scatter(;
+            name = gens[gen],
+            showlegend = leg,
+            x = ["$time_span, $(time_range[1])"],
+            y = (bar_gen[bar].bar_data[:, gen]) ./ interval,
+            type = "bar",
+            barmode = "stack",
+            marker_color = seriescolor[gen],
+            ),
             )
         end
         #=
         for param in 1:length(params)
             push!(
-                p_traces,
-                Plots.PlotlyJS.scatter(;
-                    name = params[param],
-                    x = ["$time_span, $(time_range[1])"],
-                    y = bar_gen.parameters[:, param],
-                    type = "bar",
-                    marker_color = "rgba(0, 0, 0, .1)",
-                ),
+            p_traces,
+            Plots.PlotlyJS.scatter(;
+            name = params[param],
+            x = ["$time_span, $(time_range[1])"],
+            y = bar_gen.parameters[:, param],
+            type = "bar",
+            marker_color = "rgba(0, 0, 0, .1)",
+            ),
             )
         end
         =#
         p = Plots.PlotlyJS.plot(
-            [traces; p_traces],
-            Plots.PlotlyJS.Layout(
-                title = title,
-                yaxis_title = ylabel,
-                color = seriescolor,
-                barmode = "overlay",
-            ),
+        [traces; p_traces],
+        Plots.PlotlyJS.Layout(
+        title = title,
+        yaxis_title = ylabel,
+        color = seriescolor,
+        barmode = "overlay",
+        ),
         )
         plots = vcat(plots, p)
     end
@@ -391,10 +394,10 @@ function plotly_fuel_bar_gen(
         title = title == " " ? "Bar_Generation" : replace(title, " " => "_")
         format = get(kwargs, :format, "png")
         Plots.PlotlyJS.savefig(
-            plots,
-            joinpath(save_fig, "$title.$format");
-            width = 800,
-            height = 450,
+        plots,
+        joinpath(save_fig, "$title.$format");
+        width = 800,
+        height = 450,
         )
     end
     return plots
@@ -408,13 +411,13 @@ function plotly_bar_gen(
     interval::Float64,
     reserve_list::Any;
     kwargs...,
-)
+    )
     time_range = IS.get_timestamp(results[1])[:, 1]
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     format = get(kwargs, :format, "png")
     time_span = IS.convert_compound_period(
-        convert(Dates.TimePeriod, time_range[2] - time_range[1]) * length(time_range),
+    convert(Dates.TimePeriod, time_range[2] - time_range[1]) * length(time_range),
     )
     plots = []
     plot_output = Dict()
@@ -437,40 +440,40 @@ function plotly_bar_gen(
         for gen in 1:length(gens)
             i == 1 ? leg = true : leg = false
             push!(
-                traces,
-                Plots.PlotlyJS.scatter(;
-                    name = gens[gen],
-                    showlegend = leg,
-                    x = ["$time_span, $(time_range[1])"],
-                    y = data[:, gen],
-                    type = "bar",
-                    barmode = "stack",
-                    marker_color = seriescolors[gen],
-                ),
+            traces,
+            Plots.PlotlyJS.scatter(;
+            name = gens[gen],
+            showlegend = leg,
+            x = ["$time_span, $(time_range[1])"],
+            y = data[:, gen],
+            type = "bar",
+            barmode = "stack",
+            marker_color = seriescolors[gen],
+            ),
             )
         end
         #=
         for param in 1:length(params)
             push!(
-                p_traces,
-                Plots.PlotlyJS.scatter(;
-                    name = params[param],
-                    x = ["$time_span, $(time_range[1])"],
-                    y = bar_gen.parameters[:, param],
-                    type = "bar",
-                    marker_color = "rgba(0, 0, 0, .1)",
-                ),
+            p_traces,
+            Plots.PlotlyJS.scatter(;
+            name = params[param],
+            x = ["$time_span, $(time_range[1])"],
+            y = bar_gen.parameters[:, param],
+            type = "bar",
+            marker_color = "rgba(0, 0, 0, .1)",
+            ),
             )
         end
         =#
         p = Plots.PlotlyJS.plot(
-            [traces; p_traces],
-            Plots.PlotlyJS.Layout(
-                title = title,
-                yaxis_title = ylabel,
-                color = seriescolors,
-                barmode = "overlay",
-            ),
+        [traces; p_traces],
+        Plots.PlotlyJS.Layout(
+        title = title,
+        yaxis_title = ylabel,
+        color = seriescolors,
+        barmode = "overlay",
+        ),
         )
         plots = vcat(plots, p)
     end
@@ -482,10 +485,10 @@ function plotly_bar_gen(
     if !isnothing(save_fig)
         format = get(kwargs, :format, "png")
         Plots.PlotlyJS.savefig(
-            plots,
-            joinpath(save_fig, "$title.$format");
-            width = 800,
-            height = 450,
+        plots,
+        joinpath(save_fig, "$title.$format");
+        width = 800,
+        height = 450,
         )
     end
     if !isnothing(reserve_list[1])
@@ -495,7 +498,7 @@ function plotly_bar_gen(
                 r_data = []
                 for (k, v) in reserve_list[i][key]
                     r_data =
-                        vcat(r_data, [sum(sum(convert(Matrix, v), dims = 2), dims = 1)])
+                    vcat(r_data, [sum(sum(convert(Matrix, v), dims = 2), dims = 1)])
                 end
                 r_data = hcat(r_data...) / interval
                 r_gens = collect(keys(reserve_list[i][key]))
@@ -504,27 +507,27 @@ function plotly_bar_gen(
                 for gen in 1:length(r_gens)
                     i == 1 ? leg = true : leg = false
                     push!(
-                        r_traces,
-                        Plots.PlotlyJS.scatter(;
-                            name = r_gens[gen],
-                            x = ["$time_span, $(time_range[1])"],
-                            y = r_data[:, gen],
-                            type = "bar",
-                            barmode = "stack",
-                            stackgroup = "one",
-                            marker_color = r_seriescolor[gen],
-                            showlegend = leg,
-                        ),
+                    r_traces,
+                    Plots.PlotlyJS.scatter(;
+                    name = r_gens[gen],
+                    x = ["$time_span, $(time_range[1])"],
+                    y = r_data[:, gen],
+                    type = "bar",
+                    barmode = "stack",
+                    stackgroup = "one",
+                    marker_color = r_seriescolor[gen],
+                    showlegend = leg,
+                    ),
                     )
                 end
                 r_plot = Plots.PlotlyJS.plot(
-                    r_traces,
-                    Plots.PlotlyJS.Layout(
-                        title = "$(key) Reserves",
-                        yaxis_title = ylabel,
-                        color = seriescolor,
-                        barmode = "stack",
-                    ),
+                r_traces,
+                Plots.PlotlyJS.Layout(
+                title = "$(key) Reserves",
+                yaxis_title = ylabel,
+                color = seriescolor,
+                barmode = "stack",
+                ),
                 )
                 r_plots = vcat(r_plots, r_plot)
             end
@@ -532,10 +535,10 @@ function plotly_bar_gen(
             set_display && Plots.display(r_plot)
             if !isnothing(save_fig)
                 Plots.PlotlyJS.savefig(
-                    r_plot,
-                    joinpath(save_fig, "$(key)_Reserves.$format");
-                    width = 800,
-                    height = 450,
+                r_plot,
+                joinpath(save_fig, "$(key)_Reserves.$format");
+                width = 800,
+                height = 450,
                 )
             end
             plot_output[Symbol("$(key)_Reserves")] = r_plot
@@ -550,13 +553,13 @@ function plotly_bar_plots(
     ylabel::String,
     interval::Float64;
     kwargs...,
-)
+    )
     set_display = get(kwargs, :display, true)
     save_fig = get(kwargs, :save, nothing)
     time_range = results[1].timestamp
     time_span = IS.convert_compound_period(
-        convert(Dates.TimePeriod, time_range[2, 1] - time_range[1, 1]) *
-        size(time_range, 1),
+    convert(Dates.TimePeriod, time_range[2, 1] - time_range[1, 1]) *
+    size(time_range, 1),
     )
     plot_list = Dict()
     for key in collect(keys(IS.get_variables(results[1])))
@@ -569,25 +572,25 @@ function plotly_bar_plots(
             for gen in 1:length(gens)
                 leg = res == 1 ? true : false
                 push!(
-                    traces,
-                    Plots.PlotlyJS.scatter(;
-                        name = gens[gen],
-                        showlegend = leg,
-                        x = ["$time_span, $(time_range[1, 1])"],
-                        y = sum(convert(Matrix, var)[:, gen], dims = 1) ./ interval,
-                        type = "bar",
-                        barmode = "stack",
-                        marker_color = seriescolor[gen],
-                    ),
+                traces,
+                Plots.PlotlyJS.scatter(;
+                name = gens[gen],
+                showlegend = leg,
+                x = ["$time_span, $(time_range[1, 1])"],
+                y = sum(convert(Matrix, var)[:, gen], dims = 1) ./ interval,
+                type = "bar",
+                barmode = "stack",
+                marker_color = seriescolor[gen],
+                ),
                 )
             end
             p = Plots.PlotlyJS.plot(
-                traces,
-                Plots.PlotlyJS.Layout(
-                    title = "$key",
-                    yaxis_title = ylabel,
-                    barmode = "stack",
-                ),
+            traces,
+            Plots.PlotlyJS.Layout(
+            title = "$key",
+            yaxis_title = ylabel,
+            barmode = "stack",
+            ),
             )
             plots = vcat(plots, p)
         end
@@ -596,10 +599,10 @@ function plotly_bar_plots(
         if !isnothing(save_fig)
             format = get(kwargs, :format, "png")
             Plots.PlotlyJS.savefig(
-                plot,
-                joinpath(save_fig, "$(key)_Bar.$format");
-                width = 800,
-                height = 450,
+            plot,
+            joinpath(save_fig, "$(key)_Bar.$format");
+            width = 800,
+            height = 450,
             )
         end
         plot_list[key] = plot
@@ -619,17 +622,17 @@ function _plot_fuel_internal(
     ylabel::NamedTuple{(:stack, :bar), Tuple{String, String}},
     interval::Float64;
     kwargs...,
-)
+    )
     stair = get(kwargs, :stair, false)
     stack_title = stair ? "$(title) Stair" : stack_title = "$(title) Stack"
     stacks = plotly_fuel_stack_gen(stack, seriescolor, stack_title, ylabel.stack; kwargs...)
     bars = plotly_fuel_bar_gen(
-        bar,
-        seriescolor,
-        "$(title) Bar",
-        ylabel.bar,
-        interval;
-        kwargs...,
+    bar,
+    seriescolor,
+    "$(title) Bar",
+    ylabel.bar,
+    interval;
+    kwargs...,
     )
     return PlotList(Dict(:Fuel_Stack => stacks, :Fuel_Bar => bars))
 end
@@ -652,29 +655,29 @@ function _demand_plot_internal(results::Vector, backend::Plots.PlotlyJSBackend; 
             p_names = collect(names(parameters))
             n_traces = length(p_names)
             seriescolor =
-                length(seriescolor) < n_traces ?
-                repeat(seriescolor, Int64(ceil(n_traces / length(seriescolor)))) :
-                seriescolor
+            length(seriescolor) < n_traces ?
+            repeat(seriescolor, Int64(ceil(n_traces / length(seriescolor)))) :
+            seriescolor
             n == 1 ? leg = true : leg = false
             for i in 1:n_traces
                 push!(
-                    traces,
-                    Plots.PlotlyJS.scatter(;
-                        name = p_names[i],
-                        x = results[n].timestamp[:, 1],
-                        y = parameters[:, p_names[i]],
-                        #stackgroup = "one",
-                        mode = "lines",
-                        #fill = "tonexty",
-                        line_color = seriescolor[i],
-                        showlegend = leg,
-                    ),
+                traces,
+                Plots.PlotlyJS.scatter(;
+                name = p_names[i],
+                x = results[n].timestamp[:, 1],
+                y = parameters[:, p_names[i]],
+                #stackgroup = "one",
+                mode = "lines",
+                #fill = "tonexty",
+                line_color = seriescolor[i],
+                showlegend = leg,
+                ),
                 )
             end
             title = get(kwargs, :title, "$key")
             p = Plots.PlotlyJS.plot(
-                traces,
-                Plots.PlotlyJS.Layout(title = title, yaxis_title = ylabel),
+            traces,
+            Plots.PlotlyJS.Layout(title = title, yaxis_title = ylabel),
             )
             plots = vcat(plots, p)
         end
@@ -683,10 +686,10 @@ function _demand_plot_internal(results::Vector, backend::Plots.PlotlyJSBackend; 
         if !isnothing(save_fig)
             format = get(kwargs, :format, "png")
             Plots.PlotlyJS.savefig(
-                plots,
-                joinpath(save_fig, "$title.$format");
-                width = 800,
-                height = 450,
+            plots,
+            joinpath(save_fig, "$title.$format");
+            width = 800,
+            height = 450,
             )
         end
         plot_list[key] = plots
@@ -701,12 +704,12 @@ function _demand_plot_internal(
     base_power::Array,
     backend::Plots.PlotlyJSBackend;
     kwargs...,
-)
+    )
     n_traces = size((parameters[1]))[1]
     seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
     seriescolor =
-        length(seriescolor) < n_traces ?
-        repeat(seriescolor, Int64(ceil(n_traces / length(seriescolor)))) : seriescolor
+    length(seriescolor) < n_traces ?
+    repeat(seriescolor, Int64(ceil(n_traces / length(seriescolor)))) : seriescolor
     save_fig = get(kwargs, :save, nothing)
     set_display = get(kwargs, :display, true)
     line_shape = get(kwargs, :stair, false) ? "hv" : "linear"
@@ -723,23 +726,23 @@ function _demand_plot_internal(
             stackgroup = get(kwargs, :stack, false) ? "one" : "$n"
             fillcolor = get(kwargs, :stack, false) ? seriescolor[n] : "transparent"
             push!(
-                traces,
-                Plots.PlotlyJS.scatter(;
-                    name = p_names[n],
-                    x = parameters[i][:, :timestamp],
-                    y = data[:, p_names[n]],
-                    stackgroup = stackgroup,
-                    mode = "lines",
-                    fill = "tonexty",
-                    fillcolor = fillcolor,
-                    line_color = seriescolor[n],
-                    showlegend = leg,
-                ),
+            traces,
+            Plots.PlotlyJS.scatter(;
+            name = p_names[n],
+            x = parameters[i][:, :timestamp],
+            y = data[:, p_names[n]],
+            stackgroup = stackgroup,
+            mode = "lines",
+            fill = "tonexty",
+            fillcolor = fillcolor,
+            line_color = seriescolor[n],
+            showlegend = leg,
+            ),
             )
         end
         p = Plots.PlotlyJS.plot(
-            traces,
-            Plots.PlotlyJS.Layout(title = title, yaxis_title = ylabel),
+        traces,
+        Plots.PlotlyJS.Layout(title = title, yaxis_title = ylabel),
         )
         plots = vcat(plots, p)
     end
@@ -749,10 +752,10 @@ function _demand_plot_internal(
         format = get(kwargs, :format, "png")
         title = replace(title, " " => "_")
         Plots.PlotlyJS.savefig(
-            plots,
-            joinpath(save_fig, "$title.$format");
-            width = 800,
-            height = 450,
+        plots,
+        joinpath(save_fig, "$title.$format");
+        width = 800,
+        height = 450,
         )
     end
     plot_list[Symbol(title)] = plots
@@ -767,18 +770,18 @@ function _variable_plots_internal(
     variable_name::Symbol,
     backend::Plots.PlotlyJSBackend;
     kwargs...,
-)
+    )
     seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
     y_label = _make_ylabel(base_power)
     title = get(kwargs, :title, "$variable_name")
     plot = plotly_dataframe_plots(
-        p,
-        variable,
-        seriescolor,
-        time_range,
-        title,
-        y_label;
-        kwargs...,
+    p,
+    variable,
+    seriescolor,
+    time_range,
+    title,
+    y_label;
+    kwargs...,
     )
     return plot
 end
@@ -788,7 +791,7 @@ function _dataframe_plots_internal(
     time_range::Array,
     backend::Plots.PlotlyJSBackend;
     kwargs...,
-)
+    )
     seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
     save_fig = get(kwargs, :save, nothing)
     unit = get(kwargs, :y_label, nothing)
@@ -804,126 +807,115 @@ function _dataframe_plots_internal(
     time_range::Array,
     backend::Plots.PlotlyJSBackend;
     kwargs...,
-)
+    )
     seriescolor = get(kwargs, :seriescolor, PLOTLY_DEFAULT)
     save_fig = get(kwargs, :save, nothing)
     unit = get(kwargs, :y_label, nothing)
     y_label = isnothing(unit) ? "Generation per unit" : unit
     title = get(kwargs, :title, " ")
     p = plotly_dataframe_plots(
-        p,
-        variable,
-        seriescolor,
-        time_range,
-        title,
-        y_label;
-        kwargs...,
+    p,
+    variable,
+    seriescolor,
+    time_range,
+    title,
+    y_label;
+    kwargs...,
     )
     return p
 end
-
-function plotly_dataframe_plots(
+=#
+function _dataframe_plots_internal(
+    plot::Union{Plots.PlotlyJS.Plot, Nothing},
     variable::DataFrames.DataFrame,
-    seriescolor::Array,
     time_range::Array,
-    title::Union{String, Symbol},
-    ylabel::String;
+    backend::Plots.PlotlyJSBackend;
     kwargs...,
 )
-    set_display = get(kwargs, :display, true)
-    save_fig = get(kwargs, :save, nothing)
-    line_shape = get(kwargs, :stair, false) ? "hv" : "linear"
-    traces = Plots.PlotlyJS.GenericTrace{Dict{Symbol, Any}}[]
-    gens = collect(names(variable))
-    seriescolor = set_seriescolor(seriescolor, gens)
-    for gen in 1:length(gens)
-        stackgroup = get(kwargs, :stack, false) ? "one" : "$gen"
-        fillcolor = get(kwargs, :stack, false) ? seriescolor[gen] : "transparent"
-        push!(
-            traces,
-            Plots.PlotlyJS.scatter(;
-                name = gens[gen],
-                x = time_range,
-                y = convert(Matrix, variable)[:, gen],
-                stackgroup = stackgroup,
-                mode = "lines",
-                line_shape = line_shape,
-                line_color = seriescolor[gen],
-                fillcolor = fillcolor,
-                showlegend = true,
-            ),
-        )
-    end
-    p = Plots.PlotlyJS.plot(
-        traces,
-        Plots.PlotlyJS.Layout(title = "$title", yaxis_title = ylabel),
-    )
-    title = title == " " ? "Generation" : title
-    if !isnothing(save_fig)
-        format = get(kwargs, :format, "png")
-        Plots.PlotlyJS.savefig(
-            p,
-            joinpath(save_fig, "$title.$format");
-            width = 800,
-            height = 450,
-        )
-    end
-    return p
-end
-
-function plotly_dataframe_plots(
-    plot::Any,
-    variable::DataFrames.DataFrame,
-    seriescolor::Array,
-    time_range::Array,
-    title::Union{String, Symbol},
-    ylabel::String;
-    kwargs...,
-)
-    plot_list = []
-    set_display = get(kwargs, :display, true)
-    save_fig = get(kwargs, :save, nothing)
-    line_shape = get(kwargs, :stair, false) ? "hv" : "linear"
-    traces = plot.plot.data
+    names = DataFrames.names(variable)
+    traces = plot.data
     plot_length = length(traces)
-    existing_traces = ones(plot_length)
-    gens = collect(names(variable))
-    seriescolor = set_seriescolor(seriescolor, [existing_traces; gens])
-    for gen in 1:length(gens)
-        stackgroup = get(kwargs, :stack, false) ? "one" : "$gen"
-        fillcolor =
-            get(kwargs, :stack, false) ? seriescolor[gen + plot_length] : "transparent"
-        traces = push!(
-            traces,
-            Plots.PlotlyJS.scatter(;
-                name = gens[gen],
-                x = time_range,
-                y = convert(Matrix, variable)[:, gen],
-                stackgroup = stackgroup,
-                mode = "lines",
-                line_shape = line_shape,
-                line_color = seriescolor[gen + plot_length],
-                fillcolor = fillcolor,
-                showlegend = true,
-            ),
+    seriescolor = set_seriescolor(
+        get(kwargs, :seriescolor, PLOTLY_DEFAULT),
+        [ones(plot_length); names],
+    ) #TODO: add this to GR
+
+    save_fig = get(kwargs, :save, nothing)
+    y_label = get(kwargs, :y_label, "")
+    title = get(kwargs, :title, " ")
+    stack = get(kwargs, :stack, false)
+    bar = get(kwargs, :bar, false)
+
+    time_interval =
+        IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
+    interval =
+        Dates.Millisecond(Dates.Hour(1)) / Dates.Millisecond(time_range[2] - time_range[1])
+
+    plot_data = convert(Matrix, variable)
+    isnothing(plot) && _empty_plot()
+
+    barmode = stack ? "stack" : "group"
+    if bar
+        plot_data = sum(plot_data, dims = 1) ./ interval
+        xaxis = Plots.PlotlyJS.attr(; showticklabels = false)
+        plot_type = "bar"
+    else
+        xaxis = Plots.PlotlyJS.attr(; showticklabels = true)
+        plot_type = "scatter"
+    end
+
+    line_shape = get(kwargs, :stair, false) ? "hv" : "linear"
+
+    for ix in 1:length(names)
+        stackgroup = stack ? "one" : "$ix"
+        fillcolor = bar ? seriescolor[ix] : (stack ? seriescolor[ix] : "transparent")
+        trace = Plots.PlotlyJS.scatter(;
+            name = names[ix],
+            x = time_range,
+            y = plot_data[:, ix],
+            stackgroup = stackgroup,
+            mode = "lines",
+            type = plot_type,
+            line_shape = line_shape,
+            line_color = seriescolor[ix],
+            marker_color = seriescolor[ix],
+            fillcolor = fillcolor,
+            showlegend = true,
         )
+        push!(traces, trace)
     end
-    if title !== " "
-        old_title = [title]
-        haskey(plot.plot.layout, :title) && pushfirst!(old_title, plot.plot.layout[:title])
-        update = Dict(:title => join(old_title, " & "))
-        Plots.PlotlyJS.relayout!(plot.plot.layout, update)
-    end
-    p = Plots.PlotlyJS.plot(traces, plot.plot.layout)
-    title = title == " " ? "Generation" : title
+
+    yaxis = Plots.PlotlyJS.attr(; showticklabels = true)
+    Plots.PlotlyJS.relayout!(
+        plot,
+        Plots.PlotlyJS.Layout(
+            title = "$title",
+            yaxis = yaxis,
+            xaxis = xaxis,
+            yaxis_title = y_label,
+            xaxis_title = "$time_interval",
+            barmode = barmode,
+        ),
+    )
+    get(kwargs, :set_display, false) && display(Plots.PlotlyJS.plot(plot))
     if !isnothing(save_fig)
+        title = title == " " ? "dataframe" : title
         format = get(kwargs, :format, "png")
-        Plots.PlotlyJS.savefig(
-            p,
-            joinpath(save_fig, "$title.$format");
-            width = 800,
-            height = 450,
-        )
+        save_plot(plot, joinpath(save_fig, "$title.$format"))
     end
-    return p
+    return plot
+end
+
+function save_plot(plots::Vector{Plots.PlotlyJS.Plot}, filename::String)
+    (name, ext) = splitext(filename)
+    filenames = []
+    for (ix, p) in enumerate(plots)
+        fname = name * "_$ix" * ext
+        push!(filenames, Plots.PlotlyJS.savefig(p, fname; width = 800, height = 450))
+    end
+    return filenames
+end
+function save_plot(plot::Plots.PlotlyJS.Plot, filename::String)
+    Plots.PlotlyJS.savefig(plot, filename; width = 800, height = 450)
+    return filename
 end

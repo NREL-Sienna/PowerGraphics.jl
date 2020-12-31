@@ -1,4 +1,16 @@
+struct PlotList # TODO: Is PlotList needed?
+    plots::Dict
+end
+function PlotList()
+    PlotList(Dict())
+end
 
+Base.show(io::IO, mm::MIME"text/html", p::PlotList) =
+    show(io, mm, "$(Plots.backend()) with $(length(p.plots)) plots, named $(keys(p.plots))")
+Base.show(io::IO, mm::MIME"text/plain", p::PlotList) =
+    show(io, mm, "$(Plots.backend()) with $(length(p.plots)) plots, named $(keys(p.plots))")
+
+# the fundamental struct for plotting
 struct PGData
     data::Dict{Symbol, DataFrames.DataFrame}
     time::StepRange{Dates.DateTime}

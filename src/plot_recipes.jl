@@ -1,14 +1,5 @@
-struct PlotList
-    plots::Dict
-end
-function PlotList()
-    PlotList(Dict())
-end
-Base.show(io::IO, mm::MIME"text/html", p::PlotList) =
-    show(io, mm, "$(Plots.backend()) with $(length(p.plots)) plots, named $(keys(p.plots))")
-Base.show(io::IO, mm::MIME"text/plain", p::PlotList) =
-    show(io, mm, "$(Plots.backend()) with $(length(p.plots)) plots, named $(keys(p.plots))")
 
+#=
 function _check_matching_variables(results::Array)
     variables = DataFrames.DataFrame()
     first_keys = collect(keys(IS.get_variables(results[1])))
@@ -19,9 +10,14 @@ function _check_matching_variables(results::Array)
         end
     end
 end
+=#
 
 function _empty_plot(backend::Any)
     return Plots.plot()
+end
+
+function _empty_plots(backend::Any)
+    return Vector{Plots.Plot}()
 end
 
 function _dataframe_plots_internal(
@@ -42,7 +38,6 @@ function _dataframe_plots_internal(
     interval =
         Dates.Millisecond(Dates.Hour(1)) / Dates.Millisecond(time_range[2] - time_range[1])
 
-    plot_list = Dict()
     data = convert(Matrix, variable)
 
     isnothing(plot) && _empty_plot()
@@ -109,4 +104,8 @@ function _dataframe_plots_internal(
     title = title == " " ? "dataframe" : title
     !isnothing(save_fig) && Plots.savefig(p, joinpath(save_fig, "$(title).png"))
     return p
+end
+
+function save_plot(plot::Plots.PlotlyJS.Plot, filename::String)
+    Plots.savefig(plot, filename)
 end
