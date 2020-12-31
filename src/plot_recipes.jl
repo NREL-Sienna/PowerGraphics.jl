@@ -406,7 +406,7 @@ function _stack_plot_internal(
 end
 =#
 ######################################### DEMAND ########################
-
+#=
 function _demand_plot_internal(results::Vector, backend::Any; kwargs...)
     stair = get(kwargs, :stair, false)
     linetype = stair ? :steppost : :line
@@ -497,7 +497,7 @@ function _demand_plot_internal(
     plot_list[Symbol(title)] = p
     return PlotList(plot_list)
 end
-#=
+
 function _variable_plots_internal(
     plot::Any,
     variable::DataFrames.DataFrame,

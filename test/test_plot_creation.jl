@@ -231,6 +231,13 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             save = out_path,
         )
 
+        PG.plot_demand(
+            results_uc.system,
+            display = set_display,
+            title = "sysdemand",
+            save = out_path,
+        )
+
         list = readdir(out_path)
         expected_files = [
             "demand.png",
@@ -242,6 +249,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             "demand_nofill_bar.png",
             "demand_nofill_bar_stack.png",
             "demand_multi.png",
+            "sysdemand.png",
         ]
         # expected results not created
         @test isempty(setdiff(expected_files, list))
@@ -297,8 +305,13 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         )
 
         list = readdir(out_path)
-        expected_files =
-            ["fuel.png", "fuel_stack.png", "fuel_bar.png", "fuel_bar_stack.png"]
+        expected_files = [
+            "fuel.png",
+            "fuel_stack.png",
+            "fuel_bar.png",
+            "fuel_bar_stack.png",
+            "fuel_multi.png",
+        ]
         # expected results not created
         @test isempty(setdiff(expected_files, list))
         # extra results created

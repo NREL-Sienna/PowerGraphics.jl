@@ -237,6 +237,75 @@ function get_load_data(results::PSI.StageResults; kwargs...)
     return PGData(variables, timestamps)
 end
 
+################################### INPUT DEMAND #################################
+
+function _get_loads(system::PSY.System, bus::PSY.Bus)
+    return [
+        load
+        for load in PSY.get_components(PSY.PowerLoad, system) if PSY.get_bus(load) == bus
+    ]
+end
+function _get_loads(system::PSY.System, agg::T) where {T <: PSY.AggregationTopology}
+    return PSY.get_components_in_aggregation_topology(PSY.PowerLoad, system, agg)
+end
+function _get_loads(system::PSY.System, load::PSY.PowerLoad)
+    return [load]
+end
+function _get_loads(system::PSY.System, sys::PSY.System)
+    return PSY.get_components(PSY.PowerLoad, system)
+end
+
+get_base_power(system::PSY.System) = PSY.get_base_power(system)
+get_base_power(results::PSI.StageResults) = IS.get_base_power(results)
+
+function get_load_data(
+    system::PSY.System;
+    aggregation::Union{
+        Type{PSY.PowerLoad},
+        Type{PSY.Bus},
+        Type{PSY.System},
+        Type{<:PSY.AggregationTopology},
+    } = PSY.PowerLoad,
+    kwargs...,
+)
+    aggregation_components =
+        aggregation == PSY.System ? [system] : PSY.get_components(aggregation, system)
+    if isempty(aggregation_components)
+        throw(ArgumentError("System does not have type $aggregation."))
+    end
+    horizon = get(kwargs, :horizon, PSY.get_forecast_horizon(system))
+    initial_time = get(kwargs, :initial_time, PSY.get_forecast_initial_timestamp(system))
+    parameters = DataFrames.DataFrame()
+    PSY.set_units_base_system!(system, "SYSTEM_BASE")
+    for agg in aggregation_components
+        loads = _get_loads(system, agg)
+        length(loads) == 0 && continue
+        colname = aggregation == PSY.System ? "System" : PSY.get_name(agg)
+        load_values = []
+        for load in loads
+            f = PSY.get_time_series_values( # TODO: this isn't applying the scaling factors
+                PSY.Deterministic,
+                load,
+                "max_active_power",
+                start_time = initial_time,
+                len = horizon,
+            )
+            push!(load_values, f)
+        end
+        load_values =
+            length(loads) == 1 ? load_values[1] :
+            dropdims(sum(Matrix(reduce(hcat, load_values)), dims = 2), dims = 2)
+        parameters[:, Symbol(colname)] = load_values .* -1.0
+    end
+    time_range =
+        range(initial_time, step = PSY.get_time_series_resolution(system), length = horizon)
+
+    return PGData(
+        Dict(:Load => parameters[!, setdiff(names(parameters), "timestamp")]),
+        time_range,
+    )
+end
+
 function get_service_data(results::PSI.StageResults; kwargs...)
     initial_time = get(kwargs, :initial_time, nothing)
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))

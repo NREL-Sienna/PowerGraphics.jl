@@ -438,10 +438,15 @@ plot = plot_demand(res)
 - `aggregate::String = "System", "PowerLoad", or "Bus"`: aggregate the demand other than by generator
 """
 
-function plot_demand(result::IS.Results; kwargs...)
+function plot_demand(result::Union{IS.Results, PSY.System}; kwargs...)
     return plot_demand(nothing, result; kwargs...)
 end
-function plot_demand(p::Union{Plots.Plot, Nothing}, result::IS.Results; kwargs...)
+
+function plot_demand(
+    p::Union{Plots.Plot, Nothing},
+    result::Union{IS.Results, PSY.System};
+    kwargs...,
+)
     backend = Plots.backend()
     set_display = get(kwargs, :set_display, true)
     save_fig = get(kwargs, :save, nothing)
@@ -451,7 +456,7 @@ function plot_demand(p::Union{Plots.Plot, Nothing}, result::IS.Results; kwargs..
     y_label = get(
         kwargs,
         :y_label,
-        _make_ylabel(result.base_power, variable = "Demand", time = bar ? "h" : ""),
+        _make_ylabel(get_base_power(result), variable = "Demand", time = bar ? "h" : ""),
     )
 
     load = get_load_data(result; kwargs...)
@@ -480,7 +485,7 @@ function plot_demands(results::Array; kwargs...)
     backend = Plots.backend()
     set_display = get(kwargs, :set_display, true)
     save_fig = get(kwargs, :save, nothing)
-    g_title = get(kwargs, :title, "Fuel")
+    g_title = get(kwargs, :title, "Demand")
     kwargs = ((k, v) for (k, v) in kwargs if k ∉ [:title, :save])
 
     demand_plots = []
@@ -497,76 +502,7 @@ function plot_demands(results::Array; kwargs...)
     end
     return PlotList(Dict(:Demand_Stack => p1))#, :Fuel_Bar => p2))
 end
-
-################################### INPUT DEMAND #################################
-
-function _get_loads(system::PSY.System, bus::PSY.Bus)
-    return [
-        load
-        for load in PSY.get_components(PSY.PowerLoad, system) if PSY.get_bus(load) == bus
-    ]
-end
-function _get_loads(system::PSY.System, agg::T) where {T <: PSY.AggregationTopology}
-    return PSY.get_components_in_aggregation_topology(PSY.PowerLoad, system, agg)
-end
-function _get_loads(system::PSY.System, load::PSY.PowerLoad)
-    return [load]
-end
-function _get_loads(system::PSY.System, sys::PSY.System)
-    return PSY.get_components(PSY.PowerLoad, system)
-end
-
-function make_demand_plot_data(
-    system::PSY.System,
-    aggregation::Union{
-        Type{PSY.PowerLoad},
-        Type{PSY.Bus},
-        Type{PSY.System},
-        Type{<:PSY.AggregationTopology},
-    } = PSY.PowerLoad;
-    kwargs...,
-)
-    aggregation_components =
-        aggregation == PSY.System ? [system] : PSY.get_components(aggregation, system)
-    if isempty(aggregation_components)
-        throw(ArgumentError("System does not have type $aggregation."))
-    end
-    horizon = get(kwargs, :horizon, PSY.get_forecast_horizon(system))
-    initial_time = get(kwargs, :initial_time, PSY.get_forecast_initial_timestamp(system))
-    parameters = DataFrames.DataFrame(timestamp = Dates.DateTime[])
-    PSY.set_units_base_system!(system, "SYSTEM_BASE")
-    for agg in aggregation_components
-        loads = _get_loads(system, agg)
-        length(loads) == 0 && continue
-        colname = aggregation == PSY.System ? "System" : PSY.get_name(agg)
-        load_values = []
-        for load in loads
-            f = PSY.get_time_series_array(
-                PSY.Deterministic,
-                load,
-                "max_active_power",
-                start_time = initial_time,
-                len = horizon,
-            )
-            push!(load_values, values(f))
-            parameters = DataFrames.outerjoin(
-                parameters,
-                DataFrames.DataFrame(timestamp = TimeSeries.timestamp(f)),
-                on = :timestamp,
-                makeunique = false,
-                indicator = nothing,
-                validate = (false, false),
-            )
-        end
-        load_values =
-            length(loads) == 1 ? load_values[1] :
-            dropdims(sum(Matrix(reduce(hcat, load_values)), dims = 2), dims = 2)
-        parameters[:, Symbol(colname)] = load_values
-    end
-    save_fig = get(kwargs, :save, nothing)
-    return parameters
-end
-
+#=
 """
     plot_demand(system)
 
@@ -608,7 +544,7 @@ function plot_demand(systems::Array{PSY.System}; kwargs...)
     backend = Plots.backend()
     return _demand_plot_internal(parameter_list, base_powers, backend; kwargs...)
 end
-
+=#
 ################################## Plot Forecasts ###########################
 #=
 function plot_forecast(forecast; kwargs...)
