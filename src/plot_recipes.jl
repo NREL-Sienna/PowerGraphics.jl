@@ -555,6 +555,8 @@ function _dataframe_plots_internal(
         fillrange = nothing
     end
 
+    plot_kwargs = ((k, v) for (k, v) in kwargs if k in SUPPORTED_EXTRA_PLOT_KWARGS)
+
     if get(kwargs, :bar, false)
         plot_data = sum(plot_data, dims = 1) ./ interval
         if stack
@@ -562,9 +564,7 @@ function _dataframe_plots_internal(
             plot_data = plot_data[end:-1:1, end:-1:1]
             legend = :outerright
             lab = hcat(string.(names(variable))...)[end:-1:1, end:-1:1]
-            n = length(lab)
-            seriescolor = seriescolor[:, n:-1:1]
-
+            seriescolor = seriescolor[:, length(lab):-1:1]
         else
             x = names(variable)
             plot_data = permutedims(plot_data)
@@ -572,24 +572,28 @@ function _dataframe_plots_internal(
             legend = false
             lab = hcat(string.(names(variable))...)
         end
-        p = Plots.bar!(
+        plot_func = get(kwargs, :nofill, false) ? Plots.hline! : Plots.bar!
+        p = plot_func(
             x,
             plot_data;
             seriescolor = seriescolor,
             lab = lab,
+            ylabel = y_label,
             legend = legend,
             title = title,
+            ylims = get(kwargs, :ylims, (0.0, Inf)),
             xlabel = "$time_interval",
+            xtick = false,
+            plot_kwargs...,
         )
     else
         linetype = get(kwargs, :stair, false) ? :steppost : :line
-        SUPPORTED_EXTRA_PLOT_KWARGS = [:linestyle, :linewidth]
-        plot_kwargs = (k for k in kwargs if k[1] in SUPPORTED_EXTRA_PLOT_KWARGS)
         p = Plots.plot!(
             time_range,
             plot_data;
             seriescolor = seriescolor,
             ylabel = y_label,
+            ylims = get(kwargs, :ylims, (0.0, Inf)),
             xlabel = "$time_interval",
             xtick = [time_range[1], last(time_range)],
             grid = false,

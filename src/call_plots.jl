@@ -394,24 +394,17 @@ function stack_plot(results::Array{}; kwargs...)
     )
 end
 =#
-function _make_ylabel(base_power::Float64)
+function _make_ylabel(
+    base_power::Float64;
+    variable::String = "Generation",
+    time::String = "",
+)
     if isapprox(base_power, 1.0)
-        ylabel = "Generation (MW)"
+        ylabel = "$variable (MW$time)"
     elseif isapprox(base_power, 1000.0)
-        ylabel = "Generation (GW)"
+        ylabel = "$variable (GW$time)"
     else
-        ylabel = "Generation (MW x$base_power)"
-    end
-    return ylabel
-end
-
-function _make_bar_ylabel(base_power::Float64)
-    if isapprox(base_power, 1.0)
-        ylabel = "Generation (MWh)"
-    elseif isapprox(base_power, 1000.0)
-        ylabel = "Generation (GWh)"
-    else
-        ylabel = "Generation (MWh x$base_power)"
+        ylabel = "$variable (MW$time x$base_power)"
     end
     return ylabel
 end
@@ -452,7 +445,14 @@ function plot_demand(p::Union{Plots.Plot, Nothing}, result::IS.Results; kwargs..
     backend = Plots.backend()
     set_display = get(kwargs, :set_display, true)
     save_fig = get(kwargs, :save, nothing)
+    bar = get(kwargs, :bar, false)
+
     title = get(kwargs, :title, "Demand")
+    y_label = get(
+        kwargs,
+        :y_label,
+        _make_ylabel(result.base_power, variable = "Demand", time = bar ? "h" : ""),
+    )
 
     load = get_load_data(result; kwargs...)
     load_agg = combine_categories(load.data) .* -1.0
@@ -463,7 +463,7 @@ function plot_demand(p::Union{Plots.Plot, Nothing}, result::IS.Results; kwargs..
         seriescolor = ["black"],
         linestyle = :dash,
         linewidth = 3,
-        y_label = _make_ylabel(result.base_power),
+        y_label = y_label,
         title = title,
         kwargs...,
     )
@@ -476,24 +476,26 @@ function plot_demand(p::Union{Plots.Plot, Nothing}, result::IS.Results; kwargs..
     return p
 end
 
-function plot_demand(results::Array; kwargs...)
+function plot_demands(results::Array; kwargs...)
     backend = Plots.backend()
     set_display = get(kwargs, :set_display, true)
     save_fig = get(kwargs, :save, nothing)
+    g_title = get(kwargs, :title, "Fuel")
+    kwargs = ((k, v) for (k, v) in kwargs if k ∉ [:title, :save])
 
     demand_plots = []
-    for result in results
-        p = plot_demand(result; kwargs)
+    for (ix, result) in enumerate(results)
+        title = ix == 1 ? g_title : ""
+        p = plot_demand(result; title = title, kwargs)
         push!(demand_plots, p)
     end
     p1 = Plots.plot(demand_plots...; layout = (length(results), 1))
     set_display && display(p1)
     if !isnothing(save_fig)
         title = replace(title, " " => "_")
-        stack_title = linetype == :line ? "$(title)_Stack" : "$(title)_Stair"
-        Plots.savefig(p1, joinpath(save_fig, "$(stack_title).png"))
+        Plots.savefig(p1, joinpath(save_fig, "$(g_title).png"))
     end
-    return PlotList(Dict(:Fuel_Stack => p1))#, :Fuel_Bar => p2))
+    return PlotList(Dict(:Demand_Stack => p1))#, :Fuel_Bar => p2))
 end
 
 ################################### INPUT DEMAND #################################
@@ -811,6 +813,9 @@ function plot_fuel(p::Union{Plots.Plot, Nothing}, result::IS.Results; kwargs...)
     save_fig = get(kwargs, :save, nothing)
     curtailment = get(kwargs, :curtailment, true)
     title = get(kwargs, :title, "Fuel")
+    stack = get(kwargs, :stack, true)
+    bar = get(kwargs, :bar, false)
+    kwargs = Dict((k, v) for (k, v) in kwargs if k ∉ [:title, :save])
 
     # Generation stack
     gen = get_generation_data(result; kwargs...)
@@ -820,20 +825,21 @@ function plot_fuel(p::Union{Plots.Plot, Nothing}, result::IS.Results; kwargs...)
     # passing names here enforces order
     # TODO: enable custom sort with kwarg
     fuel_agg = combine_categories(fuel; names = intersect(CATEGORY_DEFAULT, keys(fuel)))
+    y_label = get(kwargs, :y_label, _make_ylabel(result.base_power))
 
     seriescolor = get(kwargs, :seriescolor, match_fuel_colors(fuel_agg, backend))
     p = plot_dataframe(
         fuel_agg,
         gen.time;
-        stack = true,
+        stack = stack,
         seriescolor = seriescolor,
-        y_label = _make_ylabel(result.base_power),
+        y_label = y_label,
         title = title,
         kwargs...,
     )
 
     # load line
-    p = plot_demand(p, result; kwargs...)
+    p = plot_demand(p, result; nofill = true, title = title, y_label = y_label, kwargs...)
 
     # service stack
     # TODO: how to display this?
@@ -850,20 +856,20 @@ function plot_fuels(results::Array; kwargs...)
     backend = Plots.backend()
     set_display = get(kwargs, :set_display, true)
     save_fig = get(kwargs, :save, nothing)
-    curtailment = get(kwargs, :curtailment, true)
-    title = get(kwargs, :title, "Fuel")
+    g_title = get(kwargs, :title, "Fuel")
+    kwargs = ((k, v) for (k, v) in kwargs if k ∉ [:title, :save])
 
     stack_plots = []
-    for result in results
-        p = plot_fuel(result; kwargs...)
+    for (ix, result) in enumerate(results)
+        title = ix == 1 ? g_title : ""
+        p = plot_fuel(result; title = title, kwargs...)
         push!(stack_plots, p)
     end
     p1 = Plots.plot(stack_plots...; layout = (length(results), 1))
     set_display && display(p1)
     if !isnothing(save_fig)
-        title = replace(title, " " => "_")
-        stack_title = linetype == :line ? "$(title)_Stack" : "$(title)_Stair"
-        Plots.savefig(p1, joinpath(save_fig, "$(stack_title).png"))
+        title = replace(g_title, " " => "_")
+        Plots.savefig(p1, joinpath(save_fig, "$(g_title).png"))
     end
     return PlotList(Dict(:Fuel_Stack => p1))#, :Fuel_Bar => p2))
 end

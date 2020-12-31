@@ -50,6 +50,8 @@ PLOTLY_DEFAULT = getfield.(get_default_palette(), :RGB)
 PLOTLY_FUEL_DEFAULT = getfield.(get_palette(), :RGB)
 CATEGORY_DEFAULT = getfield.(get_palette(), :category)
 
+SUPPORTED_EXTRA_PLOT_KWARGS = [:linestyle, :linewidth]
+
 VARIABLE_TYPES = ["P", "Spin", "Reg", "Flex"]
 
 SUPPORTEDVARPREFIX = "P__"
