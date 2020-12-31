@@ -1,16 +1,4 @@
 
-#=
-function _check_matching_variables(results::Array)
-    variables = DataFrames.DataFrame()
-    first_keys = collect(keys(IS.get_variables(results[1])))
-    for res in 2:length(results)
-        var = collect(keys(IS.get_variables(results[res])))
-        if var != first_keys
-            throw(IS.ConflictingInputsError("The given results do not have matching variable lists."))
-        end
-    end
-end
-=#
 
 function _empty_plot(backend::Any)
     return Plots.plot()

@@ -9,6 +9,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         throw(error("$backend_pkg backend_pkg not supported"))
     end
     set_display = false
+    cleanup = true
 
     (results_uc, results_ed) = run_test_sim(TEST_RESULT_DIR)
     gen_uc = PG.get_generation_data(results_uc)
@@ -44,7 +45,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             save = out_path,
             stair = true,
         )
-
+# TODO: add legend for grouped bar in gr
         plot_dataframe(
             gen_uc.data[:P__ThermalStandard],
             gen_uc.time,
@@ -94,7 +95,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         @test isempty(setdiff(list, expected_files))
 
         @info("removing test files")
-        rm(out_path, recursive = true)
+        cleanup && rm(out_path, recursive = true)
     end
 
     @testset "test $backend_pkg pgdata plot production" begin
@@ -143,13 +144,13 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         @test isempty(setdiff(list, expected_files))
 
         @info("removing test files")
-        rm(out_path, recursive = true)
+        cleanup && rm(out_path, recursive = true)
     end
 
     @testset "test $backend_pkg demand plot production" begin
         out_path = joinpath(file_path, backend_pkg * "_demand_plots")
         !isdir(out_path) && mkdir(out_path)
-
+# TODO: make plotly load line dashed, implement nofill for plotly
         PG.plot_demand(
             results_uc,
             set_display = set_display,
@@ -255,7 +256,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         @test isempty(setdiff(list, expected_files))
 
         @info("removing test files")
-        rm(out_path, recursive = true)
+        cleanup && rm(out_path, recursive = true)
     end
 
     @testset "test $backend_pkg fuel plot production" begin
@@ -315,7 +316,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         @test isempty(setdiff(list, expected_files))
 
         @info("removing test files")
-        rm(out_path, recursive = true)
+        cleanup && rm(out_path, recursive = true)
     end
 end
 try
