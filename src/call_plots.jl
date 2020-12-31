@@ -103,7 +103,7 @@ function plot_demands(results::Array; kwargs...)
     g_title = get(kwargs, :title, "Demand")
     kwargs = ((k, v) for (k, v) in kwargs if k ∉ [:title, :save])
 
-    plots = _empty_plots()
+    plots = []
     for (ix, result) in enumerate(results)
         title = ix == 1 ? g_title : ""
         p = plot_demand(result; title = title, kwargs...)
@@ -114,8 +114,7 @@ function plot_demands(results::Array; kwargs...)
         plots
     set_display && display(p1)
     if !isnothing(save_fig)
-        title = replace(title, " " => "_")
-        save_plot(p1, joinpath(save_fig, "$(g_title).png"))
+        @warn "Saving figures not implemented for multi-plots"
     end
     return PlotList(Dict(:Demand_Stack => p1))#, :Fuel_Bar => p2))
 end
@@ -321,7 +320,7 @@ function plot_fuels(results::Array; kwargs...)
     g_title = get(kwargs, :title, "Fuel")
     kwargs = ((k, v) for (k, v) in kwargs if k ∉ [:title, :save])
 
-    plots = _empty_plots()
+    plots = []
     for (ix, result) in enumerate(results)
         title = ix == 1 ? g_title : ""
         p = plot_fuel(result; title = title, kwargs...)
@@ -332,8 +331,7 @@ function plot_fuels(results::Array; kwargs...)
         plots
     set_display && display(p1)
     if !isnothing(save_fig)
-        title = replace(g_title, " " => "_")
-        save_plot(p1, joinpath(save_fig, "$(g_title).png"))
+        @warn "Saving figures not implemented for multi-plots"
     end
     return PlotList(Dict(:Fuel_Stack => p1))#, :Fuel_Bar => p2))
 end

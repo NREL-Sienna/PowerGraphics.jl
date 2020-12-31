@@ -106,6 +106,6 @@ function _dataframe_plots_internal(
     return p
 end
 
-function save_plot(plot::Plots.PlotlyJS.Plot, filename::String)
+function save_plot(plot::Plots.Plot, filename::String)
     Plots.savefig(plot, filename)
 end

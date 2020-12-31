@@ -905,8 +905,8 @@ function _dataframe_plots_internal(
     end
     return plot
 end
-
-function save_plot(plots::Vector{Plots.PlotlyJS.Plot}, filename::String)
+#= removing support for multi-plot figure saving
+function save_plot(plots::Vector, filename::String)
     (name, ext) = splitext(filename)
     filenames = []
     for (ix, p) in enumerate(plots)
@@ -914,7 +914,7 @@ function save_plot(plots::Vector{Plots.PlotlyJS.Plot}, filename::String)
         push!(filenames, Plots.PlotlyJS.savefig(p, fname; width = 800, height = 450))
     end
     return filenames
-end
+end=#
 function save_plot(plot::Plots.PlotlyJS.Plot, filename::String)
     Plots.PlotlyJS.savefig(plot, filename; width = 800, height = 450)
     return filename

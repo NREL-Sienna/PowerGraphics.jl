@@ -94,7 +94,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         @test isempty(setdiff(list, expected_files))
 
         @info("removing test files")
-        #rm(out_path, recursive = true)
+        rm(out_path, recursive = true)
     end
 
     @testset "test $backend_pkg pgdata plot production" begin
@@ -247,7 +247,6 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             "demand_nofill_stack.png",
             "demand_nofill_bar.png",
             "demand_nofill_bar_stack.png",
-            "demand_multi.png",
             "sysdemand.png",
         ]
         # expected results not created
@@ -309,7 +308,6 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             "fuel_stack.png",
             "fuel_bar.png",
             "fuel_bar_stack.png",
-            "fuel_multi.png",
         ]
         # expected results not created
         @test isempty(setdiff(expected_files, list))
