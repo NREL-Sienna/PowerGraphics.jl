@@ -51,6 +51,7 @@ PLOTLY_FUEL_DEFAULT = getfield.(get_palette(), :RGB)
 CATEGORY_DEFAULT = getfield.(get_palette(), :category)
 
 SUPPORTED_EXTRA_PLOT_KWARGS = [:linestyle, :linewidth]
+SUPPORTED_PLOTLY_SAVE_KWARGS = [:height, :width, :format, :scale, :js]
 
 VARIABLE_TYPES = ["P", "Spin", "Reg", "Flex"]
 

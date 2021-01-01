@@ -17,9 +17,10 @@ function _dataframe_plots_internal(
 )
     seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
     save_fig = get(kwargs, :save, nothing)
-    y_label = get(kwargs, :y_label, "")
     title = get(kwargs, :title, " ")
+    bar = get(kwargs, :bar, false)
     stack = get(kwargs, :stack, false)
+    nofill = get(kwargs, :nofill, false)
 
     time_interval =
         IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
@@ -27,73 +28,66 @@ function _dataframe_plots_internal(
         Dates.Millisecond(Dates.Hour(1)) / Dates.Millisecond(time_range[2] - time_range[1])
 
     data = convert(Matrix, variable)
+    labels = names(variable)
 
     isnothing(plot) && _empty_plot()
+    plot_kwargs = Dict{Symbol, Any}(((k, v) for (k, v) in kwargs if k in SUPPORTED_EXTRA_PLOT_KWARGS))
 
     if stack
         plot_data = cumsum(data, dims = 2)
-        fillrange = hcat(zeros(length(time_range)), plot_data)
+        if !nofill
+            plot_kwargs[:fillrange] = hcat(zeros(length(time_range)), plot_data)
+        end
     else
         plot_data = data
-        fillrange = nothing
     end
 
-    plot_kwargs = ((k, v) for (k, v) in kwargs if k in SUPPORTED_EXTRA_PLOT_KWARGS)
+    plot_kwargs[:seriescolor] = seriescolor
+    plot_kwargs[:title] = title
+    plot_kwargs[:ylims] = get(kwargs, :ylims, (0.0, Inf))
+    plot_kwargs[:ylabel] = get(kwargs, :y_label, "")
+    plot_kwargs[:xlabel] = "$time_interval"
+    plot_kwargs[:grid] = false
 
-    if get(kwargs, :bar, false)
+    if bar
         plot_data = sum(plot_data, dims = 1) ./ interval
         if stack
             x = nothing
             plot_data = plot_data[end:-1:1, end:-1:1]
-            legend = :outerright
-            lab = hcat(string.(names(variable))...)[end:-1:1, end:-1:1]
-            seriescolor = seriescolor[:, length(lab):-1:1]
+            plot_kwargs[:lab] = hcat(string.(labels)...)[end:-1:1, end:-1:1]
+            plot_kwargs[:seriescolor] = seriescolor[:, length(labels):-1:1]
+            plot_kwargs[:legend] = :outerright
         else
-            x = names(variable)
+            x = labels
             plot_data = permutedims(plot_data)
-            seriescolor = permutedims(seriescolor)
-            legend = false
-            lab = hcat(string.(names(variable))...)
+            plot_kwargs[:lab]= hcat(string.(labels)...)
+            plot_kwargs[:seriescolor] = permutedims(seriescolor)
+            plot_kwargs[:legend] = false
         end
-        plot_func = get(kwargs, :nofill, false) ? Plots.hline! : Plots.bar!
+        plot_func = nofill ? Plots.hline! : Plots.bar!
         p = plot_func(
             x,
             plot_data;
-            seriescolor = seriescolor,
-            lab = lab,
-            ylabel = y_label,
-            legend = legend,
-            title = title,
-            ylims = get(kwargs, :ylims, (0.0, Inf)),
-            xlabel = "$time_interval",
-            xtick = false,
-            plot_kwargs...,
+            plot_kwargs...
         )
     else
-        linetype = get(kwargs, :stair, false) ? :steppost : :line
+        plot_kwargs[:lab] = hcat(string.(labels)...)
+        plot_kwargs[:linetype] = get(kwargs, :stair, false) ? :steppost : :line
+        plot_kwargs[:xtick] = [time_range[1], last(time_range)]
+        plot_kwargs[:legend] = :outerright
+
         p = Plots.plot!(
             time_range,
             plot_data;
-            seriescolor = seriescolor,
-            ylabel = y_label,
-            ylims = get(kwargs, :ylims, (0.0, Inf)),
-            xlabel = "$time_interval",
-            xtick = [time_range[1], last(time_range)],
-            grid = false,
-            lab = hcat(string.(names(variable))...),
-            title = title,
-            legend = :outerright,
-            linetype = linetype,
-            fillrange = fillrange,
-            plot_kwargs...,
+            plot_kwargs...
         )
     end
     get(kwargs, :set_display, false) && display(p)
     title = title == " " ? "dataframe" : title
-    !isnothing(save_fig) && Plots.savefig(p, joinpath(save_fig, "$(title).png"))
+    !isnothing(save_fig) && save_plot(p, joinpath(save_fig, "$(title).png"), backend; kwargs...)
     return p
 end
 
-function save_plot(plot::Plots.Plot, filename::String)
-    Plots.savefig(plot, filename)
+function save_plot(plot::Plots.Plot, filename::String, backend::Any; kwargs...)
+    Plots.savefig(plot, filename) # TODO: add kwargs support
 end

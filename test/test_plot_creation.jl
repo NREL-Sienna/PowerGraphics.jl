@@ -45,7 +45,6 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             save = out_path,
             stair = true,
         )
-# TODO: add legend for grouped bar in gr
         plot_dataframe(
             gen_uc.data[:P__ThermalStandard],
             gen_uc.time,

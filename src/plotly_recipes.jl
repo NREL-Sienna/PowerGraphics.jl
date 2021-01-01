@@ -46,14 +46,14 @@ function _dataframe_plots_internal(
         Dates.Millisecond(Dates.Hour(1)) / Dates.Millisecond(time_range[2] - time_range[1])
 
     plot_data = convert(Matrix, variable)
+    showxticklabels = true
     isnothing(plot) && _empty_plot()
 
     barmode = stack ? "stack" : "group"
     plot_kwargs = Dict()
-    plot_kwargs[:x] = time_range
     if bar
         plot_data = sum(plot_data, dims = 1) ./ interval
-        xaxis = Plots.PlotlyJS.attr(; showticklabels = false)
+        showtxicklabels = false
         if nofill
             plot_kwargs[:type] = "scatter"
             plot_data = [plot_data; plot_data]
@@ -67,7 +67,6 @@ function _dataframe_plots_internal(
         if !nofill && stack
             plot_kwargs[:fill] = "tonexty"
         end
-        xaxis = Plots.PlotlyJS.attr(; showticklabels = true)
         plot_kwargs[:plot_type] = "scatter"
     end
 
@@ -75,6 +74,7 @@ function _dataframe_plots_internal(
     plot_kwargs[:mode] = "lines"
     plot_kwargs[:line_dash] = get(kwargs, :line_dash, "solid")
     plot_kwargs[:showlegend] = true
+    plot_kwargs[:x] = time_range
 
     for ix in 1:length(names)
         if bar
@@ -95,8 +95,10 @@ function _dataframe_plots_internal(
         )
         push!(traces, trace)
     end
+    y_lims = get(kwargs, :ylims, [0.0, maximum(plot_data)])
+    yaxis = Plots.PlotlyJS.attr(; showticklabels = true, range = y_lims)
+    xaxis = Plots.PlotlyJS.attr(; showticklabels = showxticklabels, kwargs...)
 
-    yaxis = Plots.PlotlyJS.attr(; showticklabels = true)
     Plots.PlotlyJS.relayout!(
         plot,
         Plots.PlotlyJS.Layout(
@@ -114,7 +116,7 @@ function _dataframe_plots_internal(
     if !isnothing(save_fig)
         title = title == " " ? "dataframe" : title
         format = get(kwargs, :format, "png")
-        save_plot(plot, joinpath(save_fig, "$title.$format"))
+        save_plot(plot, joinpath(save_fig, "$title.$format"), backend; kwargs...)
     end
     return plot
 end
@@ -128,7 +130,15 @@ function save_plot(plots::Vector, filename::String)
     end
     return filenames
 end=#
-function save_plot(plot::Any, filename::String) # this needs to be typed but Plots.PlotlyJS.Plot doesn't exist until PlotlyJS is loaded
-    Plots.PlotlyJS.savefig(plot, filename; width = 800, height = 450)
+function save_plot(plot::Any, filename::String, backend::Plots.PlotlyJSBackend; kwargs...) # this needs to be typed but Plots.PlotlyJS.Plot doesn't exist until PlotlyJS is loaded
+    save_kwargs =  Dict{Symbol, Any}(((k, v) for (k, v) in kwargs if k in SUPPORTED_PLOTLY_SAVE_KWARGS))
+    save_kwargs[:height] = get(kwargs, :height, 450)
+    save_kwargs[:width] = get(kwargs, :width, 800)
+
+    if get(save_kwargs, :format, "png") == "html"
+        Plots.PlotlyJS.savehtml(Plots.PlotlyJS.plot(plot), filename, get(save_kwargs, :js, :embed))
+    else
+        Plots.PlotlyJS.savefig(plot, filename; save_kwargs...)
+    end
     return filename
 end

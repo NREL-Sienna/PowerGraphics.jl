@@ -92,7 +92,7 @@ function plot_demand(
     set_display && display(p)
     if !isnothing(save_fig)
         title = replace(title, " " => "_")
-        save_plot(p, joinpath(save_fig, "$(title).png"))
+        save_plot(p, joinpath(save_fig, "$(title).png"), backend; kwargs...)
     end
     return p
 end
@@ -314,7 +314,7 @@ function plot_fuel(p::Any, result::IS.Results; kwargs...)
     end
     if !isnothing(save_fig)
         title = replace(title, " " => "_")
-        save_plot(p, joinpath(save_fig, "$(title).png"))
+        save_plot(p, joinpath(save_fig, "$(title).png"), backend; kwargs...)
     end
     return p
 end
