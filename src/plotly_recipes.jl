@@ -38,6 +38,7 @@ function _dataframe_plots_internal(
     title = get(kwargs, :title, " ")
     stack = get(kwargs, :stack, false)
     bar = get(kwargs, :bar, false)
+    nofill = get(kwargs, :nofill, false)
 
     time_interval =
         IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
@@ -51,7 +52,12 @@ function _dataframe_plots_internal(
     if bar
         plot_data = sum(plot_data, dims = 1) ./ interval
         xaxis = Plots.PlotlyJS.attr(; showticklabels = false)
-        plot_type = "bar"
+        if nofill
+            plot_type = "scatter"
+            plot_data = [plot_data; plot_data]
+        else
+            plot_type = "bar"
+        end
     else
         xaxis = Plots.PlotlyJS.attr(; showticklabels = true)
         plot_type = "scatter"
@@ -59,9 +65,17 @@ function _dataframe_plots_internal(
 
     line_shape = get(kwargs, :stair, false) ? "hv" : "linear"
 
+    if (bar || stack) && !nofill
+        fill_color = true
+        fill = "tonexty"
+    else
+        fill_color = false
+        fill = "tozeroy"
+    end
+
     for ix in 1:length(names)
-        stackgroup = stack ? "one" : "$ix"
-        fillcolor = bar ? seriescolor[ix] : (stack ? seriescolor[ix] : "transparent")
+        stackgroup = stack ? "one" : string(ix + plot_length)
+        fillcolor = fill_color ? seriescolor[ix] : "transparent"
         trace = Plots.PlotlyJS.scatter(;
             name = names[ix],
             x = time_range,
@@ -71,8 +85,10 @@ function _dataframe_plots_internal(
             type = plot_type,
             line_shape = line_shape,
             line_color = seriescolor[ix],
+            line_dash = get(kwargs, :line_dash, nothing),
             marker_color = seriescolor[ix],
             fillcolor = fillcolor,
+            fill = fill,
             showlegend = true,
         )
         push!(traces, trace)
@@ -90,6 +106,7 @@ function _dataframe_plots_internal(
             barmode = barmode,
         ),
     )
+    #bar && nofill && Plots.PlotlyJS.relayout!(plot, Plots.PlotlyJS.Layout(shapes = hline(dropdims(plot_data, dims = 1))))
     get(kwargs, :set_display, false) && display(Plots.PlotlyJS.plot(plot))
     if !isnothing(save_fig)
         title = title == " " ? "dataframe" : title

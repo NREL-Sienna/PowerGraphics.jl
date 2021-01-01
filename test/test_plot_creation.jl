@@ -9,7 +9,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         throw(error("$backend_pkg backend_pkg not supported"))
     end
     set_display = false
-    cleanup = true
+    cleanup = false
 
     (results_uc, results_ed) = run_test_sim(TEST_RESULT_DIR)
     gen_uc = PG.get_generation_data(results_uc)
@@ -77,8 +77,6 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             title = "df_gen_load",
             save = out_path,
         )
-
-        # aggregate by something like fuel or region
 
         list = readdir(out_path)
         expected_files = [
@@ -150,7 +148,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
     @testset "test $backend_pkg demand plot production" begin
         out_path = joinpath(file_path, backend_pkg * "_demand_plots")
         !isdir(out_path) && mkdir(out_path)
-# TODO: make plotly load line dashed, implement nofill for plotly
+# TODO: implement nofill for plotly
         PG.plot_demand(
             results_uc,
             set_display = set_display,

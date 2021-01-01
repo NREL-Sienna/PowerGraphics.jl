@@ -82,6 +82,7 @@ function plot_demand(
         load.time;
         seriescolor = ["black"],
         linestyle = :dash,
+        line_dash="dash",
         linewidth = 3,
         y_label = y_label,
         title = title,
@@ -299,13 +300,17 @@ function plot_fuel(p::Union{Plots.Plot, Plots.PlotlyJS.Plot}, result::IS.Results
         title = title,
         y_label = y_label,
         set_display = false,
+        stack = false,
         kwargs...,
     )
 
     # service stack
     # TODO: how to display this?
 
-    set_display && display(p)
+    if set_display
+        backend == Plots.PlotlyJSBackend() && Plots.PlotlyJS.plot(p)
+        display(p)
+    end
     if !isnothing(save_fig)
         title = replace(title, " " => "_")
         save_plot(p, joinpath(save_fig, "$(title).png"))
