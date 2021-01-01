@@ -58,7 +58,7 @@ function plot_demand(result::Union{IS.Results, PSY.System}; kwargs...)
 end
 
 function plot_demand(
-    p::Union{Plots.Plot, Plots.PlotlyJS.Plot},
+    p::Any,
     result::Union{IS.Results, PSY.System};
     kwargs...,
 )
@@ -161,7 +161,7 @@ function plot_dataframe(
 end
 
 function plot_dataframe(
-    p::Union{Plots.Plot, Plots.PlotlyJS.Plot},
+    p::Any,
     variable::DataFrames.DataFrame,
     time_range::Union{DataFrames.DataFrame, Array, StepRange};
     kwargs...,
@@ -209,7 +209,7 @@ function plot_pgdata(pgdata::PGData; kwargs...)
     return plot_pgdata(_empty_plot(), pgdata; kwargs...)
 end
 
-function plot_pgdata(p::Union{Plots.Plot, Plots.PlotlyJS.Plot}, pgdata::PGData; kwargs...)
+function plot_pgdata(p::Any, pgdata::PGData; kwargs...)
     if get(kwargs, :combine_categories, true)
         agg = get(kwargs, :agg, nothing)
         names = get(kwargs, :names, nothing)
@@ -256,7 +256,7 @@ function plot_fuel(result::IS.Results; kwargs...)
     return plot_fuel(_empty_plot(), result; kwargs...)
 end
 
-function plot_fuel(p::Union{Plots.Plot, Plots.PlotlyJS.Plot}, result::IS.Results; kwargs...)
+function plot_fuel(p::Any, result::IS.Results; kwargs...)
     backend = Plots.backend()
     set_display = get(kwargs, :set_display, true)
     save_fig = get(kwargs, :save, nothing)
@@ -292,6 +292,7 @@ function plot_fuel(p::Union{Plots.Plot, Plots.PlotlyJS.Plot}, result::IS.Results
         kwargs...,
     )
 
+    kwargs = Dict((k, v) for (k, v) in kwargs if k ∉ [:stack, :nofill])
     # load line
     p = plot_demand(
         p,
@@ -299,7 +300,7 @@ function plot_fuel(p::Union{Plots.Plot, Plots.PlotlyJS.Plot}, result::IS.Results
         nofill = true,
         title = title,
         y_label = y_label,
-        set_display = false,
+        set_display = set_display,
         stack = false,
         kwargs...,
     )

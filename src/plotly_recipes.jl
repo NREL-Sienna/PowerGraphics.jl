@@ -14,12 +14,12 @@ function _empty_plot(backend::Plots.PlotlyJSBackend)
     return Plots.PlotlyJS.Plot()
 end
 
-function _empty_plots(backend::Any)
+function _empty_plots(backend::Plots.PlotlyJSBackend)
     return Vector{Plots.PlotlyJS.Plot}()
 end
 
 function _dataframe_plots_internal(
-    plot::Union{Plots.PlotlyJS.Plot, Nothing},
+    plot::Any, # this needs to be typed but Plots.PlotlyJS.Plot doesn't exist until PlotlyJS is loaded
     variable::DataFrames.DataFrame,
     time_range::Array,
     backend::Plots.PlotlyJSBackend;
@@ -38,7 +38,7 @@ function _dataframe_plots_internal(
     title = get(kwargs, :title, " ")
     stack = get(kwargs, :stack, false)
     bar = get(kwargs, :bar, false)
-    nofill = get(kwargs, :nofill, false)
+    nofill = get(kwargs, :nofill, !bar && !stack)
 
     time_interval =
         IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
@@ -49,47 +49,49 @@ function _dataframe_plots_internal(
     isnothing(plot) && _empty_plot()
 
     barmode = stack ? "stack" : "group"
+    plot_kwargs = Dict()
+    plot_kwargs[:x] = time_range
     if bar
         plot_data = sum(plot_data, dims = 1) ./ interval
         xaxis = Plots.PlotlyJS.attr(; showticklabels = false)
         if nofill
-            plot_type = "scatter"
+            plot_kwargs[:type] = "scatter"
             plot_data = [plot_data; plot_data]
+            x = plot_length == 0 ? time_range : plot.data[1][:x]
+            plot_kwargs[:fill] = "tozeroy"
         else
-            plot_type = "bar"
+            plot_kwargs[:type] = "bar"
+            plot_kwargs[:fill] = "tonexty"
         end
     else
+        if !nofill && stack
+            plot_kwargs[:fill] = "tonexty"
+        end
         xaxis = Plots.PlotlyJS.attr(; showticklabels = true)
-        plot_type = "scatter"
+        plot_kwargs[:plot_type] = "scatter"
     end
 
-    line_shape = get(kwargs, :stair, false) ? "hv" : "linear"
-
-    if (bar || stack) && !nofill
-        fill_color = true
-        fill = "tonexty"
-    else
-        fill_color = false
-        fill = "tozeroy"
-    end
+    plot_kwargs[:line_shape] = get(kwargs, :stair, false) ? "hv" : "linear"
+    plot_kwargs[:mode] = "lines"
+    plot_kwargs[:line_dash] = get(kwargs, :line_dash, "solid")
+    plot_kwargs[:showlegend] = true
 
     for ix in 1:length(names)
-        stackgroup = stack ? "one" : string(ix + plot_length)
-        fillcolor = fill_color ? seriescolor[ix] : "transparent"
+        if bar
+            plot_kwargs[:marker_color] = seriescolor[ix]
+        end
+        if stack && !nofill
+            plot_kwargs[:stackgroup] = "one"
+            plot_kwargs[:fillcolor] = nofill ? "transparent" : seriescolor[ix]
+        elseif !nofill
+            plot_kwargs[:stackgroup] = string(ix + plot_length)
+        end
+        plot_kwargs[:line_color] = seriescolor[ix]
+        plot_kwargs[:name] = names[ix]
+
         trace = Plots.PlotlyJS.scatter(;
-            name = names[ix],
-            x = time_range,
             y = plot_data[:, ix],
-            stackgroup = stackgroup,
-            mode = "lines",
-            type = plot_type,
-            line_shape = line_shape,
-            line_color = seriescolor[ix],
-            line_dash = get(kwargs, :line_dash, nothing),
-            marker_color = seriescolor[ix],
-            fillcolor = fillcolor,
-            fill = fill,
-            showlegend = true,
+            plot_kwargs...
         )
         push!(traces, trace)
     end
@@ -106,6 +108,7 @@ function _dataframe_plots_internal(
             barmode = barmode,
         ),
     )
+
     #bar && nofill && Plots.PlotlyJS.relayout!(plot, Plots.PlotlyJS.Layout(shapes = hline(dropdims(plot_data, dims = 1))))
     get(kwargs, :set_display, false) && display(Plots.PlotlyJS.plot(plot))
     if !isnothing(save_fig)
@@ -125,7 +128,7 @@ function save_plot(plots::Vector, filename::String)
     end
     return filenames
 end=#
-function save_plot(plot::Plots.PlotlyJS.Plot, filename::String)
+function save_plot(plot::Any, filename::String) # this needs to be typed but Plots.PlotlyJS.Plot doesn't exist until PlotlyJS is loaded
     Plots.PlotlyJS.savefig(plot, filename; width = 800, height = 450)
     return filename
 end

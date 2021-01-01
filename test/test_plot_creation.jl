@@ -148,7 +148,6 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
     @testset "test $backend_pkg demand plot production" begin
         out_path = joinpath(file_path, backend_pkg * "_demand_plots")
         !isdir(out_path) && mkdir(out_path)
-# TODO: implement nofill for plotly
         PG.plot_demand(
             results_uc,
             set_display = set_display,
