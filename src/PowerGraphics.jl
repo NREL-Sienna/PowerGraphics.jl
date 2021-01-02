@@ -42,7 +42,9 @@ include("make_report.jl")
 include("call_plots.jl")
 
 function __init__()
-    Requires.@require Weave = "44d3d7a6-8a23-5bf8-98c5-b353f8df5ec9" include("make_report.jl")
+    Requires.@require Weave = "44d3d7a6-8a23-5bf8-98c5-b353f8df5ec9" include(
+        "make_report.jl",
+    )
 end
 
 end #module

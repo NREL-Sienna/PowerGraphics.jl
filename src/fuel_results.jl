@@ -18,7 +18,9 @@ function get_generator_mapping(filename = nothing)
                 uppercase(string(val["primemover"]))
             key = (fuel = val["fuel"], primemover = pm)
             if haskey(mappings, key)
-                error("duplicate generator mappings: $gen_type $(key.fuel) $(key.primemover)")
+                error(
+                    "duplicate generator mappings: $gen_type $(key.fuel) $(key.primemover)",
+                )
             end
             mappings[key] = gen_type
         end
