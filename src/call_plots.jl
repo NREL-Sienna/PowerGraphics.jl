@@ -45,7 +45,7 @@ plot = plot_demand(res)
 # Accepted Key Words
 - `display::Bool`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
+- `format::String = "png"`: set a different format for saving a PlotlyJS plot
 - `seriescolor::Array`: Set different colors for the plots
 - `title::String = "Title"`: Set a title for the plots
 - `horizon::Int64 = 12`: To plot a shorter window of time than the full results
@@ -140,12 +140,13 @@ plot = plot_dataframe(df, time_range)
 # Accepted Key Words
 - `display::Bool`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
+- `format::String = "png"`: set a different format for saving a PlotlyJS plot
 - `seriescolor::Array`: Set different colors for the plots
 - `title::String = "Title"`: Set a title for the plots
 - `curtailment::Bool`: plot the curtailment with the variable
 - `stack::Bool`: stack plot traces
 - `bar::Bool` : create bar plot
+- `nofill::Bool` : force empty area fill
 """
 function plot_dataframe(
     variable::DataFrames.DataFrame,
@@ -193,12 +194,13 @@ plot = plot_dataframe(df, time_range)
 - `combine_categories::Bool = false` : plot category values or each value in a category
 - `display::Bool`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
+- `format::String = "png"`: set a different format for saving a PlotlyJS plot
 - `seriescolor::Array`: Set different colors for the plots
 - `title::String = "Title"`: Set a title for the plots
 - `curtailment::Bool`: plot the curtailment with the variable
 - `stack::Bool`: stack plot traces
 - `bar::Bool` : create bar plot
+- `nofill::Bool` : force empty area fill
 """
 function plot_pgdata(pgdata::PGData; kwargs...)
     return plot_pgdata(_empty_plot(), pgdata; kwargs...)
@@ -237,11 +239,13 @@ plot = plot_fuel(res)
 # Accepted Key Words
 - `display::Bool`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
+- `format::String = "png"`: set a different format for saving a PlotlyJS plot
 - `seriescolor::Array`: Set different colors for the plots
 - `title::String = "Title"`: Set a title for the plots
 - `curtailment::Bool`: To plot the curtailment in the stack plot
-- `load::Bool`: To plot the load line in the plot
+- `stack::Bool`: stack plot traces
+- `bar::Bool` : create bar plot
+- `nofill::Bool` : force empty area fill
 - `stair::Bool`: Make a stair plot instead of a stack plot
 - `generator_mapping_file` = "file_path" : file path to yaml definig generator category by fuel and primemover
 - `variables::Union{Nothing, Vector{Symbol}}` = nothing : specific variables to plot
@@ -336,4 +340,34 @@ function plot_fuels(results::Array; kwargs...)
         @warn "Saving figures not implemented for multi-plots"
     end
     return PlotList(Dict(:Fuel_Stack => p1))#, :Fuel_Bar => p2))
+end
+
+"""
+    save_plot(plot, filename)
+
+Saves plot to specified filename
+
+# Arguments
+
+- `plot::Any`: plot object
+- `filename::String` : save to filename
+
+# Example
+
+```julia
+res = solve_op_problem!(OpProblem)
+plot = plot_fuel(res)
+save_plot(plot, "my_plot.png")
+```
+
+# Accepted Key Words (currently only implemented for PlotlyJS backend)
+- `format::String = "png"`: set a different format ["html"] for saving a PlotlyJS plot
+- `js::Symbol = :embed,` : options are [:embed, :local, :remote] see PlotlyJS.jl docs...
+- `width::Union{Nothing,Int}=nothing`
+- `height::Union{Nothing,Int}=nothing`
+- `scale::Union{Nothing,Real}=nothing`
+"""
+function save_plot(plot::Any, filename::String; kwargs...) # this needs to be typed but Plots.PlotlyJS.Plot doesn't exist until PlotlyJS is loaded
+    backend = Plots.backend()
+    return save_plot(plot, filename, backend; kwargs...)
 end

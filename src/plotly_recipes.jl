@@ -36,9 +36,9 @@ function _dataframe_plots_internal(
     save_fig = get(kwargs, :save, nothing)
     y_label = get(kwargs, :y_label, "")
     title = get(kwargs, :title, " ")
-    @show stack = get(kwargs, :stack, false)
-    @show bar = get(kwargs, :bar, false)
-    @show nofill = get(kwargs, :nofill, !bar && !stack)
+    stack = get(kwargs, :stack, false)
+    bar = get(kwargs, :bar, false)
+    nofill = get(kwargs, :nofill, !bar && !stack)
 
     time_interval =
         IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
@@ -110,16 +110,7 @@ function _dataframe_plots_internal(
     end
     return plot
 end
-#= removing support for multi-plot figure saving
-function save_plot(plots::Vector, filename::String)
-    (name, ext) = splitext(filename)
-    filenames = []
-    for (ix, p) in enumerate(plots)
-        fname = name * "_$ix" * ext
-        push!(filenames, Plots.PlotlyJS.savefig(p, fname; width = 800, height = 450))
-    end
-    return filenames
-end=#
+
 function save_plot(plot::Any, filename::String, backend::Plots.PlotlyJSBackend; kwargs...) # this needs to be typed but Plots.PlotlyJS.Plot doesn't exist until PlotlyJS is loaded
     save_kwargs = Dict{Symbol, Any}((
         (k, v) for (k, v) in kwargs if k in SUPPORTED_PLOTLY_SAVE_KWARGS
