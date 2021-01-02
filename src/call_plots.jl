@@ -301,7 +301,7 @@ function plot_fuel(p::Any, result::IS.Results; kwargs...)
         title = title,
         y_label = y_label,
         set_display = set_display,
-        stack = false,
+        stack = bar ? stack : false,
         kwargs...,
     )
 

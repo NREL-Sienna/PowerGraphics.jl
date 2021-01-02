@@ -46,10 +46,8 @@ function _dataframe_plots_internal(
         Dates.Millisecond(Dates.Hour(1)) / Dates.Millisecond(time_range[2] - time_range[1])
 
     plot_data = convert(Matrix, variable)
-    showxticklabels = true
     isnothing(plot) && _empty_plot()
 
-    barmode = stack ? "stack" : "group"
     plot_kwargs = Dict()
     if bar
         plot_data = sum(plot_data, dims = 1) ./ interval
@@ -57,8 +55,7 @@ function _dataframe_plots_internal(
         if nofill
             plot_kwargs[:type] = "scatter"
             plot_data = [plot_data; plot_data]
-            x = plot_length == 0 ? time_range : plot.data[1][:x]
-            plot_kwargs[:fill] = "tozeroy"
+            plot_kwargs[:x] = [-0.5, 0.5]
         else
             plot_kwargs[:type] = "bar"
             plot_kwargs[:fill] = "tonexty"
@@ -68,13 +65,13 @@ function _dataframe_plots_internal(
             plot_kwargs[:fill] = "tonexty"
         end
         plot_kwargs[:plot_type] = "scatter"
+        plot_kwargs[:x] = time_range
     end
 
     plot_kwargs[:line_shape] = get(kwargs, :stair, false) ? "hv" : "linear"
     plot_kwargs[:mode] = "lines"
     plot_kwargs[:line_dash] = get(kwargs, :line_dash, "solid")
     plot_kwargs[:showlegend] = true
-    plot_kwargs[:x] = time_range
 
     for ix in 1:length(names)
         if bar
@@ -95,23 +92,17 @@ function _dataframe_plots_internal(
         )
         push!(traces, trace)
     end
+    layout_kwargs = Dict{Symbol, Any}()
     y_lims = get(kwargs, :ylims, [0.0, maximum(plot_data)])
-    yaxis = Plots.PlotlyJS.attr(; showticklabels = true, range = y_lims)
-    xaxis = Plots.PlotlyJS.attr(; showticklabels = showxticklabels, kwargs...)
-
+    layout_kwargs[:yaxis] = Plots.PlotlyJS.attr(; showticklabels = true, range = y_lims, title = y_label,)
+    layout_kwargs[:xaxis] = Plots.PlotlyJS.attr(; showticklabels = bar && stack, title = "$time_interval",)
+    layout_kwargs[:title] = "$title"
+    layout_kwargs[:barmode] = stack ? "stack" : "group"
     Plots.PlotlyJS.relayout!(
         plot,
-        Plots.PlotlyJS.Layout(
-            title = "$title",
-            yaxis = yaxis,
-            xaxis = xaxis,
-            yaxis_title = y_label,
-            xaxis_title = "$time_interval",
-            barmode = barmode,
-        ),
+        Plots.PlotlyJS.Layout(;layout_kwargs...),
     )
 
-    #bar && nofill && Plots.PlotlyJS.relayout!(plot, Plots.PlotlyJS.Layout(shapes = hline(dropdims(plot_data, dims = 1))))
     get(kwargs, :set_display, false) && display(Plots.PlotlyJS.plot(plot))
     if !isnothing(save_fig)
         title = title == " " ? "dataframe" : title
