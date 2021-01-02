@@ -44,7 +44,7 @@ function _dataframe_plots_internal(
 
     plot_kwargs[:seriescolor] = seriescolor
     plot_kwargs[:title] = title
-    plot_kwargs[:ylims] = get(kwargs, :ylims, (0.0, Inf))
+    #plot_kwargs[:ylims] = get(kwargs, :ylims, (0.0, Inf))
     plot_kwargs[:ylabel] = get(kwargs, :y_label, "")
     plot_kwargs[:xlabel] = "$time_interval"
     plot_kwargs[:grid] = false

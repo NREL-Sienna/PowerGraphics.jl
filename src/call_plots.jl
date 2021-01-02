@@ -77,6 +77,7 @@ function plot_demand(p::Any, result::Union{IS.Results, PSY.System}; kwargs...)
         load_agg,
         load.time;
         seriescolor = ["black"],
+        linestyle = :dash,
         line_dash = "dash",
         linewidth = 3,
         y_label = y_label,
