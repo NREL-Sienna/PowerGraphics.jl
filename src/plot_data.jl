@@ -144,7 +144,8 @@ function add_fixed_parameters!(
     for (param_name, param) in parameters
         var_name = _get_matching_var(param_name)
         if !haskey(variables, var_name)
-            variables[var_name] = param
+            mult = any(endswith.(string(param_name), NEGATIVE_PARAMETERS)) ? -1.0 : 1.0
+            variables[var_name] = param .* mult
         end
     end
 end
@@ -307,7 +308,7 @@ function get_load_data(
         load_values =
             length(loads) == 1 ? load_values[1] :
             dropdims(sum(Matrix(reduce(hcat, load_values)), dims = 2), dims = 2)
-        parameters[:, Symbol(colname)] = load_values .* -1.0
+        parameters[:, Symbol(colname)] = load_values
     end
     time_range =
         range(initial_time, step = PSY.get_time_series_resolution(system), length = horizon)

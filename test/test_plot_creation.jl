@@ -300,12 +300,8 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         )
 
         list = readdir(out_path)
-        expected_files = [
-            "fuel.png",
-            "fuel_stack.png",
-            "fuel_bar.png",
-            "fuel_bar_stack.png",
-        ]
+        expected_files =
+            ["fuel.png", "fuel_stack.png", "fuel_bar.png", "fuel_bar_stack.png"]
         # expected results not created
         @test isempty(setdiff(expected_files, list))
         # extra results created

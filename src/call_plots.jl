@@ -57,11 +57,7 @@ function plot_demand(result::Union{IS.Results, PSY.System}; kwargs...)
     return plot_demand(_empty_plot(), result; kwargs...)
 end
 
-function plot_demand(
-    p::Any,
-    result::Union{IS.Results, PSY.System};
-    kwargs...,
-)
+function plot_demand(p::Any, result::Union{IS.Results, PSY.System}; kwargs...)
     backend = Plots.backend()
     set_display = get(kwargs, :set_display, true)
     save_fig = get(kwargs, :save, nothing)
@@ -75,14 +71,13 @@ function plot_demand(
     )
 
     load = get_load_data(result; kwargs...)
-    load_agg = combine_categories(load.data) .* -1.0
+    load_agg = combine_categories(load.data)
     p = plot_dataframe(
         p,
         load_agg,
         load.time;
         seriescolor = ["black"],
-        linestyle = :dash,
-        line_dash="dash",
+        line_dash = "dash",
         linewidth = 3,
         y_label = y_label,
         title = title,
@@ -292,7 +287,7 @@ function plot_fuel(p::Any, result::IS.Results; kwargs...)
         kwargs...,
     )
 
-    kwargs = Dict((k, v) for (k, v) in kwargs if k ∉ [:stack, :nofill])
+    kwargs = Dict((k, v) for (k, v) in kwargs if k ∉ [:nofill])
     # load line
     p = plot_demand(
         p,
@@ -301,7 +296,7 @@ function plot_fuel(p::Any, result::IS.Results; kwargs...)
         title = title,
         y_label = y_label,
         set_display = set_display,
-        stack = bar ? stack : false,
+        stack = stack,
         kwargs...,
     )
 
@@ -314,7 +309,8 @@ function plot_fuel(p::Any, result::IS.Results; kwargs...)
     end
     if !isnothing(save_fig)
         title = replace(title, " " => "_")
-        save_plot(p, joinpath(save_fig, "$(title).png"), backend; kwargs...)
+        format = get(kwargs, :format, "png")
+        save_plot(p, joinpath(save_fig, "$title.$format"), backend; kwargs...)
     end
     return p
 end

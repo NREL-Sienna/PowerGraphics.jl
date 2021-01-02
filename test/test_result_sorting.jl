@@ -56,3 +56,14 @@ end
     fuel_agg = PG.combine_categories(fuel)
     @test size(fuel_agg) == (48, 4)
 end
+
+@testset "test html saving" begin
+    plot_fuel(
+        results_ed,
+        set_display = false,
+        save = TEST_RESULT_DIR,
+        title = "fuel_html_output",
+        format = "html",
+    )
+    @test isfile(joinpath(TEST_RESULT_DIR, "fuel_html_output.html"))
+end

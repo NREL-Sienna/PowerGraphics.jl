@@ -19,7 +19,7 @@ function _empty_plots(backend::Plots.PlotlyJSBackend)
 end
 
 function _dataframe_plots_internal(
-    plot::Any, # this needs to be typed but Plots.PlotlyJS.Plot doesn't exist until PlotlyJS is loaded
+    plot::Any,
     variable::DataFrames.DataFrame,
     time_range::Array,
     backend::Plots.PlotlyJSBackend;
@@ -36,9 +36,9 @@ function _dataframe_plots_internal(
     save_fig = get(kwargs, :save, nothing)
     y_label = get(kwargs, :y_label, "")
     title = get(kwargs, :title, " ")
-    stack = get(kwargs, :stack, false)
-    bar = get(kwargs, :bar, false)
-    nofill = get(kwargs, :nofill, !bar && !stack)
+    @show stack = get(kwargs, :stack, false)
+    @show bar = get(kwargs, :bar, false)
+    @show nofill = get(kwargs, :nofill, !bar && !stack)
 
     time_interval =
         IS.convert_compound_period(length(time_range) * (time_range[2] - time_range[1]))
@@ -77,33 +77,32 @@ function _dataframe_plots_internal(
         if bar
             plot_kwargs[:marker_color] = seriescolor[ix]
         end
-        if stack && !nofill
-            plot_kwargs[:stackgroup] = "one"
-            plot_kwargs[:fillcolor] = nofill ? "transparent" : seriescolor[ix]
+        if stack
+            plot_kwargs[:stackgroup] = string(plot_length + 1)
+            if nofill
+                plot_kwargs[:fillcolor] = "transparent"
+            else
+                plot_kwargs[:fillcolor] = seriescolor[ix]
+            end
         elseif !nofill
             plot_kwargs[:stackgroup] = string(ix + plot_length)
         end
         plot_kwargs[:line_color] = seriescolor[ix]
         plot_kwargs[:name] = names[ix]
 
-        trace = Plots.PlotlyJS.scatter(;
-            y = plot_data[:, ix],
-            plot_kwargs...
-        )
+        trace = Plots.PlotlyJS.scatter(; y = plot_data[:, ix], plot_kwargs...)
         push!(traces, trace)
     end
     layout_kwargs = Dict{Symbol, Any}()
-    y_lims = get(kwargs, :ylims, [0.0, maximum(plot_data)])
-    layout_kwargs[:yaxis] = Plots.PlotlyJS.attr(; showticklabels = true, range = y_lims, title = y_label,)
-    layout_kwargs[:xaxis] = Plots.PlotlyJS.attr(; showticklabels = bar && stack, title = "$time_interval",)
+    layout_kwargs[:yaxis] =
+        Plots.PlotlyJS.attr(; showticklabels = true, rangemode = "tozero", title = y_label)
+    layout_kwargs[:xaxis] =
+        Plots.PlotlyJS.attr(; showticklabels = bar && stack, title = "$time_interval")
     layout_kwargs[:title] = "$title"
     layout_kwargs[:barmode] = stack ? "stack" : "group"
-    Plots.PlotlyJS.relayout!(
-        plot,
-        Plots.PlotlyJS.Layout(;layout_kwargs...),
-    )
+    Plots.PlotlyJS.relayout!(plot, Plots.PlotlyJS.Layout(; layout_kwargs...))
 
-    get(kwargs, :set_display, false) && display(Plots.PlotlyJS.plot(plot))
+    get(kwargs, :set_display, true) && display(Plots.PlotlyJS.plot(plot))
     if !isnothing(save_fig)
         title = title == " " ? "dataframe" : title
         format = get(kwargs, :format, "png")
@@ -122,12 +121,18 @@ function save_plot(plots::Vector, filename::String)
     return filenames
 end=#
 function save_plot(plot::Any, filename::String, backend::Plots.PlotlyJSBackend; kwargs...) # this needs to be typed but Plots.PlotlyJS.Plot doesn't exist until PlotlyJS is loaded
-    save_kwargs =  Dict{Symbol, Any}(((k, v) for (k, v) in kwargs if k in SUPPORTED_PLOTLY_SAVE_KWARGS))
+    save_kwargs = Dict{Symbol, Any}((
+        (k, v) for (k, v) in kwargs if k in SUPPORTED_PLOTLY_SAVE_KWARGS
+    ))
     save_kwargs[:height] = get(kwargs, :height, 450)
     save_kwargs[:width] = get(kwargs, :width, 800)
-
+    @info "saving plot" filename
     if get(save_kwargs, :format, "png") == "html"
-        Plots.PlotlyJS.savehtml(Plots.PlotlyJS.plot(plot), filename, get(save_kwargs, :js, :embed))
+        Plots.PlotlyJS.savehtml(
+            Plots.PlotlyJS.plot(plot),
+            filename,
+            get(save_kwargs, :js, :embed),
+        )
     else
         Plots.PlotlyJS.savefig(plot, filename; save_kwargs...)
     end

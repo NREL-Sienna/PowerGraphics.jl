@@ -1,5 +1,4 @@
 
-
 function _empty_plot(backend::Any)
     return Plots.plot()
 end
@@ -31,7 +30,8 @@ function _dataframe_plots_internal(
     labels = names(variable)
 
     isnothing(plot) && _empty_plot()
-    plot_kwargs = Dict{Symbol, Any}(((k, v) for (k, v) in kwargs if k in SUPPORTED_EXTRA_PLOT_KWARGS))
+    plot_kwargs =
+        Dict{Symbol, Any}(((k, v) for (k, v) in kwargs if k in SUPPORTED_EXTRA_PLOT_KWARGS))
 
     if stack
         plot_data = cumsum(data, dims = 2)
@@ -60,31 +60,24 @@ function _dataframe_plots_internal(
         else
             x = labels
             plot_data = permutedims(plot_data)
-            plot_kwargs[:lab]= hcat(string.(labels)...)
+            plot_kwargs[:lab] = hcat(string.(labels)...)
             plot_kwargs[:seriescolor] = permutedims(seriescolor)
             plot_kwargs[:legend] = false
         end
         plot_func = nofill ? Plots.hline! : Plots.bar!
-        p = plot_func(
-            x,
-            plot_data;
-            plot_kwargs...
-        )
+        p = plot_func(x, plot_data; plot_kwargs...)
     else
         plot_kwargs[:lab] = hcat(string.(labels)...)
         plot_kwargs[:linetype] = get(kwargs, :stair, false) ? :steppost : :line
         plot_kwargs[:xtick] = [time_range[1], last(time_range)]
         plot_kwargs[:legend] = :outerright
 
-        p = Plots.plot!(
-            time_range,
-            plot_data;
-            plot_kwargs...
-        )
+        p = Plots.plot!(time_range, plot_data; plot_kwargs...)
     end
     get(kwargs, :set_display, false) && display(p)
     title = title == " " ? "dataframe" : title
-    !isnothing(save_fig) && save_plot(p, joinpath(save_fig, "$(title).png"), backend; kwargs...)
+    !isnothing(save_fig) &&
+        save_plot(p, joinpath(save_fig, "$(title).png"), backend; kwargs...)
     return p
 end
 
