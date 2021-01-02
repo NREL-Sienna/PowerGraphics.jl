@@ -8,7 +8,7 @@ function test_reports(file_path::String; backend_pkg::String = "gr")
     else
         throw(error("$backend_pkg backend_pkg not supported"))
     end
-    cleanup = false
+    cleanup = true
 
     @testset "testing $backend_pkg report production" begin
         out_path = joinpath(file_path, backend_pkg * "_reports")
