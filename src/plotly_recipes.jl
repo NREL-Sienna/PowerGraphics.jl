@@ -24,10 +24,12 @@ function _dataframe_plots_internal(
     names = DataFrames.names(variable)
     traces = plot.data
     plot_length = length(traces)
-    seriescolor = permutedims(set_seriescolor(
-        get(kwargs, :seriescolor, PLOTLY_DEFAULT),
-        vcat(ones(plot_length), names),
-    )[plot_length + 1:end])
+    seriescolor = permutedims(
+        set_seriescolor(
+            get(kwargs, :seriescolor, PLOTLY_DEFAULT),
+            vcat(ones(plot_length), names),
+        )[(plot_length + 1):end],
+    )
 
     save_fig = get(kwargs, :save, nothing)
     y_label = get(kwargs, :y_label, "")

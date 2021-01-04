@@ -19,10 +19,12 @@ function _dataframe_plots_internal(
     kwargs...,
 )
     existing_colors = ones(length(plot.series_list))
-    seriescolor = permutedims(set_seriescolor(
-        get(kwargs, :seriescolor, GR_DEFAULT),
-        vcat(existing_colors, DataFrames.names(variable)),
-    )[length(existing_colors) + 1:end])
+    seriescolor = permutedims(
+        set_seriescolor(
+            get(kwargs, :seriescolor, GR_DEFAULT),
+            vcat(existing_colors, DataFrames.names(variable)),
+        )[(length(existing_colors) + 1):end],
+    )
 
     save_fig = get(kwargs, :save, nothing)
     title = get(kwargs, :title, " ")
