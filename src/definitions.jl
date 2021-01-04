@@ -44,7 +44,7 @@ function get_default_palette()
     return default_palette
 end
 
-GR_DEFAULT = getfield.(get_default_palette(), :color)'
+GR_DEFAULT = permutedims(getfield.(get_default_palette(), :color))
 FUEL_DEFAULT = getfield.(get_palette(), :color)
 PLOTLY_DEFAULT = getfield.(get_default_palette(), :RGB)
 PLOTLY_FUEL_DEFAULT = getfield.(get_palette(), :RGB)

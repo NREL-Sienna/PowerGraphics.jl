@@ -1,4 +1,12 @@
 
+function set_seriescolor(seriescolor::Array, vars::Array)
+    color_length = length(seriescolor)
+    var_length = length(vars)
+    n = Int(ceil(var_length / color_length))
+    colors = repeat(seriescolor, n)[1:var_length]
+    return colors
+end
+
 function _empty_plot(backend::Any)
     return Plots.plot()
 end
@@ -14,7 +22,12 @@ function _dataframe_plots_internal(
     backend::Any;
     kwargs...,
 )
-    seriescolor = get(kwargs, :seriescolor, GR_DEFAULT)
+    existing_colors = ones(length(plot.series_list))
+    seriescolor = permutedims(set_seriescolor(
+        get(kwargs, :seriescolor, GR_DEFAULT),
+        vcat(existing_colors, DataFrames.names(variable)),
+    )[length(existing_colors) + 1:end])
+
     save_fig = get(kwargs, :save, nothing)
     title = get(kwargs, :title, " ")
     bar = get(kwargs, :bar, false)
@@ -27,7 +40,7 @@ function _dataframe_plots_internal(
         Dates.Millisecond(Dates.Hour(1)) / Dates.Millisecond(time_range[2] - time_range[1])
 
     data = convert(Matrix, variable)
-    labels = names(variable)
+    labels = DataFrames.names(variable)
 
     isnothing(plot) && _empty_plot()
     plot_kwargs =
@@ -44,8 +57,15 @@ function _dataframe_plots_internal(
 
     plot_kwargs[:seriescolor] = seriescolor
     plot_kwargs[:title] = title
-    ymin = minimum(plot_data) <= 0.0 ? -Inf : 0.0
-    ymax = maximum(plot_data) >= 0.0 ? Inf : 0.0
+
+    series_min, series_max = 0.0, 0.0
+    for s in plot.series_list
+        series_min = min(minimum(s[:y]), series_min)
+        series_max = max(maximum(s[:y]), series_max)
+    end
+    ymin = min(series_min, minimum(plot_data)) <= 0.0 ? -Inf : 0.0
+    ymax = max(series_max, maximum(plot_data)) >= 0.0 ? Inf : 0.0
+
     plot_kwargs[:ylims] = get(kwargs, :ylims, (ymin, ymax))
     plot_kwargs[:ylabel] = get(kwargs, :y_label, "")
     plot_kwargs[:xlabel] = "$time_interval"

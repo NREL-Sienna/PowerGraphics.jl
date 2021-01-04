@@ -1,15 +1,15 @@
 ### PlotlyJS set up
-
-function set_seriescolor(seriescolor::Array, gens::Array)
+#=
+function set_seriescolor(seriescolor::Array, vars::Array)
     colors = []
-    for i in 1:length(gens)
+    for i in 1:length(vars)
         count = i % length(seriescolor)
         count = count == 0 ? length(seriescolor) : count
         colors = vcat(colors, seriescolor[count])
     end
     return colors
 end
-
+=#
 function _empty_plot(backend::Plots.PlotlyJSBackend)
     return Plots.PlotlyJS.Plot()
 end
@@ -28,10 +28,10 @@ function _dataframe_plots_internal(
     names = DataFrames.names(variable)
     traces = plot.data
     plot_length = length(traces)
-    seriescolor = set_seriescolor(
+    seriescolor = permutedims(set_seriescolor(
         get(kwargs, :seriescolor, PLOTLY_DEFAULT),
-        [ones(plot_length); names],
-    ) #TODO: add this to GR
+        vcat(ones(plot_length), names),
+    )[plot_length + 1:end])
 
     save_fig = get(kwargs, :save, nothing)
     y_label = get(kwargs, :y_label, "")
@@ -97,7 +97,7 @@ function _dataframe_plots_internal(
     layout_kwargs[:yaxis] =
         Plots.PlotlyJS.attr(; showticklabels = true, rangemode = "tozero", title = y_label)
     layout_kwargs[:xaxis] =
-        Plots.PlotlyJS.attr(; showticklabels = bar && stack, title = "$time_interval")
+        Plots.PlotlyJS.attr(; showticklabels = !bar, title = "$time_interval")
     layout_kwargs[:title] = "$title"
     layout_kwargs[:barmode] = stack ? "stack" : "group"
     Plots.PlotlyJS.relayout!(plot, Plots.PlotlyJS.Layout(; layout_kwargs...))
