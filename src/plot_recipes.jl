@@ -11,10 +11,6 @@ function _empty_plot(backend::Any)
     return Plots.plot()
 end
 
-function _empty_plots(backend::Any)
-    return Vector{Plots.Plot}()
-end
-
 function _dataframe_plots_internal(
     plot::Union{Plots.Plot, Nothing},
     variable::DataFrames.DataFrame,

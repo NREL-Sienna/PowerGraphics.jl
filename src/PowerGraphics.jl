@@ -3,11 +3,9 @@ isdefined(Base, :__precompile__) && __precompile__()
 module PowerGraphics
 
 export plot_demand
-export plot_demands
 export plot_dataframe
 export plot_pgdata
 export plot_fuel
-export plot_fuels
 export make_fuel_dictionary
 export report
 export get_generation_data

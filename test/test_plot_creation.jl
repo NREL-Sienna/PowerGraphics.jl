@@ -220,13 +220,6 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             nofill = true,
         )
 
-        PG.plot_demands(
-            [results_uc, results_ed],
-            set_display = set_display,
-            title = "demand_multi",
-            save = out_path,
-        )
-
         PG.plot_demand(
             results_uc.system,
             set_display = set_display,
@@ -290,13 +283,6 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             save = out_path,
             bar = true,
             stack = true,
-        )
-
-        PG.plot_fuels(
-            [results_uc, results_ed],
-            set_display = set_display,
-            title = "fuel_multi",
-            save = out_path,
         )
 
         list = readdir(out_path)

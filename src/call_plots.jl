@@ -4,11 +4,6 @@ function _empty_plot()
     return _empty_plot(backend)
 end
 
-function _empty_plots()
-    backend = Plots.backend()
-    return _empty_plots(backend)
-end
-
 function _make_ylabel(
     base_power::Float64;
     variable::String = "Generation",
@@ -41,6 +36,10 @@ This function makes a plot of the demand in the system.
 res = solve_op_problem!(OpProblem)
 plot = plot_demand(res)
 ```
+
+# Arguments
+- `plot::Any` : existing plot handle (optional)
+- `result::Union{IS.Results, PSY.System}` : simulation results or PowerSystems.System
 
 # Accepted Key Words
 - `display::Bool`: set to false to prevent the plots from displaying
@@ -91,29 +90,6 @@ function plot_demand(p::Any, result::Union{IS.Results, PSY.System}; kwargs...)
         save_plot(p, joinpath(save_fig, "$(title).png"), backend; kwargs...)
     end
     return p
-end
-
-function plot_demands(results::Array; kwargs...)
-    backend = Plots.backend()
-    set_display = get(kwargs, :set_display, true)
-    save_fig = get(kwargs, :save, nothing)
-    g_title = get(kwargs, :title, "Demand")
-    kwargs = ((k, v) for (k, v) in kwargs if k ∉ [:title, :save])
-
-    plots = []
-    for (ix, result) in enumerate(results)
-        title = ix == 1 ? g_title : ""
-        p = plot_demand(result; title = title, kwargs...)
-        push!(plots, p)
-    end
-    p1 =
-        backend == Plots.GRBackend() ? Plots.plot(plots...; layout = (length(results), 1)) :
-        plots
-    set_display && display(p1)
-    if !isnothing(save_fig)
-        @warn "Saving figures not implemented for multi-plots"
-    end
-    return PlotList(Dict(:Demand_Stack => p1))#, :Fuel_Bar => p2))
 end
 
 ################################# Plotting a Single DataFrame ##########################
@@ -180,6 +156,7 @@ This function makes a plot of a PGdata object
 
 # Arguments
 
+- `plot::Any` : existing plot handle (optional)
 - `pgdata::PGData`: The dataframe to be plotted
 
 # Example
@@ -228,7 +205,8 @@ and assigns each fuel type a specific color.
 
 # Arguments
 
-- `res::Union{Results, Vector{IS.Results}}`: results to be plotted
+- `plot::Any` : existing plot handle (optional)
+- `res::Results` : results to be plotted
 
 # Example
 
@@ -318,29 +296,6 @@ function plot_fuel(p::Any, result::IS.Results; kwargs...)
         save_plot(p, joinpath(save_fig, "$title.$format"), backend; kwargs...)
     end
     return p
-end
-
-function plot_fuels(results::Array; kwargs...)
-    backend = Plots.backend()
-    set_display = get(kwargs, :set_display, true)
-    save_fig = get(kwargs, :save, nothing)
-    g_title = get(kwargs, :title, "Fuel")
-    kwargs = ((k, v) for (k, v) in kwargs if k ∉ [:title, :save])
-
-    plots = []
-    for (ix, result) in enumerate(results)
-        title = ix == 1 ? g_title : ""
-        p = plot_fuel(result; title = title, kwargs...)
-        push!(plots, p)
-    end
-    p1 =
-        backend == Plots.GRBackend() ? Plots.plot(plots...; layout = (length(results), 1)) :
-        plots
-    set_display && display(p1)
-    if !isnothing(save_fig)
-        @warn "Saving figures not implemented for multi-plots"
-    end
-    return PlotList(Dict(:Fuel_Stack => p1))#, :Fuel_Bar => p2))
 end
 
 """

@@ -14,10 +14,6 @@ function _empty_plot(backend::Plots.PlotlyJSBackend)
     return Plots.PlotlyJS.Plot()
 end
 
-function _empty_plots(backend::Plots.PlotlyJSBackend)
-    return Vector{Plots.PlotlyJS.Plot}()
-end
-
 function _dataframe_plots_internal(
     plot::Any,
     variable::DataFrames.DataFrame,
