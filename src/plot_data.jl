@@ -288,13 +288,13 @@ function get_load_data(
     end
     horizon = get(kwargs, :horizon, PSY.get_forecast_horizon(system))
     initial_time = get(kwargs, :initial_time, PSY.get_forecast_initial_timestamp(system))
-    parameters = DataFrames.DataFrame()
+    parameters = Dict{Symbol, DataFrames.DataFrame}()
     PSY.set_units_base_system!(system, "SYSTEM_BASE")
     for agg in aggregation_components
         loads = _get_loads(system, agg)
         length(loads) == 0 && continue
         colname = aggregation == PSY.System ? "System" : PSY.get_name(agg)
-        load_values = []
+        load_values = DataFrames.DataFrame()
         for load in loads
             f = PSY.get_time_series_values( # TODO: this isn't applying the scaling factors
                 PSY.Deterministic,
@@ -303,20 +303,14 @@ function get_load_data(
                 start_time = initial_time,
                 len = horizon,
             )
-            push!(load_values, f)
+            load_values[:, PSY.get_name(load)] = f
         end
-        load_values =
-            length(loads) == 1 ? load_values[1] :
-            dropdims(sum(Matrix(reduce(hcat, load_values)), dims = 2), dims = 2)
-        parameters[:, Symbol(colname)] = load_values
+        parameters[Symbol(colname)] = load_values
     end
     time_range =
         range(initial_time, step = PSY.get_time_series_resolution(system), length = horizon)
 
-    return PGData(
-        Dict(:Load => parameters[!, setdiff(names(parameters), "timestamp")]),
-        time_range,
-    )
+    return PGData(parameters, time_range)
 end
 
 function get_service_data(results::PSI.StageResults; kwargs...)

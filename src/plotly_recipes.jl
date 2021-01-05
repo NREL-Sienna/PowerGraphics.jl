@@ -1,15 +1,5 @@
-### PlotlyJS set up
-#=
-function set_seriescolor(seriescolor::Array, vars::Array)
-    colors = []
-    for i in 1:length(vars)
-        count = i % length(seriescolor)
-        count = count == 0 ? length(seriescolor) : count
-        colors = vcat(colors, seriescolor[count])
-    end
-    return colors
-end
-=#
+#Base.show(io::IO, mm::MIME"text/plain", p::Plots.PlotlyJS.Plot) = show(io, mm, "PlotlyJS Plot with $(length(p.data)) traces")
+
 function _empty_plot(backend::Plots.PlotlyJSBackend)
     return Plots.PlotlyJS.Plot()
 end

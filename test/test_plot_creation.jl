@@ -9,7 +9,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         throw(error("$backend_pkg backend_pkg not supported"))
     end
     set_display = false
-    cleanup = true
+    cleanup = false
 
     (results_uc, results_ed) = run_test_sim(TEST_RESULT_DIR)
     gen_uc = PG.get_generation_data(results_uc)
@@ -220,12 +220,25 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             nofill = true,
         )
 
-        PG.plot_demand(
+        p = PG.plot_demand(
             results_uc.system,
             set_display = set_display,
             title = "sysdemand",
             save = out_path,
+            aggregation = System,
         )
+        plot_length = backend_pkg == "gr" ? length(p.series_list) : length(p.data)
+        @test plot_length == 1
+
+        p = PG.plot_demand(
+            results_uc.system,
+            set_display = set_display,
+            title = "sysdemand_bus",
+            save = out_path,
+            aggregation = Bus,
+        )
+        plot_length = backend_pkg == "gr" ? length(p.series_list) : length(p.data)
+        @test plot_length == 3
 
         list = readdir(out_path)
         expected_files = [
@@ -238,6 +251,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             "demand_nofill_bar.png",
             "demand_nofill_bar_stack.png",
             "sysdemand.png",
+            "sysdemand_bus.png",
         ]
         # expected results not created
         @test isempty(setdiff(expected_files, list))

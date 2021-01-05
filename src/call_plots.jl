@@ -46,6 +46,7 @@ plot = plot_demand(res)
 - `save::String = "file_path"`: set a file path to save the plots
 - `format::String = "png"`: set a different format for saving a PlotlyJS plot
 - `seriescolor::Array`: Set different colors for the plots
+- `linestyle::Symbol = :dash` : set line style
 - `title::String = "Title"`: Set a title for the plots
 - `horizon::Int64 = 12`: To plot a shorter window of time than the full results
 - `initial_time::DateTime`: To start the plot at a different time other than the results initial time
@@ -61,6 +62,7 @@ function plot_demand(p::Any, result::Union{IS.Results, PSY.System}; kwargs...)
     set_display = get(kwargs, :set_display, true)
     save_fig = get(kwargs, :save, nothing)
     bar = get(kwargs, :bar, false)
+    linestyle = get(kwargs, :linestyle, :solid)
 
     title = get(kwargs, :title, "Demand")
     y_label = get(
@@ -76,9 +78,9 @@ function plot_demand(p::Any, result::Union{IS.Results, PSY.System}; kwargs...)
         load_agg,
         load.time;
         seriescolor = ["black"],
-        linestyle = :dash,
-        line_dash = "dash",
-        linewidth = 3,
+        linestyle = Symbol(linestyle),
+        line_dash = string(linestyle),
+        linewidth = get(kwargs, :linewidth, 1),
         y_label = y_label,
         title = title,
         kwargs...,
@@ -242,7 +244,8 @@ function plot_fuel(p::Any, result::IS.Results; kwargs...)
     title = get(kwargs, :title, "Fuel")
     stack = get(kwargs, :stack, true)
     bar = get(kwargs, :bar, false)
-    kwargs = Dict((k, v) for (k, v) in kwargs if k ∉ [:title, :save, :set_display])
+    kwargs =
+        Dict{Symbol, Any}((k, v) for (k, v) in kwargs if k ∉ [:title, :save, :set_display])
 
     # Generation stack
     gen = get_generation_data(result; kwargs...)
@@ -270,7 +273,10 @@ function plot_fuel(p::Any, result::IS.Results; kwargs...)
         kwargs...,
     )
 
-    kwargs = Dict((k, v) for (k, v) in kwargs if k ∉ [:nofill])
+    kwargs = Dict{Symbol, Any}((k, v) for (k, v) in kwargs if k ∉ [:nofill])
+    kwargs[:linestyle] = get(kwargs, :linestyle, :dash)
+    kwargs[:linewidth] = get(kwargs, :linewidth, 3)
+
     # load line
     p = plot_demand(
         p,

@@ -56,13 +56,16 @@ function _dataframe_plots_internal(
     plot_kwargs[:seriescolor] = seriescolor
     plot_kwargs[:title] = title
 
-    series_min, series_max = 0.0, 0.0
+    maxnan(a) = maximum(x -> isnan(x) ? -Inf : x, a)
+    minnan(a) = minimum(x -> isnan(x) ? Inf : x, a)
+
+    series_min, series_max = minnan(plot_data), maxnan(plot_data)
     for s in plot.series_list
-        series_min = min(minimum(s[:y]), series_min)
-        series_max = max(maximum(s[:y]), series_max)
+        series_min = min(minnan(s[:y]), series_min)
+        series_max = max(maxnan(s[:y]), series_max)
     end
-    ymin = min(series_min, minimum(plot_data)) <= 0.0 ? -Inf : 0.0
-    ymax = max(series_max, maximum(plot_data)) >= 0.0 ? Inf : 0.0
+    ymin = series_min <= 0.0 ? -Inf : 0.0
+    ymax = series_max >= 0.0 ? Inf : 0.0
 
     plot_kwargs[:ylims] = get(kwargs, :ylims, (ymin, ymax))
     plot_kwargs[:ylabel] = get(kwargs, :y_label, "")
