@@ -19,6 +19,18 @@ function _make_ylabel(
     return ylabel
 end
 
+function get_default_seriescolor()
+    backend = Plots.backend()
+    return get_default_seriescolor(backend)
+end
+
+function get_default_seriescolor(backend::Any)
+    return GR_DEFAULT
+end
+
+function get_default_seriescolor(backend::Plots.PlotlyJSBackend)
+    return PLOTLY_DEFAULT
+end
 ################################### DEMAND #################################
 
 """
@@ -77,7 +89,7 @@ function plot_demand(p::Any, result::Union{IS.Results, PSY.System}; kwargs...)
         p,
         load_agg,
         load.time;
-        seriescolor = ["black"],
+        seriescolor = get(kwargs, :seriescolor, get_default_seriescolor()),
         linestyle = Symbol(linestyle),
         line_dash = string(linestyle),
         linewidth = get(kwargs, :linewidth, 1),
@@ -273,7 +285,7 @@ function plot_fuel(p::Any, result::IS.Results; kwargs...)
         kwargs...,
     )
 
-    kwargs = Dict{Symbol, Any}((k, v) for (k, v) in kwargs if k ∉ [:nofill])
+    kwargs = Dict{Symbol, Any}((k, v) for (k, v) in kwargs if k ∉ [:nofill, :seriescolor])
     kwargs[:linestyle] = get(kwargs, :linestyle, :dash)
     kwargs[:linewidth] = get(kwargs, :linewidth, 3)
 
@@ -286,6 +298,7 @@ function plot_fuel(p::Any, result::IS.Results; kwargs...)
         y_label = y_label,
         set_display = set_display,
         stack = stack,
+        seriescolor = ["black"],
         kwargs...,
     )
 

@@ -9,7 +9,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         throw(error("$backend_pkg backend_pkg not supported"))
     end
     set_display = false
-    cleanup = false
+    cleanup = true
 
     (results_uc, results_ed) = run_test_sim(TEST_RESULT_DIR)
     gen_uc = PG.get_generation_data(results_uc)

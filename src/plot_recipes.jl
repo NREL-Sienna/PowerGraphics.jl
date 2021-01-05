@@ -1,4 +1,3 @@
-
 function set_seriescolor(seriescolor::Array, vars::Array)
     color_length = length(seriescolor)
     var_length = length(vars)
