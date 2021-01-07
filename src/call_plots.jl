@@ -253,6 +253,7 @@ function plot_fuel(p::Any, result::IS.Results; kwargs...)
     set_display = get(kwargs, :set_display, true)
     save_fig = get(kwargs, :save, nothing)
     curtailment = get(kwargs, :curtailment, true)
+    slacks = get(kwargs, :slacks, true)
     title = get(kwargs, :title, "Fuel")
     stack = get(kwargs, :stack, true)
     bar = get(kwargs, :bar, false)
@@ -262,7 +263,7 @@ function plot_fuel(p::Any, result::IS.Results; kwargs...)
     # Generation stack
     gen = get_generation_data(result; kwargs...)
     cat = make_fuel_dictionary(PSI.get_system(result); kwargs...)
-    fuel = categorize_data(gen.data, cat; curtailment = curtailment)
+    fuel = categorize_data(gen.data, cat; curtailment = curtailment, slacks = slacks)
 
     # passing names here enforces order
     # TODO: enable custom sort with kwarg

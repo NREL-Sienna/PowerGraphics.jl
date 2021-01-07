@@ -13,7 +13,7 @@ Base.show(io::IO, mm::MIME"text/plain", p::PlotList) =
 # the fundamental struct for plotting
 struct PGData
     data::Dict{Symbol, DataFrames.DataFrame}
-    time::StepRange{Dates.DateTime}
+    time::Union{StepRange{Dates.DateTime}, Vector{Dates.DateTime}}
 end
 
 #### Generation Names ####
@@ -30,7 +30,7 @@ function get_generation_variable_names(
             if any(endswith.(name_string, SUPPORTEDGENPARAMS))
                 push!(filter_names, name)
             end
-        elseif any(name .== SLACKVARS)
+        elseif any(name .== keys(SLACKVARS))
             push!(filter_names, name)
         end
     end
@@ -371,6 +371,7 @@ function categorize_data(
     data::Dict{Symbol, DataFrames.DataFrame},
     aggregation::Dict;
     curtailment = true,
+    slacks = true,
 )
     category_dataframes = Dict{String, DataFrames.DataFrame}()
     var_types = Dict(zip(last.(split.(string.(keys(data)), "_")), keys(data)))
@@ -394,5 +395,11 @@ function categorize_data(
     if curtailment && haskey(data, :Curtailment)
         category_dataframes["Curtailment"] = data[:Curtailment]
     end
+    for (slack, slack_name) in SLACKVARS
+        if slacks && haskey(data, slack)
+            category_dataframes[slack_name] = data[slack]
+        end
+    end
+
     return category_dataframes
 end

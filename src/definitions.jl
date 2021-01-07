@@ -82,7 +82,10 @@ DOWN_RESERVES = ["VariableReserve_ReserveDown", "StaticReserve_ReserveDown"]
 
 OVERGENERATION_VARIABLE = :γ⁻__P
 UNSERVEDENERGY_VARIABLE = :γ⁺__P
-SLACKVARS = [OVERGENERATION_VARIABLE, UNSERVEDENERGY_VARIABLE]
+SLACKVARS = Dict(
+    OVERGENERATION_VARIABLE => "Over Generation",
+    UNSERVEDENERGY_VARIABLE => "Unserved Energy",
+)
 
 LOAD_PARAMETER = :P__max_active_power__PowerLoad
 ILOAD_PARAMETER = :P__max_active_power__InterruptibleLoad
