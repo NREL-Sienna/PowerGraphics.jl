@@ -46,11 +46,11 @@ end
 
 # Recursively find all subtypes: useful for categorizing variables
 function all_subtypes(t::Type)
-    st = InteractiveUtils.subtypes(t)
+    st = [t]
     for t in st
         union!(st, InteractiveUtils.subtypes(t))
     end
-    return st
+    return [split(string(s), ".")[end] for s in st]
 end
 
 GR_DEFAULT = permutedims(getfield.(get_default_palette(), :color))
@@ -67,7 +67,7 @@ VARIABLE_TYPES = ["P", "Spin", "Reg", "Flex"]
 SUPPORTEDVARPREFIX = "P__"
 SUPPORTEDPARAMPREFIX = "P__max_active_power__"
 
-SUPPORTEDGENPARAMS = string.(all_subtypes(PSY.Generator))
+SUPPORTEDGENPARAMS = all_subtypes(PSY.Generator)
 SUPPORTEDLOADPARAMS = ["PowerLoad", "InterruptibleLoad"]
 
 NEGATIVE_PARAMETERS = ["PowerLoad"]
