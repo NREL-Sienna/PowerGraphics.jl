@@ -44,6 +44,15 @@ function get_default_palette()
     return default_palette
 end
 
+# Recursively find all subtypes: useful for categorizing variables
+function all_subtypes(t::Type)
+    st = InteractiveUtils.subtypes(t)
+    for t in st
+        union!(st, InteractiveUtils.subtypes(t))
+    end
+    return st
+end
+
 GR_DEFAULT = permutedims(getfield.(get_default_palette(), :color))
 FUEL_DEFAULT = getfield.(get_palette(), :color)
 PLOTLY_DEFAULT = getfield.(get_default_palette(), :RGB)
@@ -57,14 +66,8 @@ VARIABLE_TYPES = ["P", "Spin", "Reg", "Flex"]
 
 SUPPORTEDVARPREFIX = "P__"
 SUPPORTEDPARAMPREFIX = "P__max_active_power__"
-SUPPORTEDGENPARAMS = [
-    "RenewableDispatch",
-    "RenewableFix",
-    "HydroDispatch",
-    "HydroEnergyReservoir",
-    "ThermalStandard",
-]
 
+SUPPORTEDGENPARAMS = string.(all_subtypes(PSY.Generator))
 SUPPORTEDLOADPARAMS = ["PowerLoad", "InterruptibleLoad"]
 
 NEGATIVE_PARAMETERS = ["PowerLoad"]
