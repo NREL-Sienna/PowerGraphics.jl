@@ -67,7 +67,6 @@ VARIABLE_TYPES = ["P", "Spin", "Reg", "Flex"]
 SUPPORTEDVARPREFIX = "P__"
 SUPPORTEDPARAMPREFIX = "P__max_active_power__"
 
-SUPPORTEDGENPARAMS = all_subtypes(PSY.Generator)
 SUPPORTEDLOADPARAMS = ["PowerLoad", "InterruptibleLoad"]
 
 NEGATIVE_PARAMETERS = ["PowerLoad"]

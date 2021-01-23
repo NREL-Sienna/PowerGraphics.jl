@@ -27,7 +27,7 @@ function get_generation_variable_names(
     for name in names
         name_string = string(name)
         if any(startswith.(name_string, SUPPORTEDVARPREFIX))
-            if any(endswith.(name_string, SUPPORTEDGENPARAMS))
+            if any(endswith.(name_string, all_subtypes(PSY.Generator)))
                 push!(filter_names, name)
             end
         elseif any(name .== keys(SLACKVARS))
@@ -47,7 +47,7 @@ function get_generation_parameter_names(
     for name in names
         name_string = string(name)
         if any(startswith.(name_string, SUPPORTEDPARAMPREFIX))
-            if any(endswith.(name_string, SUPPORTEDGENPARAMS))
+            if any(endswith.(name_string, all_subtypes(PSY.Generator)))
                 push!(filter_names, name)
             end
         end
