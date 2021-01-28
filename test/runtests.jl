@@ -12,6 +12,8 @@ using PlotlyJS
 using PowerSimulations
 using GLPK
 using Weave
+using TimeSeries
+using DataStructures
 
 const PG = PowerGraphics
 const IS = InfrastructureSystems
@@ -19,10 +21,10 @@ const PSY = PowerSystems
 const PSI = PowerSimulations
 const LOG_FILE = "PowerGraphics-test.log"
 
-base_dir = dirname(dirname(pathof(PowerGraphics)))
-template_dir = joinpath(base_dir, "report_templates")
+const BASE_DIR = dirname(dirname(pathof(PowerGraphics)))
+const TEST_DIR = joinpath(BASE_DIR, "test")
+template_dir = joinpath(BASE_DIR, "report_templates")
 const generic_template = joinpath(template_dir, "generic_report_template.jmd")
-const fuel_template = joinpath(template_dir, "fuel_report_template.jmd")
 
 LOG_LEVELS = Dict(
     "Debug" => Logging.Debug,
@@ -42,9 +44,9 @@ macro includetests(testarg...)
 
     quote
         tests = $tests
-        rootfile = @__FILE__
+        rootfile = TEST_DIR
         if length(tests) == 0
-            tests = readdir(dirname(rootfile))
+            tests = readdir(rootfile)
             tests = filter(
                 f ->
                     startswith(f, "test_") && endswith(f, ".jl") && f != basename(rootfile),
@@ -56,7 +58,7 @@ macro includetests(testarg...)
         println()
         for test in tests
             print(splitext(test)[1], ": ")
-            include(test)
+            include(joinpath(TEST_DIR, test))
             println()
         end
     end
@@ -73,7 +75,7 @@ function get_logging_level(env_name::String, default)
 end
 
 function run_tests()
-    include("test_data/get_test_data.jl")
+    include(joinpath(BASE_DIR, "test", "test_data", "get_test_data.jl"))
     console_level = get_logging_level("PS_CONSOLE_LOG_LEVEL", "Error")
     console_logger = ConsoleLogger(stderr, console_level)
     file_level = get_logging_level("PS_LOG_LEVEL", "Info")
@@ -102,6 +104,8 @@ try
     run_tests()
 finally
     # Guarantee that the global logger is reset.
+    @info("removing test files")
+    #rm(TEST_OUTPUTS, recursive = true)
     global_logger(logger)
     nothing
 end

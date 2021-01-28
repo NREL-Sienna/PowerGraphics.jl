@@ -1,18 +1,38 @@
-path = joinpath(pwd(), "plots")
-!isdir(path) && mkdir(path)
+file_path = TEST_OUTPUTS
 
-function test_reports(file_path::String)
-    include("test_data.jl")
-    @testset "testing report production" begin
-        report_path = joinpath(file_path, "test_report.html")
-        PG.report(res, report_path, generic_template; doctype = "md2html")
-        @test isfile(report_path)
+function test_reports(file_path::String; backend_pkg::String = "gr")
+    if backend_pkg == "gr"
+        backend = Plots.gr()
+    elseif backend_pkg == "plotlyjs"
+        backend = Plots.plotlyjs()
+    else
+        throw(error("$backend_pkg backend_pkg not supported"))
+    end
+    cleanup = true
+
+    @testset "testing $backend_pkg report production" begin
+        out_path = joinpath(file_path, backend_pkg * "_reports")
+        !isdir(out_path) && mkpath(out_path)
+        report_out_path = joinpath(out_path, "test_report.html")
+        (results_uc, results_ed) = run_test_sim(TEST_RESULT_DIR)
+
+        PG.report(
+            results_uc,
+            report_out_path,
+            generic_template;
+            doctype = "md2html",
+            backend = backend,
+        )
+        @test isfile(joinpath(out_path, "generic_report_template.html")) # report_path) not sure why weave doesn't output the report name
+
+        @info("removing test files")
+        cleanup && rm(out_path, recursive = true)
     end
 end
 
 try
-    test_reports(path)
+    test_reports(file_path, backend_pkg = "gr")
+    test_reports(file_path, backend_pkg = "plotlyjs")
 finally
-    @info("removing test files")
-    rm(path, recursive = true)
+    nothing
 end

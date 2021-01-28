@@ -16,23 +16,38 @@ else
     Plots.gr()
 end
 
-    bar_plot(WEAVE_ARGS["res"])
+plot_fuel(WEAVE_ARGS["results"], bar = true, stack = true);
 ```
 
 # Stack Plots
 
 ```julia; echo = false
 
-stack_plot(WEAVE_ARGS["res"])
+plot_fuel(WEAVE_ARGS["results"]);
 ```
 
 # Tables
 
+### Generation
 ```julia; echo = false
-for (k,v) in WEAVE_ARGS["variables"]
-display((WEAVE_ARGS["variables"])[k])
+for (k,v) in  get_generation_data(WEAVE_ARGS["results"]).data
+    display(k)
+    display(v)
 end
+```
 
+### Load
+```julia; echo = false
+for (k,v) in  get_load_data(WEAVE_ARGS["results"]).data
+    display(k)
+    display(v)
+end
+```
 
-
+### Services
+```julia; echo = false
+for (k,v) in  get_service_data(WEAVE_ARGS["results"]).data
+    display(k)
+    display(v)
+end
 ```

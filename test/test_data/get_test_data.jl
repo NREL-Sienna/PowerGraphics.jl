@@ -1,8 +1,14 @@
-const BASE_DIR = string(dirname(dirname(pathof(PowerSimulations))))
-const DATA_DIR = joinpath(BASE_DIR, "test/test_data")
+const DATA_DIR = joinpath(BASE_DIR, "test", "test_data")
+const TEST_OUTPUTS = joinpath(BASE_DIR, "test", "test_results")
+!isdir(TEST_OUTPUTS) && mkdir(TEST_OUTPUTS)
+const TEST_RESULT_DIR = joinpath(TEST_OUTPUTS, "results")
+!isdir(TEST_RESULT_DIR) && mkdir(TEST_RESULT_DIR)
+
 include(joinpath(DATA_DIR, "data_5bus_pu.jl"))
 include(joinpath(DATA_DIR, "data_14bus_pu.jl"))
+include(joinpath(DATA_DIR, "results_data.jl"))
 
+const TS = TimeSeries
 # Test Systems
 
 # The code below provides a mechanism to optimally construct test systems. The first time a
@@ -108,7 +114,7 @@ function build_c_sys5(; kwargs...)
         for (ix, l) in enumerate(get_components(PowerLoad, c_sys5))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(load_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(load_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = load_timeseries_DA[t][ix]
             end
             add_time_series!(c_sys5, l, Deterministic("max_active_power", forecast_data))
@@ -133,7 +139,7 @@ function build_c_sys5_ml(; kwargs...)
         for (ix, l) in enumerate(get_components(PowerLoad, c_sys5_ml))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(load_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(load_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = load_timeseries_DA[t][ix]
             end
             add_time_series!(c_sys5_ml, l, Deterministic("max_active_power", forecast_data))
@@ -157,7 +163,7 @@ function build_c_sys14(; kwargs...)
     if get(kwargs, :add_forecasts, true)
         forecast_data = SortedDict{Dates.DateTime, TimeArray}()
         for (ix, l) in enumerate(get_components(PowerLoad, c_sys14))
-            ini_time = timestamp(timeseries_DA14[ix])[1]
+            ini_time = TS.timestamp(timeseries_DA14[ix])[1]
             forecast_data[ini_time] = timeseries_DA14[ix]
             add_time_series!(c_sys14, l, Deterministic("max_active_power", forecast_data))
         end
@@ -182,7 +188,7 @@ function build_c_sys5_re(; kwargs...)
         for (ix, l) in enumerate(get_components(PowerLoad, c_sys5_re))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(load_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(load_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = load_timeseries_DA[t][ix]
             end
             add_time_series!(c_sys5_re, l, Deterministic("max_active_power", forecast_data))
@@ -190,7 +196,7 @@ function build_c_sys5_re(; kwargs...)
         for (ix, r) in enumerate(get_components(RenewableGen, c_sys5_re))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(ren_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(ren_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = ren_timeseries_DA[t][ix]
             end
             add_time_series!(c_sys5_re, r, Deterministic("max_active_power", forecast_data))
@@ -210,7 +216,7 @@ function build_c_sys5_re(; kwargs...)
         for (ix, serv) in enumerate(get_components(VariableReserve, c_sys5_re))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(Reserve_ts[t])[1]
+                ini_time = TS.timestamp(Reserve_ts[t])[1]
                 forecast_data[ini_time] = Reserve_ts[t]
             end
             add_time_series!(c_sys5_re, serv, Deterministic("requirement", forecast_data))
@@ -218,10 +224,10 @@ function build_c_sys5_re(; kwargs...)
         for (ix, serv) in enumerate(get_components(ReserveDemandCurve, c_sys5_re))
             forecast_data = SortedDict{Dates.DateTime, Vector{IS.PWL}}()
             for t in 1:2
-                ini_time = timestamp(ORDC_cost_ts[t])[1]
+                ini_time = TS.timestamp(ORDC_cost_ts[t])[1]
                 forecast_data[ini_time] = TimeSeries.values(ORDC_cost_ts[t])
             end
-            resolution = timestamp(ORDC_cost_ts[1])[2] - timestamp(ORDC_cost_ts[1])[1]
+            resolution = TS.timestamp(ORDC_cost_ts[1])[2] - TS.timestamp(ORDC_cost_ts[1])[1]
             set_variable_cost!(
                 c_sys5_re,
                 serv,
@@ -248,7 +254,7 @@ function build_c_sys5_re_only(; kwargs...)
         for (ix, l) in enumerate(get_components(PowerLoad, c_sys5_re_only))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(load_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(load_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = load_timeseries_DA[t][ix]
             end
             add_time_series!(
@@ -260,7 +266,7 @@ function build_c_sys5_re_only(; kwargs...)
         for (ix, r) in enumerate(get_components(RenewableGen, c_sys5_re_only))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(ren_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(ren_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = ren_timeseries_DA[t][ix]
             end
             add_time_series!(
@@ -290,7 +296,7 @@ function build_c_sys5_hy(; kwargs...)
         for (ix, l) in enumerate(get_components(PowerLoad, c_sys5_hy))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(load_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(load_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = load_timeseries_DA[t][ix]
             end
             add_time_series!(c_sys5_hy, l, Deterministic("max_active_power", forecast_data))
@@ -298,7 +304,7 @@ function build_c_sys5_hy(; kwargs...)
         for (ix, r) in enumerate(get_components(HydroGen, c_sys5_hy))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(hydro_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(hydro_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = hydro_timeseries_DA[t][ix]
             end
             add_time_series!(c_sys5_hy, r, Deterministic("max_active_power", forecast_data))
@@ -324,7 +330,7 @@ function build_c_sys5_hyd(; kwargs...)
         for (ix, l) in enumerate(get_components(PowerLoad, c_sys5_hyd))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(load_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(load_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = load_timeseries_DA[t][ix]
             end
             add_time_series!(
@@ -336,7 +342,7 @@ function build_c_sys5_hyd(; kwargs...)
         for (ix, h) in enumerate(get_components(HydroGen, c_sys5_hyd))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(hydro_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(hydro_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = hydro_timeseries_DA[t][ix]
             end
             add_time_series!(
@@ -348,7 +354,7 @@ function build_c_sys5_hyd(; kwargs...)
         for (ix, h) in enumerate(get_components(HydroEnergyReservoir, c_sys5_hyd))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(hydro_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(hydro_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = hydro_timeseries_DA[t][ix]
             end
             add_time_series!(c_sys5_hyd, h, Deterministic("hydro_budget", forecast_data))
@@ -357,7 +363,7 @@ function build_c_sys5_hyd(; kwargs...)
             forecast_data_inflow = SortedDict{Dates.DateTime, TimeArray}()
             forecast_data_target = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(hydro_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(hydro_timeseries_DA[t][ix])[1]
                 forecast_data_inflow[ini_time] = hydro_timeseries_DA[t][ix] .* 0.8
                 forecast_data_target[ini_time] = hydro_timeseries_DA[t][ix] .* 0.5
             end
@@ -391,7 +397,7 @@ function build_c_sys5_hyd(; kwargs...)
         for (ix, serv) in enumerate(get_components(VariableReserve, c_sys5_hyd))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(Reserve_ts[t])[1]
+                ini_time = TS.timestamp(Reserve_ts[t])[1]
                 forecast_data[ini_time] = Reserve_ts[t]
             end
             add_time_series!(c_sys5_hyd, serv, Deterministic("requirement", forecast_data))
@@ -399,10 +405,10 @@ function build_c_sys5_hyd(; kwargs...)
         for (ix, serv) in enumerate(get_components(ReserveDemandCurve, c_sys5_hyd))
             forecast_data = SortedDict{Dates.DateTime, Vector{IS.PWL}}()
             for t in 1:2
-                ini_time = timestamp(ORDC_cost_ts[t])[1]
+                ini_time = TS.timestamp(ORDC_cost_ts[t])[1]
                 forecast_data[ini_time] = TimeSeries.values(ORDC_cost_ts[t])
             end
-            resolution = timestamp(ORDC_cost_ts[1])[2] - timestamp(ORDC_cost_ts[1])[1]
+            resolution = TS.timestamp(ORDC_cost_ts[1])[2] - TS.timestamp(ORDC_cost_ts[1])[1]
             set_variable_cost!(
                 c_sys5_hyd,
                 serv,
@@ -432,7 +438,7 @@ function build_c_sys5_bat(; kwargs...)
         for (ix, l) in enumerate(get_components(PowerLoad, c_sys5_bat))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(load_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(load_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = load_timeseries_DA[t][ix]
             end
             add_time_series!(
@@ -444,7 +450,7 @@ function build_c_sys5_bat(; kwargs...)
         for (ix, r) in enumerate(get_components(RenewableGen, c_sys5_bat))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(ren_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(ren_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = ren_timeseries_DA[t][ix]
             end
             add_time_series!(
@@ -464,7 +470,7 @@ function build_c_sys5_bat(; kwargs...)
         for (ix, serv) in enumerate(get_components(VariableReserve, c_sys5_bat))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(Reserve_ts[t])[1]
+                ini_time = TS.timestamp(Reserve_ts[t])[1]
                 forecast_data[ini_time] = Reserve_ts[t]
             end
             add_time_series!(c_sys5_bat, serv, Deterministic("requirement", forecast_data))
@@ -472,10 +478,10 @@ function build_c_sys5_bat(; kwargs...)
         for (ix, serv) in enumerate(get_components(ReserveDemandCurve, c_sys5_bat))
             forecast_data = SortedDict{Dates.DateTime, Vector{IS.PWL}}()
             for t in 1:2
-                ini_time = timestamp(ORDC_cost_ts[t])[1]
+                ini_time = TS.timestamp(ORDC_cost_ts[t])[1]
                 forecast_data[ini_time] = TimeSeries.values(ORDC_cost_ts[t])
             end
-            resolution = timestamp(ORDC_cost_ts[1])[2] - timestamp(ORDC_cost_ts[1])[1]
+            resolution = TS.timestamp(ORDC_cost_ts[1])[2] - TS.timestamp(ORDC_cost_ts[1])[1]
             set_variable_cost!(
                 c_sys5_bat,
                 serv,
@@ -503,7 +509,7 @@ function build_c_sys5_il(; kwargs...)
         for (ix, l) in enumerate(get_components(PowerLoad, c_sys5_il))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(load_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(load_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = load_timeseries_DA[t][ix]
             end
             add_time_series!(c_sys5_il, l, Deterministic("max_active_power", forecast_data))
@@ -511,7 +517,7 @@ function build_c_sys5_il(; kwargs...)
         for (ix, i) in enumerate(get_components(InterruptibleLoad, c_sys5_il))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(Iload_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(Iload_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = Iload_timeseries_DA[t][ix]
             end
             add_time_series!(c_sys5_il, i, Deterministic("max_active_power", forecast_data))
@@ -531,7 +537,7 @@ function build_c_sys5_il(; kwargs...)
         for (ix, serv) in enumerate(get_components(VariableReserve, c_sys5_il))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(Reserve_ts[ix])[1]
+                ini_time = TS.timestamp(Reserve_ts[ix])[1]
                 forecast_data[ini_time] = Reserve_ts[t]
             end
             add_time_series!(c_sys5_il, serv, Deterministic("requirement", forecast_data))
@@ -539,10 +545,10 @@ function build_c_sys5_il(; kwargs...)
         for (ix, serv) in enumerate(get_components(ReserveDemandCurve, c_sys5_il))
             forecast_data = SortedDict{Dates.DateTime, Vector{IS.PWL}}()
             for t in 1:2
-                ini_time = timestamp(ORDC_cost_ts[t])[1]
+                ini_time = TS.timestamp(ORDC_cost_ts[t])[1]
                 forecast_data[ini_time] = TimeSeries.values(ORDC_cost_ts[t])
             end
-            resolution = timestamp(ORDC_cost_ts[1])[2] - timestamp(ORDC_cost_ts[1])[1]
+            resolution = TS.timestamp(ORDC_cost_ts[1])[2] - TS.timestamp(ORDC_cost_ts[1])[1]
             set_variable_cost!(
                 c_sys5_il,
                 serv,
@@ -570,7 +576,7 @@ function build_c_sys5_dc(; kwargs...)
         for (ix, l) in enumerate(get_components(PowerLoad, c_sys5_dc))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(load_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(load_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = load_timeseries_DA[t][ix]
             end
             add_time_series!(c_sys5_dc, l, Deterministic("max_active_power", forecast_data))
@@ -578,7 +584,7 @@ function build_c_sys5_dc(; kwargs...)
         for (ix, r) in enumerate(get_components(RenewableGen, c_sys5_dc))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(ren_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(ren_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = ren_timeseries_DA[t][ix]
             end
             add_time_series!(c_sys5_dc, r, Deterministic("max_active_power", forecast_data))
@@ -602,7 +608,7 @@ function build_c_sys14_dc(; kwargs...)
     if get(kwargs, :add_forecasts, true)
         forecast_data = SortedDict{Dates.DateTime, TimeArray}()
         for (ix, l) in enumerate(get_components(PowerLoad, c_sys14_dc))
-            ini_time = timestamp(timeseries_DA14[ix])[1]
+            ini_time = TS.timestamp(timeseries_DA14[ix])[1]
             forecast_data[ini_time] = timeseries_DA14[ix]
             add_time_series!(
                 c_sys14_dc,
@@ -639,7 +645,7 @@ function build_c_sys5_reg(; kwargs...)
         for (ix, l) in enumerate(get_components(PowerLoad, c_sys5_reg))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(load_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(load_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = load_timeseries_DA[t][ix]
             end
             add_time_series!(
@@ -651,7 +657,7 @@ function build_c_sys5_reg(; kwargs...)
         for (_, l) in enumerate(get_components(ThermalStandard, c_sys5_reg))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(load_timeseries_DA[t][1])[1]
+                ini_time = TS.timestamp(load_timeseries_DA[t][1])[1]
                 forecast_data[ini_time] = load_timeseries_DA[t][1]
             end
             add_time_series!(
@@ -697,7 +703,7 @@ thermal_generators5_uc_testing(nodes) = [
         reactive_power_limits = (min = -0.30, max = 0.30),
         ramp_limits = nothing,
         time_limits = nothing,
-        operation_cost = ThreePartCost((0.0, 1400.0), 0.0, 4.0, 2.0),
+        operation_cost = ThreePartCost((0.0, 14.0), 0.0, 4.0, 2.0),
         base_power = 100.0,
     ),
     ThermalStandard(
@@ -714,7 +720,7 @@ thermal_generators5_uc_testing(nodes) = [
         reactive_power_limits = (min = -1.275, max = 1.275),
         ramp_limits = (up = 0.02 * 2.2125, down = 0.02 * 2.2125),
         time_limits = nothing,
-        operation_cost = ThreePartCost((0.0, 1500.0), 0.0, 1.5, 0.75),
+        operation_cost = ThreePartCost((0.0, 15.0), 0.0, 1.5, 0.75),
         base_power = 100.0,
     ),
     ThermalStandard(
@@ -731,7 +737,7 @@ thermal_generators5_uc_testing(nodes) = [
         reactive_power_limits = (min = -3.90, max = 3.90),
         ramp_limits = (up = 0.0012 * 5.2, down = 0.0012 * 5.2),
         time_limits = (up = 5.0, down = 3.0),
-        operation_cost = ThreePartCost((0.0, 3000.0), 0.0, 3.0, 1.5),
+        operation_cost = ThreePartCost((0.0, 30.0), 0.0, 3.0, 1.5),
         base_power = 100.0,
     ),
     ThermalStandard(
@@ -748,7 +754,7 @@ thermal_generators5_uc_testing(nodes) = [
         reactive_power_limits = (min = -1.5, max = 1.5),
         ramp_limits = (up = 0.015 * 2.5, down = 0.015 * 2.5),
         time_limits = (up = 2.0, down = 1.0),
-        operation_cost = ThreePartCost((0.0, 4000.0), 0.0, 4.0, 2.0),
+        operation_cost = ThreePartCost((0.0, 40.0), 0.0, 4.0, 2.0),
         base_power = 100.0,
     ),
     ThermalStandard(
@@ -765,7 +771,7 @@ thermal_generators5_uc_testing(nodes) = [
         reactive_power_limits = (min = -4.50, max = 4.50),
         ramp_limits = (up = 0.0015 * 7.5, down = 0.0015 * 7.5),
         time_limits = (up = 5.0, down = 3.0),
-        operation_cost = ThreePartCost((0.0, 1000.0), 0.0, 1.5, 0.75),
+        operation_cost = ThreePartCost((0.0, 10.0), 0.0, 1.5, 0.75),
         base_power = 100.0,
     ),
 ];
@@ -788,7 +794,7 @@ function build_sys_ramp_testing(; kwargs...)
             reactive_power_limits = nothing,
             ramp_limits = nothing,
             time_limits = nothing,
-            operation_cost = ThreePartCost((0.0, 1400.0), 0.0, 4.0, 2.0),
+            operation_cost = ThreePartCost((0.0, 14.0), 0.0, 4.0, 2.0),
             base_power = 100.0,
         ),
         ThermalStandard(
@@ -805,7 +811,7 @@ function build_sys_ramp_testing(; kwargs...)
             reactive_power_limits = nothing,
             ramp_limits = (up = 0.010625 * 2.0, down = 0.010625 * 2.0),
             time_limits = nothing,
-            operation_cost = ThreePartCost((0.0, 1500.0), 0.0, 1.5, 0.75),
+            operation_cost = ThreePartCost((0.0, 15.0), 0.0, 1.5, 0.75),
             base_power = 100.0,
         ),
     ]
@@ -842,7 +848,7 @@ function build_c_sys5_uc(; kwargs...)
         for (ix, l) in enumerate(get_components(PowerLoad, c_sys5_uc))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(load_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(load_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = load_timeseries_DA[t][ix]
             end
             add_time_series!(c_sys5_uc, l, Deterministic("max_active_power", forecast_data))
@@ -850,7 +856,7 @@ function build_c_sys5_uc(; kwargs...)
         for (ix, r) in enumerate(get_components(RenewableGen, c_sys5_uc))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(ren_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(ren_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = ren_timeseries_DA[t][ix]
             end
             add_time_series!(c_sys5_uc, r, Deterministic("max_active_power", forecast_data))
@@ -858,7 +864,7 @@ function build_c_sys5_uc(; kwargs...)
         for (ix, i) in enumerate(get_components(InterruptibleLoad, c_sys5_uc))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(Iload_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(Iload_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = Iload_timeseries_DA[t][ix]
             end
             add_time_series!(c_sys5_uc, r, Deterministic("max_active_power", forecast_data))
@@ -879,7 +885,7 @@ function build_c_sys5_uc(; kwargs...)
         for serv in get_components(VariableReserve, c_sys5_uc)
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(Reserve_ts[t])[1]
+                ini_time = TS.timestamp(Reserve_ts[t])[1]
                 forecast_data[ini_time] = Reserve_ts[t]
             end
             add_time_series!(c_sys5_uc, serv, Deterministic("requirement", forecast_data))
@@ -887,10 +893,10 @@ function build_c_sys5_uc(; kwargs...)
         for (ix, serv) in enumerate(get_components(ReserveDemandCurve, c_sys5_uc))
             forecast_data = SortedDict{Dates.DateTime, Vector{IS.PWL}}()
             for t in 1:2
-                ini_time = timestamp(ORDC_cost_ts[t])[1]
+                ini_time = TS.timestamp(ORDC_cost_ts[t])[1]
                 forecast_data[ini_time] = TimeSeries.values(ORDC_cost_ts[t])
             end
-            resolution = timestamp(ORDC_cost_ts[1])[2] - timestamp(ORDC_cost_ts[1])[1]
+            resolution = TS.timestamp(ORDC_cost_ts[1])[2] - TS.timestamp(ORDC_cost_ts[1])[1]
             set_variable_cost!(
                 c_sys5_uc,
                 serv,
@@ -930,7 +936,7 @@ function build_c_sys5_ed(; kwargs...)
             for t in 1:2 # loop over days
                 ta = load_timeseries_DA[t][ix]
                 for i in 1:length(ta) # loop over hours
-                    ini_time = timestamp(ta[i]) #get the hour
+                    ini_time = TS.timestamp(ta[i]) #get the hour
                     data = when(load_timeseries_RT[t][ix], hour, hour(ini_time[1])) # get the subset ts for that hour
                     forecast_data[ini_time[1]] = data
                 end
@@ -942,7 +948,7 @@ function build_c_sys5_ed(; kwargs...)
             for t in 1:2 # loop over days
                 ta = load_timeseries_DA[t][ix]
                 for i in 1:length(ta) # loop over hours
-                    ini_time = timestamp(ta[i]) #get the hour
+                    ini_time = TS.timestamp(ta[i]) #get the hour
                     data = when(load_timeseries_RT[t][ix], hour, hour(ini_time[1])) # get the subset ts for that hour
                     forecast_data[ini_time[1]] = data
                 end
@@ -954,7 +960,7 @@ function build_c_sys5_ed(; kwargs...)
             for t in 1:2 # loop over days
                 ta = load_timeseries_DA[t][ix]
                 for i in 1:length(ta) # loop over hours
-                    ini_time = timestamp(ta[i]) #get the hour
+                    ini_time = TS.timestamp(ta[i]) #get the hour
                     data = when(load_timeseries_RT[t][ix], hour, hour(ini_time[1])) # get the subset ts for that hour
                     forecast_data[ini_time[1]] = data
                 end
@@ -1014,7 +1020,7 @@ function build_c_sys5_hy_uc(; kwargs...)
         for (ix, l) in enumerate(get_components(PowerLoad, c_sys5_hy_uc))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(load_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(load_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = load_timeseries_DA[t][ix]
             end
             add_time_series!(
@@ -1026,7 +1032,7 @@ function build_c_sys5_hy_uc(; kwargs...)
         for (ix, h) in enumerate(get_components(HydroEnergyReservoir, c_sys5_hy_uc))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(hydro_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(hydro_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = hydro_timeseries_DA[t][ix]
             end
             add_time_series!(
@@ -1038,7 +1044,7 @@ function build_c_sys5_hy_uc(; kwargs...)
         for (ix, h) in enumerate(get_components(HydroEnergyReservoir, c_sys5_hy_uc))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(hydro_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(hydro_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = hydro_timeseries_DA[t][ix]
             end
             add_time_series!(
@@ -1055,7 +1061,7 @@ function build_c_sys5_hy_uc(; kwargs...)
         for (ix, h) in enumerate(get_components(HydroEnergyReservoir, c_sys5_hy_uc))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(hydro_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(hydro_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = hydro_timeseries_DA[t][ix] .* 0.8
             end
             add_time_series!(c_sys5_hy_uc, h, Deterministic("inflow", forecast_data))
@@ -1063,7 +1069,7 @@ function build_c_sys5_hy_uc(; kwargs...)
         for (ix, h) in enumerate(get_components(HydroDispatch, c_sys5_hy_uc))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(hydro_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(hydro_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = hydro_timeseries_DA[t][ix]
             end
             add_time_series!(
@@ -1075,7 +1081,7 @@ function build_c_sys5_hy_uc(; kwargs...)
         for (ix, r) in enumerate(get_components(RenewableGen, c_sys5_hy_uc))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(ren_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(ren_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = ren_timeseries_DA[t][ix]
             end
             add_time_series!(
@@ -1087,13 +1093,63 @@ function build_c_sys5_hy_uc(; kwargs...)
         for (ix, i) in enumerate(get_components(InterruptibleLoad, c_sys5_hy_uc))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(Iload_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(Iload_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = Iload_timeseries_DA[t][ix]
             end
             add_time_series!(
                 c_sys5_hy_uc,
                 i,
                 Deterministic("max_active_power", forecast_data),
+            )
+        end
+    end
+
+    if get(kwargs, :add_reserves, false)
+        reserve_uc = reserve5(get_components(ThermalStandard, c_sys5_hy_uc))
+        add_service!(
+            c_sys5_hy_uc,
+            reserve_uc[1],
+            get_components(ThermalStandard, c_sys5_hy_uc),
+        )
+        add_service!(
+            c_sys5_hy_uc,
+            reserve_uc[2],
+            [collect(get_components(ThermalStandard, c_sys5_hy_uc))[end]],
+        )
+        add_service!(
+            c_sys5_hy_uc,
+            reserve_uc[3],
+            get_components(ThermalStandard, c_sys5_hy_uc),
+        )
+        # ORDC Curve
+        add_service!(
+            c_sys5_hy_uc,
+            reserve_uc[4],
+            get_components(ThermalStandard, c_sys5_hy_uc),
+        )
+        for serv in get_components(VariableReserve, c_sys5_hy_uc)
+            forecast_data = SortedDict{Dates.DateTime, TimeArray}()
+            for t in 1:2
+                ini_time = TS.timestamp(Reserve_ts[t])[1]
+                forecast_data[ini_time] = Reserve_ts[t]
+            end
+            add_time_series!(
+                c_sys5_hy_uc,
+                serv,
+                Deterministic("requirement", forecast_data),
+            )
+        end
+        for (ix, serv) in enumerate(get_components(ReserveDemandCurve, c_sys5_hy_uc))
+            forecast_data = SortedDict{Dates.DateTime, Vector{IS.PWL}}()
+            for t in 1:2
+                ini_time = TS.timestamp(ORDC_cost_ts[t])[1]
+                forecast_data[ini_time] = TimeSeries.values(ORDC_cost_ts[t])
+            end
+            resolution = TS.timestamp(ORDC_cost_ts[1])[2] - TS.timestamp(ORDC_cost_ts[1])[1]
+            set_variable_cost!(
+                c_sys5_hy_uc,
+                serv,
+                Deterministic("variable_cost", forecast_data, resolution),
             )
         end
     end
@@ -1121,7 +1177,7 @@ function build_c_sys5_hy_ed(; kwargs...)
             for t in 1:2 # loop over days
                 ta = load_timeseries_DA[t][ix]
                 for i in 1:length(ta) # loop over hours
-                    ini_time = timestamp(ta[i]) #get the hour
+                    ini_time = TS.timestamp(ta[i]) #get the hour
                     data = when(load_timeseries_RT[t][ix], hour, hour(ini_time[1])) # get the subset ts for that hour
                     forecast_data[ini_time[1]] = data
                 end
@@ -1137,7 +1193,7 @@ function build_c_sys5_hy_ed(; kwargs...)
             for t in 1:2
                 ta = hydro_timeseries_DA[t][ix]
                 for i in 1:length(ta)
-                    ini_time = timestamp(ta[i])
+                    ini_time = TS.timestamp(ta[i])
                     data = when(hydro_timeseries_RT[t][ix], hour, hour(ini_time[1]))
                     forecast_data[ini_time[1]] = data
                 end
@@ -1153,7 +1209,7 @@ function build_c_sys5_hy_ed(; kwargs...)
             for t in 1:2
                 ta = load_timeseries_DA[t][ix]
                 for i in 1:length(ta)
-                    ini_time = timestamp(ta[i])
+                    ini_time = TS.timestamp(ta[i])
                     data = when(load_timeseries_RT[t][ix], hour, hour(ini_time[1]))
                     forecast_data[ini_time[1]] = data
                 end
@@ -1169,7 +1225,7 @@ function build_c_sys5_hy_ed(; kwargs...)
             for t in 1:2
                 ta = hydro_timeseries_DA[t][ix]
                 for i in 1:length(ta)
-                    ini_time = timestamp(ta[i])
+                    ini_time = TS.timestamp(ta[i])
                     data = when(hydro_timeseries_RT[t][ix], hour, hour(ini_time[1]))
                     forecast_data[ini_time[1]] = data
                 end
@@ -1190,7 +1246,7 @@ function build_c_sys5_hy_ed(; kwargs...)
             for t in 1:2
                 ta = hydro_timeseries_DA[t][ix]
                 for i in 1:length(ta)
-                    ini_time = timestamp(ta[i])
+                    ini_time = TS.timestamp(ta[i])
                     data = when(hydro_timeseries_RT[t][ix] .* 0.8, hour, hour(ini_time[1]))
                     forecast_data[ini_time[1]] = data
                 end
@@ -1202,7 +1258,7 @@ function build_c_sys5_hy_ed(; kwargs...)
             for t in 1:2
                 ta = load_timeseries_DA[t][ix]
                 for i in 1:length(ta)
-                    ini_time = timestamp(ta[i])
+                    ini_time = TS.timestamp(ta[i])
                     data = when(load_timeseries_RT[t][ix], hour, hour(ini_time[1]))
                     forecast_data[ini_time[1]] = data
                 end
@@ -1218,7 +1274,7 @@ function build_c_sys5_hy_ed(; kwargs...)
             for t in 1:2
                 ta = hydro_timeseries_DA[t][ix]
                 for i in 1:length(ta)
-                    ini_time = timestamp(ta[i])
+                    ini_time = TS.timestamp(ta[i])
                     data = when(hydro_timeseries_RT[t][ix], hour, hour(ini_time[1]))
                     forecast_data[ini_time[1]] = data
                 end
@@ -1254,7 +1310,7 @@ function build_c_sys5_phes_ed(; kwargs...)
             for t in 1:2 # loop over days
                 ta = load_timeseries_DA[t][ix]
                 for i in 1:length(ta) # loop over hours
-                    ini_time = timestamp(ta[i]) #get the hour
+                    ini_time = TS.timestamp(ta[i]) #get the hour
                     data = when(load_timeseries_RT[t][ix], hour, hour(ini_time[1])) # get the subset ts for that hour
                     forecast_data[ini_time[1]] = data
                 end
@@ -1270,7 +1326,7 @@ function build_c_sys5_phes_ed(; kwargs...)
             for t in 1:2
                 ta = hydro_timeseries_DA[t][ix]
                 for i in 1:length(ta)
-                    ini_time = timestamp(ta[i])
+                    ini_time = TS.timestamp(ta[i])
                     data = when(hydro_timeseries_RT[t][ix], hour, hour(ini_time[1]))
                     forecast_data[ini_time[1]] = data
                 end
@@ -1286,7 +1342,7 @@ function build_c_sys5_phes_ed(; kwargs...)
             for t in 1:2
                 ta = load_timeseries_DA[t][ix]
                 for i in 1:length(ta)
-                    ini_time = timestamp(ta[i])
+                    ini_time = TS.timestamp(ta[i])
                     data = when(load_timeseries_RT[t][ix], hour, hour(ini_time[1]))
                     forecast_data[ini_time[1]] = data
                 end
@@ -1302,7 +1358,7 @@ function build_c_sys5_phes_ed(; kwargs...)
             for t in 1:2
                 ta = hydro_timeseries_DA[t][ix]
                 for i in 1:length(ta)
-                    ini_time = timestamp(ta[i])
+                    ini_time = TS.timestamp(ta[i])
                     data = when(hydro_timeseries_RT[t][ix], hour, hour(ini_time[1]))
                     forecast_data[ini_time[1]] = data
                 end
@@ -1318,7 +1374,7 @@ function build_c_sys5_phes_ed(; kwargs...)
             for t in 1:2
                 ta = hydro_timeseries_DA[t][ix]
                 for i in 1:length(ta)
-                    ini_time = timestamp(ta[i])
+                    ini_time = TS.timestamp(ta[i])
                     data = when(hydro_timeseries_RT[t][ix] .* 0.8, hour, hour(ini_time[1]))
                     forecast_data[ini_time[1]] = data
                 end
@@ -1331,7 +1387,7 @@ function build_c_sys5_phes_ed(; kwargs...)
             for t in 1:2
                 ta = load_timeseries_DA[t][ix]
                 for i in 1:length(ta)
-                    ini_time = timestamp(ta[i])
+                    ini_time = TS.timestamp(ta[i])
                     data = when(load_timeseries_RT[t][ix], hour, hour(ini_time[1]))
                     forecast_data[ini_time[1]] = data
                 end
@@ -1363,7 +1419,7 @@ function build_c_sys5_pglib(; kwargs...)
         forecast_data = SortedDict{Dates.DateTime, TimeArray}()
         for (ix, l) in enumerate(get_components(PowerLoad, c_sys5_uc))
             for t in 1:2
-                ini_time = timestamp(load_timeseries_DA[t][ix])[1]
+                ini_time = TS.timestamp(load_timeseries_DA[t][ix])[1]
                 forecast_data[ini_time] = load_timeseries_DA[t][ix]
             end
             add_time_series!(c_sys5_uc, l, Deterministic("max_active_power", forecast_data))
@@ -1382,7 +1438,7 @@ function build_c_sys5_pglib(; kwargs...)
         for (ix, serv) in enumerate(get_components(VariableReserve, c_sys5_uc))
             forecast_data = SortedDict{Dates.DateTime, TimeArray}()
             for t in 1:2
-                ini_time = timestamp(Reserve_ts[ix])[1]
+                ini_time = TS.timestamp(Reserve_ts[ix])[1]
                 forecast_data[ini_time] = Reserve_ts[t]
             end
             add_time_series!(c_sys5_uc, serv, Deterministic("requirement", forecast_data))
@@ -1390,6 +1446,307 @@ function build_c_sys5_pglib(; kwargs...)
     end
 
     return c_sys5_uc
+end
+
+function build_sos_test_sys(; kwargs...)
+    node = Bus(1, "nodeA", "PV", 0, 1.0, (min = 0.9, max = 1.05), 230, nothing, nothing)
+    load = PowerLoad("Bus1", true, node, nothing, 0.4, 0.9861, 100.0, 1.0, 2.0)
+    gens_cost_sos = [
+        ThermalStandard(
+            name = "Alta",
+            available = true,
+            status = true,
+            bus = node,
+            active_power = 0.52,
+            reactive_power = 0.010,
+            rating = 0.5,
+            prime_mover = PrimeMovers.ST,
+            fuel = ThermalFuels.COAL,
+            active_power_limits = (min = 0.22, max = 0.55),
+            reactive_power_limits = nothing,
+            time_limits = nothing,
+            ramp_limits = nothing,
+            operation_cost = ThreePartCost(
+                [(1122.43, 22.0), (1617.43, 33.0), (1742.48, 44.0), (2075.88, 55.0)],
+                0.0,
+                5665.23,
+                0.0,
+            ),
+            base_power = 100.0,
+        ),
+        ThermalStandard(
+            name = "Park City",
+            available = true,
+            status = true,
+            bus = node,
+            active_power = 0.62,
+            reactive_power = 0.20,
+            rating = 2.2125,
+            prime_mover = PrimeMovers.ST,
+            fuel = ThermalFuels.COAL,
+            active_power_limits = (min = 0.62, max = 1.55),
+            reactive_power_limits = nothing,
+            time_limits = nothing,
+            ramp_limits = nothing,
+            operation_cost = ThreePartCost(
+                [(1500.19, 62.0), (2132.59, 92.9), (2829.875, 124.0), (2831.444, 155.0)],
+                0.0,
+                5665.23,
+                0.0,
+            ),
+            base_power = 100.0,
+        ),
+    ]
+
+    #Checks the data remains non-convex
+    for g in gens_cost_sos
+        @assert PSI.pwlparamcheck(PSY.get_operation_cost(g).variable) == false
+    end
+
+    DA_load_forecast = SortedDict{Dates.DateTime, TimeArray}()
+    ini_time = DateTime("1/1/2024  0:00:00", "d/m/y  H:M:S")
+    cost_sos_load = [[1.3, 2.1], [1.3, 2.1]]
+    for (ix, date) in enumerate(range(ini_time; length = 2, step = Hour(1)))
+        DA_load_forecast[date] = TimeArray([date, date + Hour(1)], cost_sos_load[ix])
+    end
+    load_forecast_cost_sos = Deterministic("max_active_power", DA_load_forecast)
+    cost_test_sos_sys =
+        System(100.0; time_series_in_memory = get(kwargs, :time_series_in_memory, true))
+    add_component!(cost_test_sos_sys, node)
+    add_component!(cost_test_sos_sys, load)
+    add_component!(cost_test_sos_sys, gens_cost_sos[1])
+    add_component!(cost_test_sos_sys, gens_cost_sos[2])
+    add_time_series!(cost_test_sos_sys, load, load_forecast_cost_sos)
+
+    return cost_test_sos_sys
+end
+
+function build_pwl_test_sys(; kwargs...)
+    node = Bus(1, "nodeA", "PV", 0, 1.0, (min = 0.9, max = 1.05), 230, nothing, nothing)
+    load = PowerLoad("Bus1", true, node, nothing, 0.4, 0.9861, 100.0, 1.0, 2.0)
+    gens_cost = [
+        ThermalStandard(
+            name = "Alta",
+            available = true,
+            status = true,
+            bus = node,
+            active_power = 0.52,
+            reactive_power = 0.010,
+            rating = 0.5,
+            prime_mover = PrimeMovers.ST,
+            fuel = ThermalFuels.COAL,
+            active_power_limits = (min = 0.22, max = 0.55),
+            reactive_power_limits = nothing,
+            time_limits = nothing,
+            ramp_limits = nothing,
+            operation_cost = ThreePartCost(
+                [(589.99, 22.0), (884.99, 33.0), (1210.04, 44.0), (1543.44, 55.0)],
+                532.44,
+                5665.23,
+                0.0,
+            ),
+            base_power = 100.0,
+        ),
+        ThermalStandard(
+            name = "Park City",
+            available = true,
+            status = true,
+            bus = node,
+            active_power = 0.62,
+            reactive_power = 0.20,
+            rating = 221.25,
+            prime_mover = PrimeMovers.ST,
+            fuel = ThermalFuels.COAL,
+            active_power_limits = (min = 0.62, max = 1.55),
+            reactive_power_limits = nothing,
+            time_limits = nothing,
+            ramp_limits = nothing,
+            operation_cost = ThreePartCost(
+                [(1264.80, 62.0), (1897.20, 93.0), (2594.4787, 124.0), (3433.04, 155.0)],
+                235.397,
+                5665.23,
+                0.0,
+            ),
+            base_power = 100.0,
+        ),
+    ]
+
+    DA_load_forecast = SortedDict{Dates.DateTime, TimeArray}()
+    ini_time = DateTime("1/1/2024  0:00:00", "d/m/y  H:M:S")
+    cost_sos_load = [[1.3, 2.1], [1.3, 2.1]]
+    for (ix, date) in enumerate(range(ini_time; length = 2, step = Hour(1)))
+        DA_load_forecast[date] = TimeArray([date, date + Hour(1)], cost_sos_load[ix])
+    end
+    load_forecast_cost_sos = Deterministic("max_active_power", DA_load_forecast)
+    cost_test_sys =
+        System(100.0; time_series_in_memory = get(kwargs, :time_series_in_memory, true))
+    add_component!(cost_test_sys, node)
+    add_component!(cost_test_sys, load)
+    add_component!(cost_test_sys, gens_cost[1])
+    add_component!(cost_test_sys, gens_cost[2])
+    add_time_series!(cost_test_sys, load, load_forecast_cost_sos)
+    return cost_test_sys
+end
+
+function build_duration_test_sys(; kwargs...)
+    node = Bus(1, "nodeA", "PV", 0, 1.0, (min = 0.9, max = 1.05), 230, nothing, nothing)
+    load = PowerLoad("Bus1", true, node, nothing, 0.4, 0.9861, 100.0, 1.0, 2.0)
+    DA_dur = collect(
+        DateTime("1/1/2024  0:00:00", "d/m/y  H:M:S"):Hour(1):DateTime(
+            "1/1/2024  6:00:00",
+            "d/m/y  H:M:S",
+        ),
+    )
+    gens_dur = [
+        ThermalStandard(
+            name = "Alta",
+            available = true,
+            status = true,
+            bus = node,
+            active_power = 0.40,
+            reactive_power = 0.010,
+            rating = 0.5,
+            prime_mover = PrimeMovers.ST,
+            fuel = ThermalFuels.COAL,
+            active_power_limits = (min = 0.3, max = 0.9),
+            reactive_power_limits = nothing,
+            ramp_limits = nothing,
+            time_limits = (up = 4, down = 2),
+            operation_cost = ThreePartCost((0.0, 14.0), 0.0, 4.0, 2.0),
+            base_power = 100.0,
+            time_at_status = 2.0,
+        ),
+        ThermalStandard(
+            name = "Park City",
+            available = true,
+            status = false,
+            bus = node,
+            active_power = 1.70,
+            reactive_power = 0.20,
+            rating = 2.2125,
+            prime_mover = PrimeMovers.ST,
+            fuel = ThermalFuels.COAL,
+            active_power_limits = (min = 0.7, max = 2.2),
+            reactive_power_limits = nothing,
+            ramp_limits = nothing,
+            time_limits = (up = 6, down = 4),
+            operation_cost = ThreePartCost((0.0, 15.0), 0.0, 1.5, 0.75),
+            base_power = 100.0,
+            time_at_status = 3.0,
+        ),
+    ]
+
+    duration_load = [0.3, 0.6, 0.8, 0.7, 1.7, 0.9, 0.7]
+    load_data = SortedDict(DA_dur[1] => TimeArray(DA_dur, duration_load))
+    load_forecast_dur = Deterministic("max_active_power", load_data)
+    duration_test_sys =
+        System(100.0; time_series_in_memory = get(kwargs, :time_series_in_memory, true))
+    add_component!(duration_test_sys, node)
+    add_component!(duration_test_sys, load)
+    add_component!(duration_test_sys, gens_dur[1])
+    add_component!(duration_test_sys, gens_dur[2])
+    add_time_series!(duration_test_sys, load, load_forecast_dur)
+
+    return duration_test_sys
+end
+
+function build_pwl_marketbid_sys(; kwargs...)
+    node = Bus(1, "nodeA", "PV", 0, 1.0, (min = 0.9, max = 1.05), 230, nothing, nothing)
+    load = PowerLoad("Bus1", true, node, nothing, 0.4, 0.9861, 100.0, 1.0, 2.0)
+    gens_cost = [
+        ThermalStandard(
+            name = "Alta",
+            available = true,
+            status = true,
+            bus = node,
+            active_power = 0.52,
+            reactive_power = 0.010,
+            rating = 0.5,
+            prime_mover = PrimeMovers.ST,
+            fuel = ThermalFuels.COAL,
+            active_power_limits = (min = 0.22, max = 0.55),
+            reactive_power_limits = nothing,
+            time_limits = nothing,
+            ramp_limits = nothing,
+            operation_cost = MarketBidCost(
+                no_load = 0.0,
+                start_up = (hot = 0.0, warm = 0.0, cold = 0.0),
+                shut_down = 0.0,
+            ),
+            base_power = 100.0,
+        ),
+        ThermalMultiStart(
+            name = "115_STEAM_1",
+            available = true,
+            status = true,
+            bus = node,
+            active_power = 0.05,
+            reactive_power = 0.010,
+            rating = 0.12,
+            prime_mover = PrimeMovers.ST,
+            fuel = ThermalFuels.COAL,
+            active_power_limits = (min = 0.05, max = 0.12),
+            reactive_power_limits = (min = -0.30, max = 0.30),
+            ramp_limits = (up = 0.2 * 0.12, down = 0.2 * 0.12),
+            power_trajectory = (startup = 0.05, shutdown = 0.05),
+            time_limits = (up = 4.0, down = 2.0),
+            start_time_limits = (hot = 2.0, warm = 4.0, cold = 12.0),
+            start_types = 3,
+            operation_cost = MarketBidCost(
+                no_load = 0.0,
+                start_up = (hot = 393.28, warm = 455.37, cold = 703.76),
+                shut_down = 0.0,
+            ),
+            base_power = 100.0,
+        ),
+    ]
+    ini_time = DateTime("1/1/2024  0:00:00", "d/m/y  H:M:S")
+    DA_load_forecast = Dict{Dates.DateTime, TimeArray}()
+    market_bid_gen1_data = Dict(
+        ini_time => [
+            [(589.99, 22.0), (884.99, 33.0), (1210.04, 44.0), (1543.44, 55.0)],
+            [(589.99, 22.0), (884.99, 33.0), (1210.04, 44.0), (1543.44, 55.0)],
+        ],
+        ini_time + Hour(1) => [
+            [(589.99, 22.0), (884.99, 33.0), (1210.04, 44.0), (1543.44, 55.0)],
+            [(589.99, 22.0), (884.99, 33.0), (1210.04, 44.0), (1543.44, 55.0)],
+        ],
+    )
+    market_bid_gen1 = Deterministic(
+        name = "variable_cost",
+        data = market_bid_gen1_data,
+        resolution = Hour(1),
+    )
+    market_bid_gen2_data = Dict(
+        ini_time => [
+            [(0.0, 5.0), (290.1, 7.33), (582.72, 9.67), (894.1, 12.0)],
+            [(0.0, 5.0), (300.1, 7.33), (600.72, 9.67), (900.1, 12.0)],
+        ],
+        ini_time + Hour(1) => [
+            [(0.0, 5.0), (290.1, 7.33), (582.72, 9.67), (894.1, 12.0)],
+            [(0.0, 5.0), (300.1, 7.33), (600.72, 9.67), (900.1, 12.0)],
+        ],
+    )
+    market_bid_gen2 = Deterministic(
+        name = "variable_cost",
+        data = market_bid_gen2_data,
+        resolution = Hour(1),
+    )
+    market_bid_load = [[1.3, 2.1], [1.3, 2.1]]
+    for (ix, date) in enumerate(range(ini_time; length = 2, step = Hour(1)))
+        DA_load_forecast[date] = TimeArray([date, date + Hour(1)], market_bid_load[ix])
+    end
+    load_forecast_cost_market_bid = Deterministic("max_active_power", DA_load_forecast)
+    cost_test_sys =
+        System(100.0; time_series_in_memory = get(kwargs, :time_series_in_memory, true))
+    add_component!(cost_test_sys, node)
+    add_component!(cost_test_sys, load)
+    add_component!(cost_test_sys, gens_cost[1])
+    add_component!(cost_test_sys, gens_cost[2])
+    add_time_series!(cost_test_sys, load, load_forecast_cost_market_bid)
+    set_variable_cost!(cost_test_sys, gens_cost[1], market_bid_gen1)
+    set_variable_cost!(cost_test_sys, gens_cost[2], market_bid_gen2)
+    return cost_test_sys
 end
 
 TEST_SYSTEMS = Dict(
@@ -1477,6 +1834,26 @@ TEST_SYSTEMS = Dict(
     "c_ramp_test" => (
         description = "1-bus for ramp testing",
         build = build_sys_ramp_testing,
+        time_series_in_memory = true,
+    ),
+    "c_duration_test" => (
+        description = "1 Bus for durantion testing",
+        build = build_duration_test_sys,
+        time_series_in_memory = true,
+    ),
+    "c_linear_pwl_test" => (
+        description = "1 Bus lineal PWL linear testing",
+        build = build_pwl_test_sys,
+        time_series_in_memory = true,
+    ),
+    "c_sos_pwl_test" => (
+        description = "1 Bus lineal PWL sos testing",
+        build = build_sos_test_sys,
+        time_series_in_memory = true,
+    ),
+    "c_market_bid_cost" => (
+        description = "1 bus system with MarketBidCost Model",
+        build = build_pwl_marketbid_sys,
         time_series_in_memory = true,
     ),
 )

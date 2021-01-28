@@ -1,764 +1,37 @@
-function _filter_variables(results::IS.Results; kwargs...)
-    filter_variables = Dict()
-    filter_parameters = Dict()
-    results = _filter_parameters(results)
-    for (key, var) in IS.get_variables(results)
-        if startswith("$key", "P__") | any(key .== [:γ⁻__P, :γ⁺__P])
-            filter_variables[key] = var
-        end
-    end
 
-    curtailment = get(kwargs, :curtailment, false)
-    filter_variables = _filter_curtailment(results, filter_variables, curtailment)
-    load = get(kwargs, :load, false)
-    if load && (:P__PowerLoad in keys(results.parameter_values))
-        filter_parameters[:P__PowerLoad] = results.parameter_values[:P__PowerLoad]
-    elseif load
-        @warn "PowerLoad not found in results parameters."
-    end
-    new_results = Results(
-        IS.get_base_power(results),
-        filter_variables,
-        IS.get_optimizer_log(results),
-        IS.get_total_cost(results),
-        IS.get_timestamp(results),
-        results.dual_values,
-        filter_parameters,
-    )
-    return new_results
+function _empty_plot()
+    backend = Plots.backend()
+    return _empty_plot(backend)
 end
 
-function _filter_reserves(results::IS.Results, reserves::Bool)
-    filter_up_reserves = Dict()
-    filter_down_reserves = Dict()
-    if reserves
-        for (key, var) in IS.get_variables(results)
-            if occursin("__", "$key")
-                ending = split("$key", "__")[2]
-                if in(ending, UP_RESERVES)
-                    filter_up_reserves[key] = var
-                elseif in(ending, DOWN_RESERVES)
-                    filter_down_reserves[key] = var
-                end
-            end
-        end
-        if isempty(filter_up_reserves) && isempty(filter_down_reserves)
-            @warn "No reserves found in results."
-            return nothing
-        else
-            return Dict("Up" => filter_up_reserves, "Down" => filter_down_reserves)
-        end
-    else
-        return nothing
-    end
-end
-
-function _filter_curtailment(results::IS.Results, filter_results::Dict, curtailment::Bool)
-    for (key, parameter) in IS.get_parameters(results)
-        param = "$key"
-        name = split(param, "_")[end]
-        !(name in SUPPORTEDGENPARAMS) && continue
-
-        if !(key in keys(IS.get_variables(results))) || !curtailment
-            filter_results[key] = parameter
-        else
-            if Symbol("Curtailment") in keys(filter_results)
-                hcat(
-                    filter_results[Symbol("Curtailment")],
-                    (parameter .- IS.get_variables(results)[key]),
-                )
-            else
-                filter_results[Symbol("Curtailment")] =
-                    (parameter .- IS.get_variables(results)[key])
-            end
-        end
-    end
-    return filter_results
-end
-
-function _filter_parameters(results::IS.Results)
-    filter_parameters = Dict()
-    for (key, parameter) in IS.get_parameters(results)
-        new_key = replace(replace("$key", "parameter_" => ""), "_" => "__")
-        param = split("$key", "_")[end]
-        if startswith(new_key, "P") && param in SUPPORTEDGENPARAMS
-            filter_parameters[Symbol(new_key)] = parameter
-        elseif startswith(new_key, "P") && param in SUPPORTEDLOADPARAMS
-            filter_parameters[Symbol(new_key)] = parameter .* -1.0
-        end
-    end
-    new_results = Results(
-        IS.get_base_power(results),
-        IS.get_variables(results),
-        IS.get_optimizer_log(results),
-        IS.get_total_cost(results),
-        IS.get_timestamp(results),
-        results.dual_values,
-        filter_parameters,
-    )
-    return new_results
-end
-
-function fuel_plot(
-    res::IS.Results,
-    variables::Array,
-    genterator_data::Union{Dict, PSY.System};
-    kwargs...,
+function _make_ylabel(
+    base_power::Float64;
+    variable::String = "Generation",
+    time::String = "",
 )
-    res_var = Dict()
-    for variable in variables
-        res_var[variable] = IS.get_variables(res)[variable]
-    end
-    results = Results(
-        IS.get_base_power(res),
-        res_var,
-        IS.get_optimizer_log(res),
-        IS.get_total_cost(res),
-        IS.get_timestamp(res),
-        res.dual_values,
-        res.parameter_values,
-    )
-    plots = fuel_plot(results, genterator_data; kwargs...)
-    return plots
-end
-
-function fuel_plot(
-    results::Array,
-    variables::Array,
-    genterator_data::Union{Dict, PSY.System};
-    kwargs...,
-)
-    new_results = []
-    for res in results
-        res_var = Dict()
-        for variable in variables
-            res_var[variable] = IS.get_variables(res)[variable]
-        end
-        results = Results(
-            IS.get_base_power(res),
-            res_var,
-            IS.get_optimizer_log(res),
-            IS.get_total_cost(res),
-            IS.get_timestamp(res),
-            res.dual_values,
-            res.parameter_values,
-        )
-        new_results = vcat(new_results, results)
-    end
-    plots = fuel_plot(new_results, genterator_data; kwargs...)
-    return plots
-end
-
-"""
-    fuel_plot(results, system)
-
-This function makes a stack plot of the results by fuel type
-and assigns each fuel type a specific color.
-
-# Arguments
-
-- `res::Results = results`: results to be plotted
-- `system::PSY.System`: The power systems system
-
-# Example
-
-```julia
-res = solve_op_problem!(OpProblem)
-plot = fuel_plot(res, sys)
-```
-
-# Accepted Key Words
-- `display::Bool`: set to false to prevent the plots from displaying
-- `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
-- `seriescolor::Array`: Set different colors for the plots
-- `title::String = "Title"`: Set a title for the plots
-- `curtailment::Bool`: To plot the curtailment in the stack plot
-- `load::Bool`: To plot the load line in the plot
-- `stair::Bool`: Make a stair plot instead of a stack plot
-- `generator_mapping_file` = "file_path" : file path to yaml definig generator category by fuel and primemover
-"""
-function fuel_plot(res::Union{IS.Results, Array}, sys::PSY.System; kwargs...)
-    ref = make_fuel_dictionary(sys; kwargs...)
-    return fuel_plot(res, ref; kwargs...)
-end
-
-"""
-    fuel_plot(results::IS.Results, generators)
-
-This function makes a stack plot of the results by fuel type
-and assigns each fuel type a specific color.
-
-# Arguments
-
-- `res::IS.Results = results`: results to be plotted
-- `generators::Dict`: the dictionary of fuel type and an array
- of the generators per fuel type, or some other specified category order
-
-# Example
-
-```julia
-res = solve_op_problem!(OpProblem)
-generator_dict = make_fuel_dictionary(sys, mapping)
-plot = fuel_plot(res, generator_dict)
-```
-
-# Accepted Key Words
-- `display::Bool`: set to false to prevent the plots from displaying
-- `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
-- `seriescolor::Array`: Set different colors for the plots
-- `title::String = "Title"`: Set a title for the plots
-- `curtailment::Bool`: To plot the curtailment in the stack plot
-- `load::Bool`: To plot the load line in the plot
-- `stair::Bool`: Make a stair plot instead of a stack plot
-- `title::String = "Title"`: Set a title for the plots
-"""
-
-function fuel_plot(res::IS.Results, generator_dict::Dict; kwargs...)
-    set_display = get(kwargs, :display, true)
-    save_fig = get(kwargs, :save, nothing)
-    res = _filter_variables(res; kwargs...)
-    stack = get_stacked_aggregation_data(res, generator_dict)
-    bar = get_bar_aggregation_data(res, generator_dict)
-    backend = Plots.backend()
-    default_colors = match_fuel_colors(stack, bar, backend, FUEL_DEFAULT)
-    seriescolor = get(kwargs, :seriescolor, default_colors)
-    ylabel = (
-        stack = _make_ylabel(IS.get_base_power(res)),
-        bar = _make_bar_ylabel(IS.get_base_power(res)),
-    )
-    title = get(kwargs, :title, "Fuel")
-    if isnothing(backend)
-        throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
-    end
-    time_interval = IS.get_timestamp(res)[2, 1] - IS.get_timestamp(res)[1, 1]
-    interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
-    return _fuel_plot_internal(
-        stack,
-        bar,
-        seriescolor,
-        backend,
-        save_fig,
-        set_display,
-        title,
-        ylabel,
-        interval;
-        kwargs...,
-    )
-end
-
-function fuel_plot(results::Array, generator_dict::Dict; kwargs...)
-    set_display = get(kwargs, :display, true)
-    save_fig = get(kwargs, :save, nothing)
-    stack = StackedGeneration[]
-    bar = BarGeneration[]
-    for result in results
-        new_res = _filter_variables(result; kwargs...)
-        push!(stack, get_stacked_aggregation_data(new_res, generator_dict))
-        push!(bar, get_bar_aggregation_data(new_res, generator_dict))
-    end
-    backend = Plots.backend()
-    default_colors = match_fuel_colors(stack[1], bar[1], backend, FUEL_DEFAULT)
-    seriescolor = get(kwargs, :seriescolor, default_colors)
-    title = get(kwargs, :title, "Fuel")
-    ylabel = (
-        stack = _make_ylabel(IS.get_base_power(results[1])),
-        bar = _make_bar_ylabel(IS.get_base_power(results[1])),
-    )
-    if isnothing(backend)
-        throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
-    end
-    time_interval = IS.get_timestamp(results[1])[2, 1] - IS.get_timestamp(results[1])[1, 1]
-    interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
-    return _fuel_plot_internal(
-        stack,
-        bar,
-        seriescolor,
-        backend,
-        save_fig,
-        set_display,
-        title,
-        ylabel,
-        interval;
-        kwargs...,
-    )
-end
-
-"""
-   bar_plot(results::IS.Results)
-
-This function plots a bar plot for the generators in each variable within
-the results variables dictionary, and makes a bar plot for all of the variables.
-
-# Arguments
-- `res::IS.Results = results`: results to be plotted
-
-# Example
-
-```julia
-results = solve_op_problem!(OpProblem)
-plot = bar_plot(results)
-```
-
-# Accepted Key Words
-- `display::Bool`: set to false to prevent the plots from displaying
-- `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
-- `seriescolor::Array`: Set different colors for the plots
-- `load::Bool`: plot the load line
-- `title::String = "Title"`: Set a title for the plots
-"""
-
-function bar_plot(res::IS.Results; kwargs...)
-    backend = Plots.backend()
-    set_display = get(kwargs, :display, true)
-    save_fig = get(kwargs, :save, nothing)
-    reserve = get(kwargs, :reserves, false)
-    reserves = _filter_reserves(res, reserve)
-    res = _filter_variables(res; kwargs...)
-    if isnothing(backend)
-        throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
-    end
-    time_interval = IS.get_timestamp(res)[2, 1] - IS.get_timestamp(res)[1, 1]
-    interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
-    return _bar_plot_internal(
-        res,
-        backend,
-        save_fig,
-        set_display,
-        interval,
-        reserves;
-        kwargs...,
-    )
-end
-
-"""
-   bar_plot(results::Array{IS.Results})
-
-This function plots a subplot for each result. Each subplot has a bar plot for the generators in each variable within
-the results variables dictionary, and makes a bar plot for all of the variables per result object.
-
-# Arguments
-- `res::Array{IS.Results} = [results1; results2]`: results to be plotted
-
-# Example
-
-```julia
-results1 = solve_op_problem!(OpProblem1)
-results2 = solve_op_problem!(OpProblem2)
-plot = bar_plot([results1; results2])
-```
-
-# Accepted Key Words
-- `display::Bool`: set to false to prevent the plots from displaying
-- `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
-- `seriescolor::Array`: Set different colors for the plots
-- `title::String = "Title"`: Set a title for the plots
-"""
-
-function bar_plot(results::Array; kwargs...)
-    backend = Plots.backend()
-    set_display = get(kwargs, :display, true)
-    save_fig = get(kwargs, :save, nothing)
-    reserve = get(kwargs, :reserves, false)
-    reserve_list = []
-    res = []
-    for result in results
-        reserve_list = vcat(reserve_list, _filter_reserves(result, reserve))
-        res = vcat(res, _filter_variables(result; kwargs...))
-    end
-    #res = hcat(res...)
-    #reserve_list = hcat(reserve_list...)
-    if isnothing(backend)
-        throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
-    end
-    time_interval = IS.get_timestamp(res[1])[2, 1] - IS.get_timestamp(res[1])[1, 1]
-    interval = Dates.Millisecond(Dates.Hour(1)) / time_interval
-    return _bar_plot_internal(
-        res,
-        backend,
-        save_fig,
-        set_display,
-        interval,
-        reserve_list;
-        kwargs...,
-    )
-end
-
-function bar_plot(res::IS.Results, variables::Array; kwargs...)
-    res_var = Dict()
-    for variable in variables
-        res_var[variable] = IS.get_variables(res)[variable]
-    end
-    results = Results(
-        IS.get_base_power(res),
-        res_var,
-        IS.get_optimizer_log(res),
-        IS.get_total_cost(res),
-        IS.get_timestamp(res),
-        res.dual_values,
-        res.parameter_values,
-    )
-    return bar_plot(results; kwargs...)
-end
-
-function bar_plot(results::Array, variables::Array; kwargs...)
-    new_results = []
-    for res in results
-        res_var = Dict()
-        for variable in variables
-            res_var[variable] = IS.get_variables(res)[variable]
-        end
-        results = Results(
-            IS.get_base_power(res),
-            res_var,
-            IS.get_optimizer_log(res),
-            IS.get_total_cost(res),
-            IS.get_timestamp(res),
-            res.dual_values,
-            res.parameter_values,
-        )
-        new_results = vcat(new_results, results)
-    end
-    return bar_plot(new_results; kwargs...)
-end
-
-"""
-     stack_plot(results::IS.Results)
-
-This function plots a stack plot for the generators in each variable within
-the results variables dictionary, and makes a stack plot for all of the variables.
-
-# Arguments
-- `res::IS.Results = results`: results to be plotted
-
-# Examples
-
-```julia
-results = solve_op_problem!(OpProblem)
-plot = stack_plot(results)
-```
-
-# Accepted Key Words
-- `display::Bool`: set to false to prevent the plots from displaying
-- `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "png"`: Set a different default format for saving PlotlyJS
-- `seriescolor::Array`: Set different colors for the plots
-- `stair::Bool`: make a stair plot instead of a stack plot
-- `title::String = "Title"`: Set a title for the plots
-"""
-
-function stack_plot(res::IS.Results; kwargs...)
-    set_display = get(kwargs, :set_display, true)
-    backend = Plots.backend()
-    save_fig = get(kwargs, :save, nothing)
-    reserve = get(kwargs, :reserves, false)
-    reserves = _filter_reserves(res, reserve)
-    results = _filter_variables(res; kwargs...)
-    if isnothing(backend)
-        throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
-    end
-    return _stack_plot_internal(
-        results,
-        backend,
-        save_fig,
-        set_display,
-        reserves;
-        kwargs...,
-    )
-end
-
-"""
-     stack_plot(results::Array{IS.Results})
-
-This function plots a subplot for each result object. Each subplot stacks the generators in each variable within
-results variables dictionary, and makes a stack plot for all of the variables per result object.
-
-# Arguments
-- `res::Array{IS.Results} = [results1, results2]`: results to be plotted
-
-# Examples
-
-```julia
-results1 = solve_op_problem!(OpProblem1)
-results2 = solve_op_problem!(OpProblem2)
-plot = stack_plot([results1; results2])
-```
-
-# Accepted Key Words
-- `display::Bool`: set to false to prevent the plots from displaying
-- `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
-- `seriescolor::Array`: Set different colors for the plots
-- `title::String = "Title"`: Set a title for the plots
-"""
-
-function stack_plot(results::Array{}; kwargs...)
-    set_display = get(kwargs, :set_display, true)
-    backend = Plots.backend()
-    save_fig = get(kwargs, :save, nothing)
-    reserves = get(kwargs, :reserves, false)
-    reserve_list = []
-    new_results = []
-    for res in results
-        reserve_list = vcat(reserve_list, _filter_reserves(res, reserves))
-        new_results = vcat(new_results, _filter_variables(res; kwargs...))
-    end
-    #new_results = hcat(new_results...)
-    #reserves_list = hcat(reserves_list...)
-    if isnothing(backend)
-        throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
-    end
-    return _stack_plot_internal(
-        new_results,
-        backend,
-        save_fig,
-        set_display,
-        reserve_list;
-        kwargs...,
-    )
-end
-
-"""
-     stack_plot(results::IS.Results, variables::Array)
-
-This function plots a stack plot for the generators in each variable within
-the results variables dictionary, and makes a stack plot for all of the variables in the array.
-
-# Arguments
-- `res::IS.Results = results`: results to be plotted
-- `variables::Array`: list of variables to be plotted in the results
-
-# Examples
-
-```julia
-results = solve_op_problem!(OpProblem)
-variables = [:var1, :var2, :var3]
-plot = stack_plot(results, variables)
-```
-
-# Accepted Key Words
-- `display::Bool`: set to false to prevent the plots from displaying
-- `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
-- `seriescolor::Array`: Set different colors for the plots
-- `title::String = "Title"`: Set a title for the plots
-"""
-
-function stack_plot(res::IS.Results, variables::Array; kwargs...)
-    res_var = Dict()
-    res_param = Dict()
-    for variable in variables
-        ending = last(split("$variable", "_"))
-        parameter = Symbol("parameter_P_$ending")
-        res_var[variable] = IS.get_variables(res)[variable]
-        if parameter in keys(IS.get_parameters(res))
-            res_param[parameter] = IS.get_parameters(res)[parameter]
-        end
-    end
-    results = Results(
-        IS.get_base_power(res),
-        res_var,
-        IS.get_optimizer_log(res),
-        IS.get_total_cost(res),
-        IS.get_timestamp(res),
-        res.dual_values,
-        res_param,
-    )
-    return stack_plot(results; kwargs...)
-end
-
-function stack_plot(results::Array, variables::Array; kwargs...)
-    new_results = []
-    for res in results
-        res_var = Dict()
-        res_param = Dict()
-        for variable in variables
-            ending = last(split("$variable", "_"))
-            parameter = Symbol("parameter_P_$ending")
-            res_var[variable] = IS.get_variables(res)[variable]
-            if parameter in keys(IS.get_parameters(res))
-                res_param[parameter] = IS.get_parameters(res)[parameter]
-            end
-        end
-        results = Results(
-            IS.get_base_power(res),
-            res_var,
-            IS.get_optimizer_log(res),
-            IS.get_total_cost(res),
-            IS.get_timestamp(res),
-            res.dual_values,
-            res_param,
-        )
-        new_results = vcat(new_results, results)
-    end
-    return stack_plot(new_results; kwargs...)
-end
-
-function _make_ylabel(base_power::Float64)
     if isapprox(base_power, 1.0)
-        ylabel = "Generation (MW)"
+        ylabel = "$variable (MW$time)"
     elseif isapprox(base_power, 1000.0)
-        ylabel = "Generation (GW)"
+        ylabel = "$variable (GW$time)"
     else
-        ylabel = "Generation (MW x$base_power)"
+        ylabel = "$variable (MW$time x$base_power)"
     end
     return ylabel
 end
 
-function _make_bar_ylabel(base_power::Float64)
-    if isapprox(base_power, 1.0)
-        ylabel = "Generation (MWh)"
-    elseif isapprox(base_power, 1000.0)
-        ylabel = "Generation (GWh)"
-    else
-        ylabel = "Generation (MWh x$base_power)"
-    end
-    return ylabel
-end
-
-"""
-    stair_plot(results)
-
-This function makes a stair plot for each variable, as well as all of the variables.
-The same methods for stack_plot apply to stair_plot.
-
-# Arguments
-
-- `res::Results = results`: results to be plotted
-
-# Example
-
-```julia
-res = solve_op_problem!(OpProblem)
-plot = stair_plot(res)
-```
-
-# Accepted Key Words
-- `display::Bool`: set to false to prevent the plots from displaying
-- `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
-- `seriescolor::Array`: Set different colors for the plots
-- `title::String = "Title"`: Set a title for the plots
-- `curtailment::Bool`: To plot the curtailment in the stack plot
-- `load::Bool`: To plot the load line in the plot
-"""
-
-function stair_plot(res::IS.Results; kwargs...)
-    set_display = get(kwargs, :set_display, true)
+function get_default_seriescolor()
     backend = Plots.backend()
-    save_fig = get(kwargs, :save, nothing)
-    reserve = get(kwargs, :reserves, false)
-    reserves = _filter_reserves(res, reserve)
-    res = _filter_variables(res; kwargs...)
-    if isnothing(backend)
-        throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
-    end
-    return _stack_plot_internal(
-        res,
-        backend,
-        save_fig,
-        set_display,
-        reserves;
-        stairs = "hv",
-        linetype = :steppost,
-        kwargs...,
-    )
+    return get_default_seriescolor(backend)
 end
 
-function stair_plot(results::Array; kwargs...)
-    set_display = get(kwargs, :set_display, true)
-    backend = Plots.backend()
-    save_fig = get(kwargs, :save, nothing)
-    reserves = get(kwargs, :reserves, false)
-    new_results = []
-    reserves_list = []
-    for res in results
-        reserves_list = vcat(reserves_list, _filter_reserves(res, reserves))
-        new_results = vcat(new_results, _filter_variables(res; kwargs...))
-    end
-    #reserves_list = hcat(reserves_list...)
-    #new_results = hcat(new_results...)
-    if isnothing(backend)
-        throw(IS.ConflictingInputsError("No backend detected. Type gr() to set a backend."))
-    end
-    return _stack_plot_internal(
-        new_results,
-        backend,
-        save_fig,
-        set_display,
-        reserves_list;
-        stairs = "hv",
-        linetype = :steppost,
-        kwargs...,
-    )
+function get_default_seriescolor(backend::Any)
+    return GR_DEFAULT
 end
 
-function stair_plot(res::IS.Results, variables::Array; kwargs...)
-    res_var = Dict()
-    for variable in variables
-        res_var[variable] = IS.get_variables(res)[variable]
-    end
-    results = Results(
-        IS.get_base_power(res),
-        res_var,
-        IS.get_optimizer_log(res),
-        IS.get_total_cost(res),
-        IS.get_timestamp(res),
-        res.dual_values,
-        res.parameter_values,
-    )
-    return stair_plot(results; kwargs...)
-end
-
-function stair_plot(results::Array, variables::Array; kwargs...)
-    new_results = []
-    for res in results
-        res_var = Dict()
-        for variable in variables
-            res_var[variable] = IS.get_variables(res)[variable]
-        end
-        results = Results(
-            IS.get_base_power(res),
-            res_var,
-            IS.get_optimizer_log(res),
-            IS.get_total_cost(res),
-            IS.get_timestamp(res),
-            res.dual_values,
-            res.parameter_values,
-        )
-        new_results = vcat(new_results, results)
-    end
-    return stair_plot(new_results; kwargs...)
+function get_default_seriescolor(backend::Plots.PlotlyJSBackend)
+    return PLOTLY_DEFAULT
 end
 ################################### DEMAND #################################
-
-function _shorten_time(results::IS.Results, horizon::Int64, init_time::Dates.DateTime)
-    time_range = IS.get_timestamp(results)[:, 1]
-    resolution = Dates.Hour(time_range[2] - time_range[1])
-    parameters = IS.get_parameters(results)
-    times = collect(init_time:resolution:(init_time + resolution * horizon))
-    new_time_range = DataFrames.DataFrame(:Range => times)
-    new_params = Dict()
-    init_spot = findall(x -> x == init_time, time_range)[1]
-    if isempty(init_spot)
-        throw(IS.InvalidValue("$init_time is not in the time_range."))
-    end
-    for (k, p) in parameters
-        new_params[k] = p[init_spot:(init_spot + horizon), :]
-    end
-    return Results(
-        IS.get_base_power(results),
-        IS.get_variables(results),
-        IS.get_optimizer_log(results),
-        IS.get_total_cost(results),
-        new_time_range,
-        results.dual_values,
-        new_params,
-    )
-end
 
 """
     plot_demand(results)
@@ -767,7 +40,7 @@ This function makes a plot of the demand in the system.
 
 # Arguments
 
-- `res::Results = results`: results to be plotted
+- `res::Union{Results, Vector{IS.Results}}`: results to be plotted
 
 # Example
 
@@ -776,449 +49,301 @@ res = solve_op_problem!(OpProblem)
 plot = plot_demand(res)
 ```
 
-# Accepted Key Words
-- `display::Bool`: set to false to prevent the plots from displaying
-- `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
-- `seriescolor::Array`: Set different colors for the plots
-- `title::String = "Title"`: Set a title for the plots
-- `horizon::Int64 = 12`: To plot a shorter window of time than the full results
-- `initial_time::DateTime`: To start the plot at a different time other than the results initial time
-- `aggregate::String = "System", "PowerLoad", or "Bus"`: aggregate the demand other than by generator
-"""
-
-function plot_demand(res::IS.Results; kwargs...)
-    results = _filter_parameters(res)
-    if isempty(IS.get_parameters(results))
-        @warn "No parameters provided."
-    end
-    backend = Plots.backend()
-    horizon = get(kwargs, :horizon, nothing)
-    initial_time = get(kwargs, :initial_time, nothing)
-    if !isnothing(horizon) && !isnothing(initial_time)
-        results = _shorten_time(results, horizon, initial_time)
-    end
-    return _demand_plot_internal(results, backend; kwargs...)
-end
-
-"""
-    plot_demand([results_1, results_2])
-
-This function makes a plot of the demand in the system.
-
 # Arguments
-
-- `results_array::Array`: Array of results to be plotted
-
-# Example
-
-```julia
-res = solve_op_problem!(OpProblem)
-plot = plot_demand([res, res])
-```
+- `plot::Any` : existing plot handle (optional)
+- `result::Union{IS.Results, PSY.System}` : simulation results or PowerSystems.System
 
 # Accepted Key Words
 - `display::Bool`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
+- `format::String = "png"`: set a different format for saving a PlotlyJS plot
 - `seriescolor::Array`: Set different colors for the plots
+- `linestyle::Symbol = :dash` : set line style
 - `title::String = "Title"`: Set a title for the plots
 - `horizon::Int64 = 12`: To plot a shorter window of time than the full results
 - `initial_time::DateTime`: To start the plot at a different time other than the results initial time
 - `aggregate::String = "System", "PowerLoad", or "Bus"`: aggregate the demand other than by generator
 """
 
-function plot_demand(results::Array; kwargs...)
-    newer_results = []
-    for res in results
-        new_res = _filter_parameters(res)
-        horizon = get(kwargs, :horizon, nothing)
-        initial_time = get(kwargs, :initial_time, nothing)
-        if !isnothing(horizon) && !isnothing(initial_time)
-            new_res = _shorten_time(new_res, horizon, initial_time)
-        end
-        newer_results = vcat(newer_results, new_res)
-        if isempty(IS.get_parameters(new_res))
-            @warn "No parameters provided."
-        end
-    end
+function plot_demand(result::Union{IS.Results, PSY.System}; kwargs...)
+    return plot_demand(_empty_plot(), result; kwargs...)
+end
+
+function plot_demand(p::Any, result::Union{IS.Results, PSY.System}; kwargs...)
     backend = Plots.backend()
+    set_display = get(kwargs, :set_display, true)
     save_fig = get(kwargs, :save, nothing)
-    return _demand_plot_internal(newer_results, backend; kwargs...)
-end
-function _get_loads(system::PSY.System, bus::PSY.Bus)
-    return [
-        load
-        for load in PSY.get_components(PSY.PowerLoad, system) if PSY.get_bus(load) == bus
-    ]
-end
-function _get_loads(system::PSY.System, agg::T) where {T <: PSY.AggregationTopology}
-    return PSY.get_components_in_aggregation_topology(PSY.PowerLoad, system, agg)
-end
-function _get_loads(system::PSY.System, load::PSY.PowerLoad)
-    return [load]
-end
-function _get_loads(system::PSY.System, sys::PSY.System)
-    return PSY.get_components(PSY.PowerLoad, system)
-end
+    bar = get(kwargs, :bar, false)
+    linestyle = get(kwargs, :linestyle, :solid)
 
-function make_demand_plot_data(
-    system::PSY.System,
-    aggregation::Union{
-        Type{PSY.PowerLoad},
-        Type{PSY.Bus},
-        Type{PSY.System},
-        Type{<:PSY.AggregationTopology},
-    } = PSY.PowerLoad;
-    kwargs...,
-)
-    aggregation_components =
-        aggregation == PSY.System ? [system] : PSY.get_components(aggregation, system)
-    if isempty(aggregation_components)
-        throw(ArgumentError("System does not have type $aggregation."))
-    end
-    horizon = get(kwargs, :horizon, PSY.get_forecasts_horizon(system))
-    initial_time = get(kwargs, :initial_time, PSY.get_forecasts_initial_time(system))
-    parameters = DataFrames.DataFrame(timestamp = Dates.DateTime[])
-    for agg in aggregation_components
-        loads = _get_loads(system, agg)
-        length(loads) == 0 && continue
-        colname = aggregation == PSY.System ? "System" : PSY.get_name(agg)
-        load_values = []
-        for load in loads
-            f = PSY.get_forecast_values(
-                PSY.Deterministic,
-                load,
-                initial_time,
-                "get_max_active_power",
-                horizon,
-            )
-            push!(load_values, values(f))
-            parameters = DataFrames.outerjoin(
-                parameters,
-                DataFrames.DataFrame(timestamp = TimeSeries.timestamp(f)),
-                on = :timestamp,
-                makeunique = false,
-                indicator = nothing,
-                validate = (false, false),
-            )
-        end
-        load_values =
-            length(loads) == 1 ? load_values[1] :
-            dropdims(sum(Matrix(reduce(hcat, load_values)), dims = 2), dims = 2)
-        parameters[:, Symbol(colname)] = load_values
-    end
-    save_fig = get(kwargs, :save, nothing)
-    return parameters
-end
+    title = get(kwargs, :title, "Demand")
+    y_label = get(
+        kwargs,
+        :y_label,
+        _make_ylabel(get_base_power(result), variable = "Demand", time = bar ? "h" : ""),
+    )
 
-"""
-    plot_demand(system)
-
-This function makes a plot of the demand in the system.
-
-# Arguments
-
-- `sys::PSY.System`: the system to be plotted
-
-# Example
-
-```julia
-plot = plot_demand(sys)
-```
-
-# Accepted Key Words
-- `display::Bool`: set to false to prevent the plots from displaying
-- `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
-- `seriescolor::Array`: Set different colors for the plots
-- `title::String = "Title"`: Set a title for the plots
-- `horizon::Int64 = 12`: To plot a shorter window of time than the full results
-- `initial_time::DateTime`: To start the plot at a different time other than the results initial time
-- `aggregate::String = "System", "PowerLoad", or "Bus"`: aggregate the demand other than by generator
-"""
-
-function plot_demand(system::PSY.System; kwargs...)
-    aggregation = get(kwargs, :aggregate, PSY.PowerLoad)
-    parameters = make_demand_plot_data(system, aggregation; kwargs...)
-    backend = Plots.backend()
-    return _demand_plot_internal(
-        parameters,
-        PSY.get_base_power(system),
-        Plots.backend();
+    load = get_load_data(result; kwargs...)
+    load_agg = combine_categories(load.data)
+    p = plot_dataframe(
+        p,
+        load_agg,
+        load.time;
+        seriescolor = get(kwargs, :seriescolor, get_default_seriescolor()),
+        linestyle = Symbol(linestyle),
+        line_dash = string(linestyle),
+        linewidth = get(kwargs, :linewidth, 1),
+        y_label = y_label,
+        title = title,
         kwargs...,
     )
-end
 
-"""
-    plot_demand([system_1, system_2])
-
-This function makes a plot of the demand in the system.
-
-# Arguments
-
-- `system::PSY.system`: Array of systems to be plotted
-
-# Example
-
-```julia
-plot = plot_demand([sys, sys])
-```
-
-# Accepted Key Words
-- `display::Bool`: set to false to prevent the plots from displaying
-- `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
-- `seriescolor::Array`: Set different colors for the plots
-- `title::String = "Title"`: Set a title for the plots
-- `horizon::Int64 = 12`: To plot a shorter window of time than the full results
-- `initial_time::DateTime`: To start the plot at a different time other than the results initial time
-- `aggregate::String = "System", "PowerLoad", or "Bus"`: aggregate the demand other than by generator
-"""
-function plot_demand(systems::Array{PSY.System}; kwargs...)
-    parameter_list = []
-    base_powers = []
-    aggregation = get(kwargs, :aggregate, PSY.PowerLoad)
-    for system in systems
-        push!(base_powers, PSY.get_base_power(system))
-        push!(parameter_list, make_demand_plot_data(system, aggregation; kwargs...))
+    set_display && display(p)
+    if !isnothing(save_fig)
+        title = replace(title, " " => "_")
+        save_plot(p, joinpath(save_fig, "$(title).png"), backend; kwargs...)
     end
-    backend = Plots.backend()
-    return _demand_plot_internal(parameter_list, base_powers, backend; kwargs...)
+    return p
 end
 
-################################## Plot Forecasts ###########################
-#=
-function plot_forecast(forecast; kwargs...)
-end
-=#
-
-############################### Reserve Plot ################################
+################################# Plotting a Single DataFrame ##########################
 
 """
-    plot_reserves(results)
-
-This function makes a stack plot of the reserves in results.
-
-# Arguments
-
-- `results::IS.Results`: The results to be plotted
- or
-- `Array::Array{IS.Results}`: An array of multiple results to be plotted
-
-# Example
-
-```julia
-plot = plot_reserves(results)
-```
-or
-
-```julia
-plot = plot_reserves([results, results])
-```
-# Accepted Key Words
-- `display::Bool`: set to false to prevent the plots from displaying
-- `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
-- `seriescolor::Array`: Set different colors for the plots
-- `title::String = "Title"`: Set a title for the plots
-- `stair::Bool`: Makes a stair plot instead
-"""
-function plot_reserves(res::Union{IS.Results, Array}; kwargs...)
-    backend = Plots.backend()
-    plot_list = _reserve_plot(res, backend; kwargs...)
-    return plot_list
-end
-
-################################# Plotting a Single Variable ##########################
-
-"""
-    plot_variable(results, variable_name)
-
-This function makes a plot of a specific variable
-
-# Arguments
-
-- `res::Results = results`: results to be plotted
-- `variable::Union{String, Symbol}`: The variable name to be plotted
-
-# Example
-
-```julia
-res = solve_op_problem!(OpProblem)
-plot = plot_variable(res, variable)
-```
-
-# Accepted Key Words
-- `display::Bool`: set to false to prevent the plots from displaying
-- `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
-- `seriescolor::Array`: Set different colors for the plots
-- `title::String = "Title"`: Set a title for the plots
-- `curtailment::Bool`: plot the curtailment with the variable
-- `load::Bool`: plot the load with the variable
-"""
-function plot_variable(res::IS.Results, variable_name::Union{Symbol, String}; kwargs...)
-    var = Symbol(variable_name)
-    if !(var in keys(IS.get_variables(res)))
-        @warn "$var not found in results variables. Existing variables are \n$(keys(IS.get_variables(res)))"
-    else
-        curtailment = get(kwargs, :curtailment, false)
-        variables = Dict(var => IS.get_variables(res)[var])
-        variables = _filter_curtailment(res, variables, curtailment)
-        variable = variables[var]
-        if :Curtailment in keys(variables)
-            variable[:, :Curtailment] .= sum(Matrix(variables[:Curtailment]))
-        end
-        time_range = IS.get_timestamp(res)[:, 1]
-        plots = _variable_plots_internal(
-            variable,
-            time_range,
-            IS.get_base_power(res),
-            var,
-            Plots.backend();
-            kwargs...,
-        )
-        return plots
-    end
-end
-
-"""
-    plot_variable(plot, results, variable_name)
-
-This function overlays the plot of a specific variable onto an existing plot
-
-# Arguments
-
-- `plot::Union{Plots.plot, PlotlyJS.SyncPlot}`: the existing plot to be overlayed
-- `res::Results = results`: results to be plotted
-- `variable::Union{String, Symbol}`: The variable name to be plotted
-
-# Example
-
-```julia
-res = solve_op_problem!(OpProblem)
-plot = plot_variable(res, variable)
-plot_2 = plot_variable(plot, res, variable_2)
-```
-
-# Accepted Key Words
-- `display::Bool`: set to false to prevent the plots from displaying
-- `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
-- `seriescolor::Array`: Set different colors for the plots
-- `title::String = "Title"`: Set a title for the plots
-- `curtailment::Bool`: plot the curtailment with the variable
-- `load::Bool`: plot the load with the variable
-"""
-function plot_variable(
-    plot::Any,
-    res::IS.Results,
-    variable_name::Union{Symbol, String};
-    kwargs...,
-)
-    var = Symbol(variable_name)
-    if !(var in keys(IS.get_variables(res)))
-        @warn "$var not found in results variables. Existing variables are \n$(keys(IS.get_variables(res)))"
-    else
-        curtailment = get(kwargs, :curtailment, false)
-        variables = Dict(var => IS.get_variables(res)[var])
-        variables = _filter_curtailment(res, variables, curtailment)
-        variable = variables[var]
-        if :Curtailment in keys(variables)
-            variable[:, :Curtailment] .= sum(Matrix(variables[:Curtailment]))
-        end
-        time_range = IS.get_timestamp(res)[:, 1]
-        plots = _variable_plots_internal(
-            plot,
-            variable,
-            time_range,
-            IS.get_base_power(res),
-            var,
-            Plots.backend();
-            kwargs...,
-        )
-        return plots
-    end
-end
-
-"""
-    plot_dataframe(variable, time_range)
+    plot_dataframe(df, time_range)
+    plot_dataframe(plot, variable, time_range)
 
 This function makes a plot of a specific dataframe and time range, not necessarily from the results
 
 # Arguments
 
-- `variable::DataFrames.DataFrame`: The dataframe to be plotted
+- `df::DataFrames.DataFrame`: The dataframe to be plotted
 - `time_range::Union{Array, DataFrame}`: The time range to be plotted
 
 # Example
 
 ```julia
-variable = IS.get_variables(results)[variable_name]
-time_Range = IS.get_timestamp(results)
-plot = plot_dataframe(variable, time_range)
+var_name = :P__ThermalStandard
+df = PSI.read_realized_variables(results, names = [var_name])[var_name]
+time_range = PSI.get_realized_timestamps(results)
+plot = plot_dataframe(df, time_range)
 ```
 
 # Accepted Key Words
 - `display::Bool`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
+- `format::String = "png"`: set a different format for saving a PlotlyJS plot
 - `seriescolor::Array`: Set different colors for the plots
 - `title::String = "Title"`: Set a title for the plots
 - `curtailment::Bool`: plot the curtailment with the variable
-- `load::Bool`: plot the load with the variable
+- `stack::Bool`: stack plot traces
+- `bar::Bool` : create bar plot
+- `nofill::Bool` : force empty area fill
 """
 function plot_dataframe(
     variable::DataFrames.DataFrame,
-    time_range::Union{DataFrames.DataFrame, Array};
+    time_range::Union{DataFrames.DataFrame, Array, StepRange};
     kwargs...,
 )
-    time_range = typeof(time_range) == DataFrames.DataFrame ? time_range[:, 1] : time_range
-    backend = Plots.backend()
-    plot = _dataframe_plots_internal(variable, time_range, backend; kwargs...)
-    return plot
+    return plot_dataframe(_empty_plot(), variable, time_range; kwargs...)
 end
 
-"""
-    plot_dataframe(plot, variable, time_range)
-
-This function overlays the plot of a specific dataframe, over that of another plot
-
-# Arguments
-
-- `plot::Union{Plots.plot, PlotlyJS.SyncPlot}`: the existing plot to be overlayed
-- `variable::DataFrames.DataFrame`: The dataframe to be plotted
-- `time_range::Union{Array, DataFrame}`: The time range to be plotted
-
-# Example
-
-```julia
-variable = IS.get_variables(results)[variable_name]
-time_Range = IS.get_timestamp(results)
-plot = plot_dataframe(variable, time_range)
-
-variable_2 = IS.get_variables(results)[variable_name_2]
-plot_2 = plot_dataframe(plot, variable_2, time_range)
-```
-
-# Accepted Key Words
-- `display::Bool`: set to false to prevent the plots from displaying
-- `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "html"`: set a different format for saving a PlotlyJS plot
-- `seriescolor::Array`: Set different colors for the plots
-- `title::String = "Title"`: Set a title for the plots
-- `curtailment::Bool`: plot the curtailment with the variable
-- `load::Bool`: plot the load with the variable
-"""
 function plot_dataframe(
     p::Any,
     variable::DataFrames.DataFrame,
-    time_range::Union{DataFrames.DataFrame, Array};
+    time_range::Union{DataFrames.DataFrame, Array, StepRange};
     kwargs...,
 )
-    time_range = typeof(time_range) == DataFrames.DataFrame ? time_range[:, 1] : time_range
+    time_range =
+        typeof(time_range) == DataFrames.DataFrame ? time_range[:, 1] : collect(time_range)
     backend = Plots.backend()
     p = _dataframe_plots_internal(p, variable, time_range, backend; kwargs...)
     return p
+end
+
+################################# Plotting PGData ##########################
+
+"""
+    plot_pgdata(pgdata, time_range)
+    plot_pgdata(plot, pgdata, time_range)
+
+This function makes a plot of a PGdata object
+
+# Arguments
+
+- `plot::Any` : existing plot handle (optional)
+- `pgdata::PGData`: The dataframe to be plotted
+
+# Example
+
+```julia
+var_name = :P__ThermalStandard
+df = PSI.read_realized_variables(results, names = [var_name])[var_name]
+time_range = PSI.get_realized_timestamps(results)
+plot = plot_dataframe(df, time_range)
+```
+
+# Accepted Key Words
+- `combine_categories::Bool = false` : plot category values or each value in a category
+- `display::Bool`: set to false to prevent the plots from displaying
+- `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "png"`: set a different format for saving a PlotlyJS plot
+- `seriescolor::Array`: Set different colors for the plots
+- `title::String = "Title"`: Set a title for the plots
+- `curtailment::Bool`: plot the curtailment with the variable
+- `stack::Bool`: stack plot traces
+- `bar::Bool` : create bar plot
+- `nofill::Bool` : force empty area fill
+"""
+function plot_pgdata(pgdata::PGData; kwargs...)
+    return plot_pgdata(_empty_plot(), pgdata; kwargs...)
+end
+
+function plot_pgdata(p::Any, pgdata::PGData; kwargs...)
+    if get(kwargs, :combine_categories, true)
+        agg = get(kwargs, :agg, nothing)
+        names = get(kwargs, :names, nothing)
+        data = combine_categories(pgdata.data; names = names, agg = agg)
+    else
+        data = pgdata.data
+    end
+    plot_dataframe(p, data, pgdata.time; kwargs...)
+    return p
+end
+
+################################# Plotting Fuel Plot of Results ##########################
+"""
+    plot_fuel(results)
+
+This function makes a stack plot of the results by fuel type
+and assigns each fuel type a specific color.
+
+# Arguments
+
+- `plot::Any` : existing plot handle (optional)
+- `res::Results` : results to be plotted
+
+# Example
+
+```julia
+res = solve_op_problem!(OpProblem)
+plot = plot_fuel(res)
+```
+
+# Accepted Key Words
+- `display::Bool`: set to false to prevent the plots from displaying
+- `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "png"`: set a different format for saving a PlotlyJS plot
+- `seriescolor::Array`: Set different colors for the plots
+- `title::String = "Title"`: Set a title for the plots
+- `curtailment::Bool`: To plot the curtailment in the stack plot
+- `stack::Bool`: stack plot traces
+- `bar::Bool` : create bar plot
+- `nofill::Bool` : force empty area fill
+- `stair::Bool`: Make a stair plot instead of a stack plot
+- `generator_mapping_file` = "file_path" : file path to yaml definig generator category by fuel and primemover
+- `variables::Union{Nothing, Vector{Symbol}}` = nothing : specific variables to plot
+"""
+
+function plot_fuel(result::IS.Results; kwargs...)
+    return plot_fuel(_empty_plot(), result; kwargs...)
+end
+
+function plot_fuel(p::Any, result::IS.Results; kwargs...)
+    backend = Plots.backend()
+    set_display = get(kwargs, :set_display, true)
+    save_fig = get(kwargs, :save, nothing)
+    curtailment = get(kwargs, :curtailment, true)
+    slacks = get(kwargs, :slacks, true)
+    title = get(kwargs, :title, "Fuel")
+    stack = get(kwargs, :stack, true)
+    bar = get(kwargs, :bar, false)
+    kwargs =
+        Dict{Symbol, Any}((k, v) for (k, v) in kwargs if k ∉ [:title, :save, :set_display])
+
+    # Generation stack
+    gen = get_generation_data(result; kwargs...)
+    cat = make_fuel_dictionary(PSI.get_system(result); kwargs...)
+    fuel = categorize_data(gen.data, cat; curtailment = curtailment, slacks = slacks)
+
+    # passing names here enforces order
+    # TODO: enable custom sort with kwarg
+    fuel_agg = combine_categories(fuel; names = intersect(CATEGORY_DEFAULT, keys(fuel)))
+    y_label = get(
+        kwargs,
+        :y_label,
+        _make_ylabel(get_base_power(result), variable = "", time = bar ? "h" : ""),
+    )
+
+    seriescolor = get(kwargs, :seriescolor, match_fuel_colors(fuel_agg, backend))
+    p = plot_dataframe(
+        fuel_agg,
+        gen.time;
+        stack = stack,
+        seriescolor = seriescolor,
+        y_label = y_label,
+        title = title,
+        set_display = false,
+        kwargs...,
+    )
+
+    kwargs = Dict{Symbol, Any}((k, v) for (k, v) in kwargs if k ∉ [:nofill, :seriescolor])
+    kwargs[:linestyle] = get(kwargs, :linestyle, :dash)
+    kwargs[:linewidth] = get(kwargs, :linewidth, 3)
+
+    # load line
+    p = plot_demand(
+        p,
+        result;
+        nofill = true,
+        title = title,
+        y_label = y_label,
+        set_display = set_display,
+        stack = stack,
+        seriescolor = ["black"],
+        kwargs...,
+    )
+
+    # service stack
+    # TODO: how to display this?
+
+    if set_display
+        backend == Plots.PlotlyJSBackend() && Plots.PlotlyJS.plot(p)
+        display(p)
+    end
+    if !isnothing(save_fig)
+        title = replace(title, " " => "_")
+        format = get(kwargs, :format, "png")
+        save_plot(p, joinpath(save_fig, "$title.$format"), backend; kwargs...)
+    end
+    return p
+end
+
+"""
+    save_plot(plot, filename)
+
+Saves plot to specified filename
+
+# Arguments
+
+- `plot::Any`: plot object
+- `filename::String` : save to filename
+
+# Example
+
+```julia
+res = solve_op_problem!(OpProblem)
+plot = plot_fuel(res)
+save_plot(plot, "my_plot.png")
+```
+
+# Accepted Key Words (currently only implemented for PlotlyJS backend)
+- `format::String = "png"`: set a different format ["html"] for saving a PlotlyJS plot
+- `js::Symbol = :embed,` : options are [:embed, :local, :remote] see PlotlyJS.jl docs...
+- `width::Union{Nothing,Int}=nothing`
+- `height::Union{Nothing,Int}=nothing`
+- `scale::Union{Nothing,Real}=nothing`
+"""
+function save_plot(plot::Any, filename::String; kwargs...) # this needs to be typed but Plots.PlotlyJS.Plot doesn't exist until PlotlyJS is loaded
+    backend = Plots.backend()
+    return save_plot(plot, filename, backend; kwargs...)
 end

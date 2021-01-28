@@ -44,23 +44,32 @@ function get_default_palette()
     return default_palette
 end
 
-GR_DEFAULT = getfield.(get_default_palette(), :color)'
+# Recursively find all subtypes: useful for categorizing variables
+function all_subtypes(t::Type)
+    st = [t]
+    for t in st
+        union!(st, InteractiveUtils.subtypes(t))
+    end
+    return [split(string(s), ".")[end] for s in st]
+end
+
+GR_DEFAULT = permutedims(getfield.(get_default_palette(), :color))
 FUEL_DEFAULT = getfield.(get_palette(), :color)
 PLOTLY_DEFAULT = getfield.(get_default_palette(), :RGB)
 PLOTLY_FUEL_DEFAULT = getfield.(get_palette(), :RGB)
 CATEGORY_DEFAULT = getfield.(get_palette(), :category)
 
+SUPPORTED_EXTRA_PLOT_KWARGS = [:linestyle, :linewidth]
+SUPPORTED_PLOTLY_SAVE_KWARGS = [:height, :width, :format, :scale, :js]
+
 VARIABLE_TYPES = ["P", "Spin", "Reg", "Flex"]
 
-SUPPORTEDGENPARAMS = [
-    "RenewableDispatch",
-    "RenewableFix",
-    "HydroDispatch",
-    "HydroEnergyReservoir",
-    "ThermalStandard",
-]
+SUPPORTEDVARPREFIX = "P__"
+SUPPORTEDPARAMPREFIX = "P__max_active_power__"
 
-SUPPORTEDLOADPARAMS = ["PowerLoad"]
+SUPPORTEDLOADPARAMS = ["PowerLoad", "InterruptibleLoad"]
+
+NEGATIVE_PARAMETERS = ["PowerLoad"]
 
 SUPPORTEDSERVICEPARAMS = [
     "VariableReserve_ReserveUp",
@@ -75,6 +84,14 @@ DOWN_RESERVES = ["VariableReserve_ReserveDown", "StaticReserve_ReserveDown"]
 
 OVERGENERATION_VARIABLE = :γ⁻__P
 UNSERVEDENERGY_VARIABLE = :γ⁺__P
+SLACKVARS = Dict(
+    OVERGENERATION_VARIABLE => "Over Generation",
+    UNSERVEDENERGY_VARIABLE => "Unserved Energy",
+)
+
+LOAD_PARAMETER = :P__max_active_power__PowerLoad
+ILOAD_PARAMETER = :P__max_active_power__InterruptibleLoad
+ILOAD_VARIABLE = :P__InterruptibleLoad
 
 GENERATOR_MAPPING_FILE = joinpath(
     dirname(dirname(pathof(PowerGraphics))),
@@ -82,33 +99,23 @@ GENERATOR_MAPPING_FILE = joinpath(
     "generator_mapping.yaml",
 )
 
-function match_fuel_colors(
-    stack::StackedGeneration,
-    bar::BarGeneration,
-    backend::Any,
-    default::Array,
-)
+function match_fuel_colors(data::DataFrames.DataFrame, backend::Any)
     if backend == Plots.PlotlyJSBackend()
         color_range = PLOTLY_FUEL_DEFAULT
     else
         color_range = FUEL_DEFAULT
     end
     color_fuel = DataFrames.DataFrame(fuels = CATEGORY_DEFAULT, colors = color_range)
+    names = DataFrames.names(data)
     default =
-        [(color_fuel[findall(in(["$(bar.labels[1])"]), color_fuel.fuels), :][:, :colors])[1]]
-    for i in 2:length(bar.labels)
-        @debug bar.labels[i] (color_fuel[
-            findall(in(["$(bar.labels[i])"]), color_fuel.fuels),
-            :,
-        ][
+        [(color_fuel[findall(in(["$(names[1])"]), color_fuel.fuels), :][:, :colors])[1]]
+    for i in 2:length(names)
+        @debug names[i] (color_fuel[findall(in(["$(names[i])"]), color_fuel.fuels), :][
             :,
             :colors,
         ])
         specific_color =
-            (color_fuel[findall(in(["$(bar.labels[i])"]), color_fuel.fuels), :][
-                :,
-                :colors,
-            ])[1]
+            (color_fuel[findall(in(["$(names[i])"]), color_fuel.fuels), :][:, :colors])[1]
         default = hcat(default, specific_color)
     end
     return default

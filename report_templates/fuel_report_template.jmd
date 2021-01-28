@@ -30,7 +30,7 @@ stack_plot(WEAVE_ARGS["res"])
 
 ```julia; echo = false
 
-fuel_plot(WEAVE_ARGS["res"], WEAVE_ARGS["gen"])
+plot_fuel(WEAVE_ARGS["res"], WEAVE_ARGS["gen"])
 ```
 
 # Tables
