@@ -17,15 +17,15 @@ julia> ]
 ```julia
 using PowerGraphics
 # where "res" is a PowerSimulations.SimulationResults object
-stack_plot(res)
+gen = get_generation_data(res)
+plot_pgdata(gen)
 ```
 
-`PowerGraphics.jl` creates figures using a number of optional backends using `Plots.jl`. For interactive figures, it is recommended to use the `PlotlyJS.jl` backend, which requires the `PlotlyJS.jl` and `ORCA.jl` packages:
+`PowerGraphics.jl` creates figures using a number of optional backends using `Plots.jl`. For interactive figures, it is recommended to use the `PlotlyJS.jl` backend, which requires the `PlotlyJS.jl`:
 
 ```julia
 using Pkg
 Pkg.add("PlotlyJS")
-Pkg.add("ORCA")
 ```
 
 When using `PowerGraphics.jl` within a jupyter notebook, `WebIO.jl` is also required (*and depending on the local configuration of nbextensions, some [additional steps](https://juliagizmos.github.io/WebIO.jl/latest/troubleshooting/not-detected/) may be required):
@@ -39,9 +39,8 @@ An additional command (`plotlyjs()`) to startup the `PlotlyJS` backend from `Plo
 ```julia
 using PowerGraphics
 plotlyjs()
-# where "res" is a PowerSimulations.SimulationResults object,
-# and "sys" is a PowerSystems.System object
-plot_fuel(res, sys)
+# where "res" is a PowerSimulations.SimulationResults object
+plot_fuel(res)
 ```
 
 ## Development
