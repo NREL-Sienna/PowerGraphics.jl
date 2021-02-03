@@ -37,6 +37,24 @@ function get_generation_variable_names(
     return filter_names
 end
 
+function get_storage_variable_names(
+    results::IS.Results;
+    names::Union{Nothing, Vector{Symbol}} = nothing,
+)
+    existing_names = PSI.get_existing_variables(results)
+    names = isnothing(names) ? existing_names : [n for n in names if n ∈ existing_names]
+    filter_names = Vector{Symbol}()
+    for name in names
+        name_string = string(name)
+        if any(startswith.(name_string, SUPPORTEDVARPREFIX))
+            if any(endswith.(name_string, all_subtypes(PSY.Storage)))
+                push!(filter_names, name)
+            end
+        end
+    end
+    return filter_names
+end
+
 function get_generation_parameter_names(
     results::IS.Results;
     names::Union{Nothing, Vector{Symbol}} = nothing,
@@ -128,11 +146,13 @@ end
 #### get data ###
 
 function _get_matching_param(var_name)
-    return Symbol(replace(string(var_name), SUPPORTEDVARPREFIX => SUPPORTEDPARAMPREFIX))
+    param_name = Symbol(join([SUPPORTEDPARAMPREFIX, split(string(var_name), PSI_NAME_DELIMITER)[end]]))
+    return param_name
 end
 
 function _get_matching_var(param_name)
-    return Symbol(replace(string(param_name), SUPPORTEDPARAMPREFIX => SUPPORTEDVARPREFIX))
+    var_name = Symbol(join(["P", split(string(param_name), PSI_NAME_DELIMITER)[end]], PSI_NAME_DELIMITER))
+    return var_name
 end
 
 function add_fixed_parameters!(
@@ -150,11 +170,12 @@ function add_fixed_parameters!(
     end
 end
 
+# finds the parameters corresponding to variables for curtailment calculations
 function _curtailment_parameters(parameters::Vector{Symbol}, variables::Vector{Symbol})
     curtailment_parameters =
         Vector{NamedTuple{(:parameter, :variable), Tuple{Symbol, Symbol}}}()
     for var in variables
-        var_param = Symbol(replace(string(var), SUPPORTEDVARPREFIX => SUPPORTEDPARAMPREFIX))
+        var_param = Symbol(join([SUPPORTEDPARAMPREFIX, split(string(var), PSI_NAME_DELIMITER)[end]]))
         if var_param in parameters
             push!(curtailment_parameters, (parameter = var_param, variable = var))
         end
@@ -190,11 +211,18 @@ function get_generation_data(results::PSI.StageResults; kwargs...)
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     names = get(kwargs, :names, nothing)
     curtailment = get(kwargs, :curtailment, true)
+    storage = get(kwargs, :storage, true)
+
     if curtailment && !isnothing(names)
         @warn "Cannot guarantee curtailment calculations with specified names"
     end
 
     var_names = get_generation_variable_names(results; names = names)
+
+    if storage
+        var_names = vcat(var_names, get_storage_variable_names(results; names))
+    end
+
     param_names = get_generation_parameter_names(results; names = names)
 
     variables = PSI.read_realized_variables(
@@ -380,7 +408,7 @@ function categorize_data(
         for tuple in list
             if haskey(var_types, tuple[1])
                 category_data = data[var_types[tuple[1]]]
-                colname =
+                @show colname =
                     typeof(names(category_data)[1]) == String ? "$(tuple[2])" :
                     Symbol(tuple[2])
                 DataFrames.insertcols!(

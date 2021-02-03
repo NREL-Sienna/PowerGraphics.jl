@@ -69,15 +69,17 @@ generators = make_fuel_dictionary(c_sys5_re)
 
 """
 function make_fuel_dictionary(sys::PSY.System, mapping::Dict{NamedTuple, String})
-    generators = PSY.get_components(PSY.Generator, sys)
+    generators = PSY.get_components(PSY.StaticInjection, sys)
     gen_categories = Dict()
     for category in unique(values(mapping))
         gen_categories["$category"] = []
     end
 
     for gen in generators
+        gen isa PSY.ElectricLoad && continue
         fuel = hasmethod(PSY.get_fuel, Tuple{typeof(gen)}) ? PSY.get_fuel(gen) : nothing
-        category = get_generator_category(fuel, PSY.get_prime_mover(gen), mapping)
+        pm = hasmethod(PSY.get_prime_mover, Tuple{typeof(gen)}) ? PSY.get_prime_mover(gen) : nothing
+        category = get_generator_category(fuel, pm, mapping)
         push!(gen_categories["$category"], (string(typeof(gen)), (PSY.get_name(gen))))
     end
     [delete!(gen_categories, "$k") for (k, v) in gen_categories if isempty(v)]
