@@ -78,7 +78,9 @@ function make_fuel_dictionary(sys::PSY.System, mapping::Dict{NamedTuple, String}
     for gen in generators
         gen isa PSY.ElectricLoad && continue
         fuel = hasmethod(PSY.get_fuel, Tuple{typeof(gen)}) ? PSY.get_fuel(gen) : nothing
-        pm = hasmethod(PSY.get_prime_mover, Tuple{typeof(gen)}) ? PSY.get_prime_mover(gen) : nothing
+        pm =
+            hasmethod(PSY.get_prime_mover, Tuple{typeof(gen)}) ? PSY.get_prime_mover(gen) :
+            nothing
         category = get_generator_category(fuel, pm, mapping)
         push!(gen_categories["$category"], (string(typeof(gen)), (PSY.get_name(gen))))
     end

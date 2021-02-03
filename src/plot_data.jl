@@ -146,12 +146,16 @@ end
 #### get data ###
 
 function _get_matching_param(var_name)
-    param_name = Symbol(join([SUPPORTEDPARAMPREFIX, split(string(var_name), PSI_NAME_DELIMITER)[end]]))
+    param_name = Symbol(
+        join([SUPPORTEDPARAMPREFIX, split(string(var_name), PSI_NAME_DELIMITER)[end]]),
+    )
     return param_name
 end
 
 function _get_matching_var(param_name)
-    var_name = Symbol(join(["P", split(string(param_name), PSI_NAME_DELIMITER)[end]], PSI_NAME_DELIMITER))
+    var_name = Symbol(
+        join(["P", split(string(param_name), PSI_NAME_DELIMITER)[end]], PSI_NAME_DELIMITER),
+    )
     return var_name
 end
 
@@ -175,7 +179,9 @@ function _curtailment_parameters(parameters::Vector{Symbol}, variables::Vector{S
     curtailment_parameters =
         Vector{NamedTuple{(:parameter, :variable), Tuple{Symbol, Symbol}}}()
     for var in variables
-        var_param = Symbol(join([SUPPORTEDPARAMPREFIX, split(string(var), PSI_NAME_DELIMITER)[end]]))
+        var_param = Symbol(
+            join([SUPPORTEDPARAMPREFIX, split(string(var), PSI_NAME_DELIMITER)[end]]),
+        )
         if var_param in parameters
             push!(curtailment_parameters, (parameter = var_param, variable = var))
         end
