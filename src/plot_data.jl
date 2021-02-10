@@ -289,7 +289,7 @@ end
 function _get_loads(system::PSY.System, bus::PSY.Bus)
     return [
         load for
-        load in PSY.get_components(PSY.PowerLoad, system) if PSY.get_bus(load) == bus
+        load in PSY.get_components(PSY.PowerLoad, system, PSY.get_available) if PSY.get_bus(load) == bus
     ]
 end
 function _get_loads(system::PSY.System, agg::T) where {T <: PSY.AggregationTopology}
@@ -299,7 +299,7 @@ function _get_loads(system::PSY.System, load::PSY.PowerLoad)
     return [load]
 end
 function _get_loads(system::PSY.System, sys::PSY.System)
-    return PSY.get_components(PSY.PowerLoad, system)
+    return PSY.get_components(PSY.PowerLoad, system, PSY.get_available)
 end
 
 get_base_power(system::PSY.System) = PSY.get_base_power(system)
@@ -385,8 +385,16 @@ function combine_categories(
 )
     agg = isnothing(agg) ? x -> sum(x, dims = 2) : agg
     names = isnothing(names) ? keys(data) : names
-    data = hcat([agg(Matrix(data[k])) for k in names]...)
-    return DataFrames.DataFrame(data, string.(collect(names)))
+    values = []
+    keep_names = []
+    for k in names
+        if !isempty(data[k])
+            push!(values, agg(Matrix(data[k])))
+            push!(keep_names, k)
+        end
+    end
+    data = hcat(values...)
+    return DataFrames.DataFrame(data, string.(keep_names))
 end
 
 """
@@ -414,7 +422,7 @@ function categorize_data(
         for tuple in list
             if haskey(var_types, tuple[1])
                 category_data = data[var_types[tuple[1]]]
-                @show colname =
+                colname =
                     typeof(names(category_data)[1]) == String ? "$(tuple[2])" :
                     Symbol(tuple[2])
                 DataFrames.insertcols!(

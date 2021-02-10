@@ -38,3 +38,4 @@ CSP:
   - {primemover: CP, fuel: null}
 Other:
   - {primemover: OT, fuel: OTHER}
+  - {primemover: null, fuel: null}

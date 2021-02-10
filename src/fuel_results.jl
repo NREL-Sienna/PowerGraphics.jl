@@ -69,7 +69,7 @@ generators = make_fuel_dictionary(c_sys5_re)
 
 """
 function make_fuel_dictionary(sys::PSY.System, mapping::Dict{NamedTuple, String})
-    generators = PSY.get_components(PSY.StaticInjection, sys)
+    generators = PSY.get_components(PSY.StaticInjection, sys, PSY.get_available)
     gen_categories = Dict()
     for category in unique(values(mapping))
         gen_categories["$category"] = []
