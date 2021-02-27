@@ -185,7 +185,7 @@ function _filter_curtailment!(
     end
 end
 
-function get_generation_data(results::PSI.StageResults; kwargs...)
+function get_generation_data(results::PSI.ProblemResults; kwargs...)
     initial_time = get(kwargs, :initial_time, nothing)
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     names = get(kwargs, :names, nothing)
@@ -222,7 +222,7 @@ function get_generation_data(results::PSI.StageResults; kwargs...)
     return PGData(variables, timestamps)
 end
 
-function get_load_data(results::PSI.StageResults; kwargs...)
+function get_load_data(results::PSI.ProblemResults; kwargs...)
     initial_time = get(kwargs, :initial_time, nothing)
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     names = get(kwargs, :names, nothing)
@@ -269,7 +269,7 @@ function _get_loads(system::PSY.System, sys::PSY.System)
 end
 
 get_base_power(system::PSY.System) = PSY.get_base_power(system)
-get_base_power(results::PSI.StageResults) = IS.get_base_power(results)
+get_base_power(results::PSI.ProblemResults) = IS.get_base_power(results)
 
 function get_load_data(
     system::PSY.System;
@@ -313,7 +313,7 @@ function get_load_data(
     return PGData(parameters, time_range)
 end
 
-function get_service_data(results::PSI.StageResults; kwargs...)
+function get_service_data(results::PSI.ProblemResults; kwargs...)
     initial_time = get(kwargs, :initial_time, nothing)
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     names = get(kwargs, :names, nothing)
