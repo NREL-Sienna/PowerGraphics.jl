@@ -62,9 +62,11 @@ CATEGORY_DEFAULT = getfield.(get_palette(), :category)
 SUPPORTED_EXTRA_PLOT_KWARGS = [:linestyle, :linewidth]
 SUPPORTED_PLOTLY_SAVE_KWARGS = [:height, :width, :format, :scale, :js]
 
+PSI_NAME_DELIMITER = "__"
+
 VARIABLE_TYPES = ["P", "Spin", "Reg", "Flex"]
 
-SUPPORTEDVARPREFIX = "P__"
+SUPPORTEDVARPREFIX = ["P__", "Pout__"]
 SUPPORTEDPARAMPREFIX = "P__max_active_power__"
 
 SUPPORTEDLOADPARAMS = ["PowerLoad", "InterruptibleLoad"]

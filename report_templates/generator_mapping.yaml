@@ -13,6 +13,7 @@ Petroleum:
   - {primemover: null, fuel: PETROLEUM_COKE}
 Storage:
   - {primemover: BA, fuel: null}
+  - {primemover: PS, fuel: null}
 NG-CT:
   - {primemover: CT, fuel: NATURAL_GAS}
 NG-CC:
@@ -37,3 +38,4 @@ CSP:
   - {primemover: CP, fuel: null}
 Other:
   - {primemover: OT, fuel: OTHER}
+  - {primemover: null, fuel: null}
