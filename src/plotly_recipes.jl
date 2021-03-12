@@ -5,7 +5,7 @@ function _empty_plot(backend::Plots.PlotlyJSBackend)
 end
 
 function _dataframe_plots_internal(
-    plot::Any,
+    plot,
     variable::DataFrames.DataFrame,
     time_range::Array,
     backend::Plots.PlotlyJSBackend;
@@ -99,7 +99,7 @@ function _dataframe_plots_internal(
     return plot
 end
 
-function save_plot(plot::Any, filename::String, backend::Plots.PlotlyJSBackend; kwargs...) # this needs to be typed but Plots.PlotlyJS.Plot doesn't exist until PlotlyJS is loaded
+function save_plot(plot, filename::String, backend::Plots.PlotlyJSBackend; kwargs...) # this needs to be typed but Plots.PlotlyJS.Plot doesn't exist until PlotlyJS is loaded
     save_kwargs = Dict{Symbol, Any}((
         (k, v) for (k, v) in kwargs if k in SUPPORTED_PLOTLY_SAVE_KWARGS
     ))
