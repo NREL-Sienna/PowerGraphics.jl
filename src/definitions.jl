@@ -101,7 +101,7 @@ GENERATOR_MAPPING_FILE = joinpath(
     "generator_mapping.yaml",
 )
 
-function match_fuel_colors(data::DataFrames.DataFrame, backend::Any)
+function match_fuel_colors(data::DataFrames.DataFrame, backend)
     if backend == Plots.PlotlyJSBackend()
         color_range = PLOTLY_FUEL_DEFAULT
     else

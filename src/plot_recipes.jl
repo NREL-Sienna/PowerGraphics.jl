@@ -6,7 +6,7 @@ function set_seriescolor(seriescolor::Array, vars::Array)
     return colors
 end
 
-function _empty_plot(backend::Any)
+function _empty_plot(backend)
     return Plots.plot()
 end
 
@@ -14,7 +14,7 @@ function _dataframe_plots_internal(
     plot::Union{Plots.Plot, Nothing},
     variable::DataFrames.DataFrame,
     time_range::Array,
-    backend::Any;
+    backend;
     kwargs...,
 )
     existing_colors = ones(length(plot.series_list))
@@ -103,6 +103,6 @@ function _dataframe_plots_internal(
     return p
 end
 
-function save_plot(plot::Plots.Plot, filename::String, backend::Any; kwargs...)
+function save_plot(plot::Plots.Plot, filename::String, backend; kwargs...)
     Plots.savefig(plot, filename) # TODO: add kwargs support
 end

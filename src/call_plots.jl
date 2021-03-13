@@ -24,7 +24,7 @@ function get_default_seriescolor()
     return get_default_seriescolor(backend)
 end
 
-function get_default_seriescolor(backend::Any)
+function get_default_seriescolor(backend)
     return GR_DEFAULT
 end
 
@@ -50,7 +50,7 @@ plot = plot_demand(res)
 ```
 
 # Arguments
-- `plot::Any` : existing plot handle (optional)
+- `plot` : existing plot handle (optional)
 - `result::Union{IS.Results, PSY.System}` : simulation results or PowerSystems.System
 
 # Accepted Key Words
@@ -69,7 +69,7 @@ function plot_demand(result::Union{IS.Results, PSY.System}; kwargs...)
     return plot_demand(_empty_plot(), result; kwargs...)
 end
 
-function plot_demand(p::Any, result::Union{IS.Results, PSY.System}; kwargs...)
+function plot_demand(p, result::Union{IS.Results, PSY.System}; kwargs...)
     backend = Plots.backend()
     set_display = get(kwargs, :set_display, true)
     save_fig = get(kwargs, :save, nothing)
@@ -148,7 +148,7 @@ function plot_dataframe(
 end
 
 function plot_dataframe(
-    p::Any,
+    p,
     variable::DataFrames.DataFrame,
     time_range::Union{DataFrames.DataFrame, Array, StepRange};
     kwargs...,
@@ -170,7 +170,7 @@ This function makes a plot of a PGdata object
 
 # Arguments
 
-- `plot::Any` : existing plot handle (optional)
+- `plot` : existing plot handle (optional)
 - `pgdata::PGData`: The dataframe to be plotted
 
 # Example
@@ -198,7 +198,7 @@ function plot_pgdata(pgdata::PGData; kwargs...)
     return plot_pgdata(_empty_plot(), pgdata; kwargs...)
 end
 
-function plot_pgdata(p::Any, pgdata::PGData; kwargs...)
+function plot_pgdata(p, pgdata::PGData; kwargs...)
     if get(kwargs, :combine_categories, true)
         agg = get(kwargs, :agg, nothing)
         names = get(kwargs, :names, nothing)
@@ -219,7 +219,7 @@ and assigns each fuel type a specific color.
 
 # Arguments
 
-- `plot::Any` : existing plot handle (optional)
+- `plot` : existing plot handle (optional)
 - `res::Results` : results to be plotted
 
 # Example
@@ -248,7 +248,7 @@ function plot_fuel(result::IS.Results; kwargs...)
     return plot_fuel(_empty_plot(), result; kwargs...)
 end
 
-function plot_fuel(p::Any, result::IS.Results; kwargs...)
+function plot_fuel(p, result::IS.Results; kwargs...)
     backend = Plots.backend()
     set_display = get(kwargs, :set_display, true)
     save_fig = get(kwargs, :save, nothing)
@@ -325,7 +325,7 @@ Saves plot to specified filename
 
 # Arguments
 
-- `plot::Any`: plot object
+- `plot`: plot object
 - `filename::String` : save to filename
 
 # Example
@@ -343,7 +343,7 @@ save_plot(plot, "my_plot.png")
 - `height::Union{Nothing,Int}=nothing`
 - `scale::Union{Nothing,Real}=nothing`
 """
-function save_plot(plot::Any, filename::String; kwargs...) # this needs to be typed but Plots.PlotlyJS.Plot doesn't exist until PlotlyJS is loaded
+function save_plot(plot, filename::String; kwargs...) # this needs to be typed but Plots.PlotlyJS.Plot doesn't exist until PlotlyJS is loaded
     backend = Plots.backend()
     return save_plot(plot, filename, backend; kwargs...)
 end
