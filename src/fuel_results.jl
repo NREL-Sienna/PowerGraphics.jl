@@ -57,7 +57,7 @@ end
 This function makes a dictionary of fuel type and the generators associated.
 
 # Arguments
-- `c_sys5_re::PSY.System`: the system that is used to create the results
+- `sys::PSY.System`: the system that is used to create the results
 - `results::IS.Results`: results
 
 # Key Words
@@ -65,7 +65,7 @@ This function makes a dictionary of fuel type and the generators associated.
 
 # Example
 results = solve_op_model!(OpModel)
-generators = make_fuel_dictionary(c_sys5_re)
+generators = make_fuel_dictionary(sys)
 
 """
 function make_fuel_dictionary(sys::PSY.System, mapping::Dict{NamedTuple, String})

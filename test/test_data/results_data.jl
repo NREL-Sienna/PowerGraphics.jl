@@ -1,8 +1,29 @@
 
-
 function run_test_sim(result_dir::String)
     sim_name = "results_sim"
     sim_path = joinpath(result_dir, sim_name)
+    c_sys5_hy_uc = PSB.build_system(PSB.SIIPExampleSystems, "5_bus_hydro_uc_sys")
+    c_sys5_hy_ed = PSB.build_system(PSB.SIIPExampleSystems, "5_bus_hydro_ed_sys")
+    function add_re!(sys)
+        re = RenewableDispatch(
+            "WindBusA",
+            true,
+            get_component(Bus, sys, "bus5"),
+            0.0,
+            0.0,
+            1.200,
+            PrimeMovers.WT,
+            (min = 0.0, max = 0.0),
+            1.0,
+            TwoPartCost(0.220, 0.0),
+            100.0,
+        )
+        add_component!(sys, re)
+        copy_time_series!(re, get_component(PowerLoad, sys, "bus2"))
+    end
+    add_re!(c_sys5_hy_uc)
+    add_re!(c_sys5_hy_ed)
+
     if ispath(sim_path)
         executions = tryparse.(Int, readdir(sim_path))
         sim = joinpath(sim_path, string(maximum(executions)))
@@ -11,18 +32,23 @@ function run_test_sim(result_dir::String)
         mkpath(result_dir)
         GLPK_optimizer =
             optimizer_with_attributes(GLPK.Optimizer, "msg_lev" => GLPK.GLP_MSG_OFF)
-        c_sys5_hy_uc = PSB.build_system(PSB.PSITestSystems, "c_sys5_hy_uc", add_reserves = true)
-        c_sys5_hy_ed = PSB.build_system(PSB.PSITestSystems, "c_sys5_hy_ed")
 
         template_hydro_st_uc = template_unit_commitment()
         set_device_model!(template_hydro_st_uc, HydroDispatch, FixedOutput)
-        set_device_model!(template_hydro_st_uc, HydroEnergyReservoir, HydroDispatchReservoirStorage)
+        set_device_model!(
+            template_hydro_st_uc,
+            HydroEnergyReservoir,
+            HydroDispatchReservoirStorage,
+        )
 
         template_hydro_st_ed = template_economic_dispatch()
         set_device_model!(template_hydro_st_ed, HydroDispatch, FixedOutput)
-        set_device_model!(template_hydro_st_ed, HydroEnergyReservoir, HydroDispatchReservoirStorage)
+        set_device_model!(
+            template_hydro_st_ed,
+            HydroEnergyReservoir,
+            HydroDispatchReservoirStorage,
+        )
         template_hydro_st_ed.services = Dict() #remove ed services
-
 
         problems = SimulationProblems(
             UC = OperationsProblem(
@@ -35,11 +61,11 @@ function run_test_sim(result_dir::String)
                 c_sys5_hy_ed,
                 optimizer = GLPK_optimizer,
                 constraint_duals = [:CopperPlateBalance],
-                balance_slack_variables = true
+                balance_slack_variables = true,
             ),
         )
 
-        sequence= SimulationSequence(
+        sequence = SimulationSequence(
             problems = problems,
             feedforward_chronologies = Dict(("UC" => "ED") => Synchronize(periods = 24)),
             intervals = Dict(
@@ -75,7 +101,9 @@ function run_test_sim(result_dir::String)
 
     results = SimulationResults(sim)
     results_uc = get_problem_results(results, "UC")
+    set_system!(results_uc, c_sys5_hy_uc)
     results_ed = get_problem_results(results, "ED")
+    set_system!(results_ed, c_sys5_hy_ed)
 
     return results_uc, results_ed
 end

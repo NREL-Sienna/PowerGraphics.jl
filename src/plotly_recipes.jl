@@ -11,7 +11,7 @@ function _dataframe_plots_internal(
     backend::Plots.PlotlyJSBackend;
     kwargs...,
 )
-    names = DataFrames.names(variable)
+    names = DataFrames.names(no_datetime(variable))
     traces = plot.data
     plot_length = length(traces)
     seriescolor = permutedims(
@@ -33,7 +33,7 @@ function _dataframe_plots_internal(
     interval =
         Dates.Millisecond(Dates.Hour(1)) / Dates.Millisecond(time_range[2] - time_range[1])
 
-    plot_data = convert(Matrix, variable)
+    plot_data = convert(Matrix, no_datetime(variable))
     isnothing(plot) && _empty_plot()
 
     plot_kwargs = Dict()

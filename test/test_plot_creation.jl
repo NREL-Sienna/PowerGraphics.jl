@@ -62,7 +62,6 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             bar = true,
             stack = true,
         )
-
         plot_dataframe(
             plot_dataframe(
                 gen_uc.data[:P__ThermalStandard],
@@ -70,7 +69,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
                 set_display = set_display,
                 stack = true,
             ),
-            load_uc.data[:P__PowerLoad] .* -1,
+            PG.no_datetime(load_uc.data[:P__PowerLoad]) .* -1,
             gen_uc.time,
             set_display = set_display,
             title = "df_gen_load",

@@ -23,7 +23,7 @@ function test_reports(file_path::String; backend_pkg::String = "gr")
             doctype = "md2html",
             backend = backend,
         )
-        @test isfile(joinpath(out_path, "generic_report_template.html")) # report_path) not sure why weave doesn't output the report name
+        @test isfile(report_out_path)
 
         @info("removing test files")
         cleanup && rm(out_path, recursive = true)
