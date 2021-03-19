@@ -12,12 +12,16 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
     cleanup = true
 
     (results_uc, results_ed) = run_test_sim(TEST_RESULT_DIR)
+    problem_results = run_test_prob()
     gen_uc = PG.get_generation_data(results_uc)
     gen_ed = PG.get_generation_data(results_ed)
+    gen_pb = PG.get_generation_data(problem_results)
     load_uc = PG.get_load_data(results_uc)
     load_ed = PG.get_load_data(results_ed)
+    load_pb = PG.get_load_data(problem_results)
     svc_uc = PG.get_service_data(results_uc)
     svc_ed = PG.get_service_data(results_ed)
+    svc_pb = PG.get_service_data(problem_results)
 
     @testset "test $backend_pkg plot production" begin
         out_path = joinpath(file_path, backend_pkg * "_plots")

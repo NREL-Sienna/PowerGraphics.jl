@@ -215,7 +215,10 @@ function _filter_curtailment!(
     end
 end
 
-function get_generation_data(results::PSI.SimulationProblemResults; kwargs...)
+function get_generation_data(
+    results::Union{PSI.SimulationProblemResults, PSI.ProblemResults};
+    kwargs...,
+)
     initial_time = get(kwargs, :initial_time, nothing)
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     names = get(kwargs, :names, nothing)
@@ -259,7 +262,10 @@ function get_generation_data(results::PSI.SimulationProblemResults; kwargs...)
     return PGData(variables, timestamps)
 end
 
-function get_load_data(results::PSI.SimulationProblemResults; kwargs...)
+function get_load_data(
+    results::Union{PSI.SimulationProblemResults, PSI.ProblemResults};
+    kwargs...,
+)
     initial_time = get(kwargs, :initial_time, nothing)
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     names = get(kwargs, :names, nothing)
@@ -350,7 +356,10 @@ function get_load_data(
     return PGData(parameters, time_range)
 end
 
-function get_service_data(results::PSI.SimulationProblemResults; kwargs...)
+function get_service_data(
+    results::Union{PSI.SimulationProblemResults, PSI.ProblemResults};
+    kwargs...,
+)
     initial_time = get(kwargs, :initial_time, nothing)
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     names = get(kwargs, :names, nothing)

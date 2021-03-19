@@ -34,6 +34,7 @@ const PSI = PowerSimulations
 
 include("definitions.jl")
 include("plot_data.jl")
+include("problem_results.jl")
 include("fuel_results.jl")
 include("plot_recipes.jl")
 include("plotly_recipes.jl")

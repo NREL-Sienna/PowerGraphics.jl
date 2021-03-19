@@ -1,26 +1,27 @@
+function add_re!(sys)
+    re = RenewableDispatch(
+        "WindBusA",
+        true,
+        get_component(Bus, sys, "bus5"),
+        0.0,
+        0.0,
+        1.200,
+        PrimeMovers.WT,
+        (min = 0.0, max = 0.0),
+        1.0,
+        TwoPartCost(0.220, 0.0),
+        100.0,
+    )
+    add_component!(sys, re)
+    copy_time_series!(re, get_component(PowerLoad, sys, "bus2"))
+end
 
 function run_test_sim(result_dir::String)
     sim_name = "results_sim"
     sim_path = joinpath(result_dir, sim_name)
     c_sys5_hy_uc = PSB.build_system(PSB.SIIPExampleSystems, "5_bus_hydro_uc_sys")
     c_sys5_hy_ed = PSB.build_system(PSB.SIIPExampleSystems, "5_bus_hydro_ed_sys")
-    function add_re!(sys)
-        re = RenewableDispatch(
-            "WindBusA",
-            true,
-            get_component(Bus, sys, "bus5"),
-            0.0,
-            0.0,
-            1.200,
-            PrimeMovers.WT,
-            (min = 0.0, max = 0.0),
-            1.0,
-            TwoPartCost(0.220, 0.0),
-            100.0,
-        )
-        add_component!(sys, re)
-        copy_time_series!(re, get_component(PowerLoad, sys, "bus2"))
-    end
+
     add_re!(c_sys5_hy_uc)
     add_re!(c_sys5_hy_ed)
 
@@ -106,4 +107,31 @@ function run_test_sim(result_dir::String)
     set_system!(results_ed, c_sys5_hy_ed)
 
     return results_uc, results_ed
+end
+
+function run_test_prob()
+    c_sys5_hy_uc = PSB.build_system(PSB.SIIPExampleSystems, "5_bus_hydro_uc_sys")
+    add_re!(c_sys5_hy_uc)
+    GLPK_optimizer =
+        optimizer_with_attributes(GLPK.Optimizer, "msg_lev" => GLPK.GLP_MSG_OFF)
+
+    template_hydro_st_uc = template_unit_commitment()
+    set_device_model!(template_hydro_st_uc, HydroDispatch, FixedOutput)
+    set_device_model!(
+        template_hydro_st_uc,
+        HydroEnergyReservoir,
+        HydroDispatchReservoirStorage,
+    )
+
+    prob = OperationsProblem(
+        template_hydro_st_uc,
+        c_sys5_hy_uc,
+        optimizer = GLPK_optimizer,
+        horizon = 12,
+        use_parameters = true,
+    )
+    build!(prob, output_dir = mktempdir())
+    solve!(prob)
+    res = ProblemResults(prob)
+    return res
 end
