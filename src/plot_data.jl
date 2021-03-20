@@ -215,10 +215,7 @@ function _filter_curtailment!(
     end
 end
 
-function get_generation_data(
-    results::R;
-    kwargs...,
-) where R <: PSI.PSIResults
+function get_generation_data(results::R; kwargs...) where {R <: PSI.PSIResults}
     initial_time = get(kwargs, :initial_time, nothing)
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     names = get(kwargs, :names, nothing)
@@ -262,10 +259,7 @@ function get_generation_data(
     return PGData(variables, timestamps)
 end
 
-function get_load_data(
-    results::R;
-    kwargs...,
-) where R <: PSI.PSIResults
+function get_load_data(results::R; kwargs...) where {R <: PSI.PSIResults}
     initial_time = get(kwargs, :initial_time, nothing)
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     names = get(kwargs, :names, nothing)
@@ -356,10 +350,7 @@ function get_load_data(
     return PGData(parameters, time_range)
 end
 
-function get_service_data(
-    results::R;
-    kwargs...,
-) where R <: PSI.PSIResults
+function get_service_data(results::R; kwargs...) where {R <: PSI.PSIResults}
     initial_time = get(kwargs, :initial_time, nothing)
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     names = get(kwargs, :names, nothing)
@@ -395,7 +386,7 @@ function combine_categories(
     names::Union{Vector{String}, Vector{Symbol}, Nothing} = nothing,
     aggregate::Union{Function, Nothing} = nothing,
 )
-aggregate = isnothing(aggregate) ? x -> sum(x, dims = 2) : aggregate
+    aggregate = isnothing(aggregate) ? x -> sum(x, dims = 2) : aggregate
     names = isnothing(names) ? keys(data) : names
     values = []
     keep_names = []
