@@ -13,7 +13,6 @@ using PowerSimulations
 using GLPK
 using Weave
 using TimeSeries
-using DataStructures
 
 const PG = PowerGraphics
 const IS = InfrastructureSystems
@@ -23,6 +22,13 @@ const LOG_FILE = "PowerGraphics-test.log"
 
 const BASE_DIR = dirname(dirname(pathof(PowerGraphics)))
 const TEST_DIR = joinpath(BASE_DIR, "test")
+const TEST_OUTPUTS = joinpath(BASE_DIR, "test", "test_results")
+!isdir(TEST_OUTPUTS) && mkdir(TEST_OUTPUTS)
+const TEST_RESULT_DIR = joinpath(TEST_OUTPUTS, "results")
+!isdir(TEST_RESULT_DIR) && mkdir(TEST_RESULT_DIR)
+
+import PowerSystemCaseBuilder
+const PSB = PowerSystemCaseBuilder
 template_dir = joinpath(BASE_DIR, "report_templates")
 const generic_template = joinpath(template_dir, "generic_report_template.jmd")
 
@@ -75,7 +81,7 @@ function get_logging_level(env_name::String, default)
 end
 
 function run_tests()
-    include(joinpath(BASE_DIR, "test", "test_data", "get_test_data.jl"))
+    include(joinpath(BASE_DIR, "test", "test_data", "results_data.jl"))
     console_level = get_logging_level("PS_CONSOLE_LOG_LEVEL", "Error")
     console_logger = ConsoleLogger(stderr, console_level)
     file_level = get_logging_level("PS_LOG_LEVEL", "Info")

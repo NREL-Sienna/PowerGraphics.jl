@@ -36,8 +36,8 @@ function _dataframe_plots_internal(
     interval =
         Dates.Millisecond(Dates.Hour(1)) / Dates.Millisecond(time_range[2] - time_range[1])
 
-    data = convert(Matrix, variable)
-    labels = DataFrames.names(variable)
+    data = convert(Matrix, no_datetime(variable))
+    labels = DataFrames.names(no_datetime(variable))
 
     isnothing(plot) && _empty_plot()
     plot_kwargs =

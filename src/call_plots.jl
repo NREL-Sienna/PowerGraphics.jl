@@ -200,9 +200,9 @@ end
 
 function plot_pgdata(p, pgdata::PGData; kwargs...)
     if get(kwargs, :combine_categories, true)
-        agg = get(kwargs, :agg, nothing)
+        aggregate = get(kwargs, :aggregate, nothing)
         names = get(kwargs, :names, nothing)
-        data = combine_categories(pgdata.data; names = names, agg = agg)
+        data = combine_categories(pgdata.data; names = names, aggregate = aggregate)
     else
         data = pgdata.data
     end
@@ -262,7 +262,11 @@ function plot_fuel(p, result::IS.Results; kwargs...)
 
     # Generation stack
     gen = get_generation_data(result; kwargs...)
-    cat = make_fuel_dictionary(PSI.get_system(result); kwargs...)
+    sys = PSI.get_system(result)
+    if sys === nothing
+        Throw(error("No System data present: please run `set_system!(results, sys)`"))
+    end
+    cat = make_fuel_dictionary(sys; kwargs...)
     fuel = categorize_data(gen.data, cat; curtailment = curtailment, slacks = slacks)
 
     # passing names here enforces order

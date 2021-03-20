@@ -33,6 +33,7 @@ const IS = InfrastructureSystems
 const PSI = PowerSimulations
 
 include("definitions.jl")
+include("problem_results.jl")
 include("plot_data.jl")
 include("fuel_results.jl")
 include("plot_recipes.jl")

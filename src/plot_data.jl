@@ -159,6 +159,8 @@ function _get_matching_var(param_name)
     return var_name
 end
 
+no_datetime(df::DataFrames.DataFrame) = df[:, propertynames(df) .!== :DateTime]
+
 function add_fixed_parameters!(
     variables::Dict{Symbol, DataFrames.DataFrame},
     parameters::Dict{Symbol, DataFrames.DataFrame},
@@ -169,7 +171,8 @@ function add_fixed_parameters!(
         var_name = _get_matching_var(param_name)
         if !haskey(variables, var_name)
             mult = any(endswith.(string(param_name), NEGATIVE_PARAMETERS)) ? -1.0 : 1.0
-            variables[var_name] = param .* mult
+            variables[var_name] = param
+            variables[var_name][:, propertynames(param) .!== :DateTime] .*= mult
         end
     end
 end
@@ -212,7 +215,7 @@ function _filter_curtailment!(
     end
 end
 
-function get_generation_data(results::PSI.ProblemResults; kwargs...)
+function get_generation_data(results::R; kwargs...) where {R <: PSI.PSIResults}
     initial_time = get(kwargs, :initial_time, nothing)
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     names = get(kwargs, :names, nothing)
@@ -256,7 +259,7 @@ function get_generation_data(results::PSI.ProblemResults; kwargs...)
     return PGData(variables, timestamps)
 end
 
-function get_load_data(results::PSI.ProblemResults; kwargs...)
+function get_load_data(results::R; kwargs...) where {R <: PSI.PSIResults}
     initial_time = get(kwargs, :initial_time, nothing)
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     names = get(kwargs, :names, nothing)
@@ -303,7 +306,7 @@ function _get_loads(system::PSY.System, sys::PSY.System)
 end
 
 get_base_power(system::PSY.System) = PSY.get_base_power(system)
-get_base_power(results::PSI.ProblemResults) = IS.get_base_power(results)
+get_base_power(results::PSI.SimulationProblemResults) = IS.get_base_power(results)
 
 function get_load_data(
     system::PSY.System;
@@ -347,7 +350,7 @@ function get_load_data(
     return PGData(parameters, time_range)
 end
 
-function get_service_data(results::PSI.ProblemResults; kwargs...)
+function get_service_data(results::R; kwargs...) where {R <: PSI.PSIResults}
     initial_time = get(kwargs, :initial_time, nothing)
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     names = get(kwargs, :names, nothing)
@@ -381,15 +384,15 @@ PG.combine_categories(gen_uc.data)
 function combine_categories(
     data::Union{Dict{Symbol, DataFrames.DataFrame}, Dict{String, DataFrames.DataFrame}};
     names::Union{Vector{String}, Vector{Symbol}, Nothing} = nothing,
-    agg::Union{Function, Nothing} = nothing,
+    aggregate::Union{Function, Nothing} = nothing,
 )
-    agg = isnothing(agg) ? x -> sum(x, dims = 2) : agg
+    aggregate = isnothing(aggregate) ? x -> sum(x, dims = 2) : aggregate
     names = isnothing(names) ? keys(data) : names
     values = []
     keep_names = []
     for k in names
         if !isempty(data[k])
-            push!(values, agg(Matrix(data[k])))
+            push!(values, aggregate(Matrix(no_datetime(data[k]))))
             push!(keep_names, k)
         end
     end
