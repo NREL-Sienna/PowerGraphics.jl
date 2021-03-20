@@ -216,9 +216,9 @@ function _filter_curtailment!(
 end
 
 function get_generation_data(
-    results::Union{PSI.SimulationProblemResults, PSI.ProblemResults};
+    results::R;
     kwargs...,
-)
+) where R <: PSI.PSIResults
     initial_time = get(kwargs, :initial_time, nothing)
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     names = get(kwargs, :names, nothing)
@@ -263,9 +263,9 @@ function get_generation_data(
 end
 
 function get_load_data(
-    results::Union{PSI.SimulationProblemResults, PSI.ProblemResults};
+    results::R;
     kwargs...,
-)
+) where R <: PSI.PSIResults
     initial_time = get(kwargs, :initial_time, nothing)
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     names = get(kwargs, :names, nothing)
@@ -357,9 +357,9 @@ function get_load_data(
 end
 
 function get_service_data(
-    results::Union{PSI.SimulationProblemResults, PSI.ProblemResults};
+    results::R;
     kwargs...,
-)
+) where R <: PSI.PSIResults
     initial_time = get(kwargs, :initial_time, nothing)
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     names = get(kwargs, :names, nothing)
@@ -393,15 +393,15 @@ PG.combine_categories(gen_uc.data)
 function combine_categories(
     data::Union{Dict{Symbol, DataFrames.DataFrame}, Dict{String, DataFrames.DataFrame}};
     names::Union{Vector{String}, Vector{Symbol}, Nothing} = nothing,
-    agg::Union{Function, Nothing} = nothing,
+    aggregate::Union{Function, Nothing} = nothing,
 )
-    agg = isnothing(agg) ? x -> sum(x, dims = 2) : agg
+aggregate = isnothing(aggregate) ? x -> sum(x, dims = 2) : aggregate
     names = isnothing(names) ? keys(data) : names
     values = []
     keep_names = []
     for k in names
         if !isempty(data[k])
-            push!(values, agg(Matrix(no_datetime(data[k]))))
+            push!(values, aggregate(Matrix(no_datetime(data[k]))))
             push!(keep_names, k)
         end
     end
