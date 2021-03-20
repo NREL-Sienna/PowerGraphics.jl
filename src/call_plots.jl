@@ -263,7 +263,9 @@ function plot_fuel(p, result::IS.Results; kwargs...)
     # Generation stack
     gen = get_generation_data(result; kwargs...)
     sys = PSI.get_system(result)
-    isnothing(sys) &&
+    if sys === nothing 
+        Throw(error("No System data present: please run `set_system!(results, sys)`"))
+   end
         Throw(error("No System data present: please run `set_system!(results, sys)`"))
 
     cat = make_fuel_dictionary(sys; kwargs...)
