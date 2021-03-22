@@ -207,7 +207,7 @@ function _filter_curtailment!(
                 parameter_values[curtailment.parameter] .-
                 variable_values[curtailment.variable]
             if haskey(variable_values, :Curtailment)
-                variable_values[:Curtailment] = hcat(variable_values[:Curtailment], curt)
+                variable_values[:Curtailment] = hcat(variable_values[:Curtailment], no_datetime(curt))
             else
                 variable_values[:Curtailment] = curt
             end
