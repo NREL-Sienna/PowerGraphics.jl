@@ -154,7 +154,7 @@ end
 
 function _get_matching_var(param_name)
     var_name = Symbol(
-        join(["P", split(string(param_name), PSI_NAME_DELIMITER)[end]], PSI_NAME_DELIMITER),
+        join(["P", split(string(param_name), "_")[end]], PSI_NAME_DELIMITER),
     )
     return var_name
 end
@@ -307,6 +307,7 @@ end
 
 get_base_power(system::PSY.System) = PSY.get_base_power(system)
 get_base_power(results::PSI.SimulationProblemResults) = IS.get_base_power(results)
+get_base_power(results::PSI.ProblemResults) = results.base_power
 
 function get_load_data(
     system::PSY.System;
@@ -397,7 +398,9 @@ function combine_categories(
         end
     end
     data = hcat(values...)
-    return DataFrames.DataFrame(data, string.(keep_names))
+    keep_names = string.(keep_names)
+    isempty(data) && return DataFrames.DataFrame()
+    return DataFrames.DataFrame(data, keep_names)
 end
 
 """

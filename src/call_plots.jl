@@ -85,6 +85,11 @@ function plot_demand(p, result::Union{IS.Results, PSY.System}; kwargs...)
 
     load = get_load_data(result; kwargs...)
     load_agg = combine_categories(load.data)
+
+    if isnothing(load_agg)
+        Throw(error("No load data found"))
+    end
+
     p = plot_dataframe(
         p,
         load_agg,
@@ -230,13 +235,15 @@ plot = plot_fuel(res)
 ```
 
 # Accepted Key Words
-- `display::Bool`: set to false to prevent the plots from displaying
+- `display::Bool = true`: set to false to prevent the plots from displaying
+- `slacks::Bool = true` : display slack variables
+- `load::Bool = true` : display load line
+- `curtailment::Bool = true`: To plot the curtailment in the stack plot
 - `save::String = "file_path"`: set a file path to save the plots
 - `format::String = "png"`: set a different format for saving a PlotlyJS plot
 - `seriescolor::Array`: Set different colors for the plots
 - `title::String = "Title"`: Set a title for the plots
-- `curtailment::Bool`: To plot the curtailment in the stack plot
-- `stack::Bool`: stack plot traces
+- `stack::Bool = true`: stack plot traces
 - `bar::Bool` : create bar plot
 - `nofill::Bool` : force empty area fill
 - `stair::Bool`: Make a stair plot instead of a stack plot
@@ -254,6 +261,7 @@ function plot_fuel(p, result::IS.Results; kwargs...)
     save_fig = get(kwargs, :save, nothing)
     curtailment = get(kwargs, :curtailment, true)
     slacks = get(kwargs, :slacks, true)
+    load = get(kwargs, :load, true)
     title = get(kwargs, :title, "Fuel")
     stack = get(kwargs, :stack, true)
     bar = get(kwargs, :bar, false)
@@ -294,18 +302,20 @@ function plot_fuel(p, result::IS.Results; kwargs...)
     kwargs[:linestyle] = get(kwargs, :linestyle, :dash)
     kwargs[:linewidth] = get(kwargs, :linewidth, 3)
 
-    # load line
-    p = plot_demand(
-        p,
-        result;
-        nofill = true,
-        title = title,
-        y_label = y_label,
-        set_display = set_display,
-        stack = stack,
-        seriescolor = ["black"],
-        kwargs...,
-    )
+    if load
+        # load line
+        p = plot_demand(
+            p,
+            result;
+            nofill = true,
+            title = title,
+            y_label = y_label,
+            set_display = set_display,
+            stack = stack,
+            seriescolor = ["black"],
+            kwargs...,
+        )
+    end
 
     # service stack
     # TODO: how to display this?
