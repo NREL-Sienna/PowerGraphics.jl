@@ -153,9 +153,7 @@ function _get_matching_param(var_name)
 end
 
 function _get_matching_var(param_name)
-    var_name = Symbol(
-        join(["P", split(string(param_name), PSI_NAME_DELIMITER)[end]], PSI_NAME_DELIMITER),
-    )
+    var_name = Symbol(join(["P", split(string(param_name), "_")[end]], PSI_NAME_DELIMITER))
     return var_name
 end
 
@@ -183,7 +181,7 @@ function _curtailment_parameters(parameters::Vector{Symbol}, variables::Vector{S
         Vector{NamedTuple{(:parameter, :variable), Tuple{Symbol, Symbol}}}()
     for var in variables
         var_param = Symbol(
-            join([SUPPORTEDPARAMPREFIX, split(string(var), PSI_NAME_DELIMITER)[end]]),
+            join([CURTAILMENTPARAMPREFIX, split(string(var), PSI_NAME_DELIMITER)[end]]),
         )
         if var_param in parameters
             push!(curtailment_parameters, (parameter = var_param, variable = var))
@@ -207,7 +205,8 @@ function _filter_curtailment!(
                 parameter_values[curtailment.parameter] .-
                 variable_values[curtailment.variable]
             if haskey(variable_values, :Curtailment)
-                variable_values[:Curtailment] = hcat(variable_values[:Curtailment], curt)
+                variable_values[:Curtailment] =
+                    hcat(variable_values[:Curtailment], no_datetime(curt))
             else
                 variable_values[:Curtailment] = curt
             end
@@ -307,6 +306,7 @@ end
 
 get_base_power(system::PSY.System) = PSY.get_base_power(system)
 get_base_power(results::PSI.SimulationProblemResults) = IS.get_base_power(results)
+get_base_power(results::PSI.ProblemResults) = results.base_power
 
 function get_load_data(
     system::PSY.System;
@@ -397,7 +397,9 @@ function combine_categories(
         end
     end
     data = hcat(values...)
-    return DataFrames.DataFrame(data, string.(keep_names))
+    keep_names = string.(keep_names)
+    isempty(data) && return DataFrames.DataFrame()
+    return DataFrames.DataFrame(data, keep_names)
 end
 
 """

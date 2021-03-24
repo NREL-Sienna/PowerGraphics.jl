@@ -7,7 +7,7 @@ function _read_realized_results(
     existing_names = collect(keys(result_values))
     names = isnothing(names) ? existing_names : names
     PSI._validate_names(existing_names, names)
-    return filter(p -> (p.first ∈ names), result_values)
+    return deepcopy(filter(p -> (p.first ∈ names), result_values))
 end
 
 function _read_results(

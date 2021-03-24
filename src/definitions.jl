@@ -67,11 +67,12 @@ PSI_NAME_DELIMITER = "__"
 VARIABLE_TYPES = ["P", "Spin", "Reg", "Flex"]
 
 SUPPORTEDVARPREFIX = ["P__", "Pout__"]
-SUPPORTEDPARAMPREFIX = "P__max_active_power__"
+SUPPORTEDPARAMPREFIX = "P_"
+CURTAILMENTPARAMPREFIX = "P__max_active_power__"
 
 SUPPORTEDLOADPARAMS = ["PowerLoad", "InterruptibleLoad"]
 
-NEGATIVE_PARAMETERS = ["PowerLoad"]
+NEGATIVE_PARAMETERS = ["nothing"] #TODO: If this is always true, remove the negative handling in add_fixed_parameters
 
 SUPPORTEDSERVICEPARAMS = [
     "VariableReserve_ReserveUp",
