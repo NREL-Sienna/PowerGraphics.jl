@@ -68,6 +68,7 @@ VARIABLE_TYPES = ["P", "Spin", "Reg", "Flex"]
 
 SUPPORTEDVARPREFIX = ["P__", "Pout__"]
 SUPPORTEDPARAMPREFIX = "P_"
+CURTAILMENTPARAMPREFIX = "P__max_active_power__"
 
 SUPPORTEDLOADPARAMS = ["PowerLoad", "InterruptibleLoad"]
 
