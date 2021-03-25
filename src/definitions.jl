@@ -72,7 +72,7 @@ CURTAILMENTPARAMPREFIX = "P__max_active_power__"
 
 SUPPORTEDLOADPARAMS = ["PowerLoad", "InterruptibleLoad"]
 
-NEGATIVE_PARAMETERS = ["nothing"] #TODO: If this is always true, remove the negative handling in add_fixed_parameters
+NEGATIVE_PARAMETERS = ["PowerLoad"]
 
 SUPPORTEDSERVICEPARAMS = [
     "VariableReserve_ReserveUp",
