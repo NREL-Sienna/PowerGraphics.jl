@@ -21,6 +21,7 @@
     load = PG.get_load_data(results_ed)
     @test length(load.data) == 1
     @test length(load.time) == 48
+    @test !any(Matrix(PG.no_datetime(load.data[:P__PowerLoad])) .< 0.0)
 
     load = PG.get_load_data(
         results_ed,
@@ -30,6 +31,7 @@
     )
     @test length(load.data) == 1
     @test length(load.time) == 3
+    @test !any(Matrix(PG.no_datetime(load.data[:P__PowerLoad])) .< 0.0)
 
     srv = PG.get_service_data(results_ed)
     @test length(srv.data) == 0
