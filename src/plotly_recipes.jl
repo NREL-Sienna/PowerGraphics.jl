@@ -95,6 +95,7 @@ function _dataframe_plots_internal(
         Plots.PlotlyJS.attr(; showticklabels = !bar, title = "$time_interval")
     layout_kwargs[:title] = "$title"
     layout_kwargs[:barmode] = stack ? "stack" : "group"
+    merge!(layout_kwargs, kwargs)
     Plots.PlotlyJS.relayout!(plot, Plots.PlotlyJS.Layout(; layout_kwargs...))
 
     get(kwargs, :set_display, true) && display(Plots.PlotlyJS.plot(plot))
