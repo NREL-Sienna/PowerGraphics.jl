@@ -33,7 +33,11 @@ function _dataframe_plots_internal(
     interval =
         Dates.Millisecond(Dates.Hour(1)) / Dates.Millisecond(time_range[2] - time_range[1])
 
-    plot_data = convert(Matrix, no_datetime(variable))
+    if isempty(variable)
+        throw(error("No data"))
+    else
+        plot_data = convert(Matrix, no_datetime(variable))
+    end
     isnothing(plot) && _empty_plot()
 
     plot_kwargs = Dict()
