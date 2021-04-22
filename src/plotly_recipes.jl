@@ -1,3 +1,4 @@
+# TODO: CB this line supresses the plotlyjs outputs, but can't be included since we don't have a PlotlyJS dependency
 #Base.show(io::IO, mm::MIME"text/plain", p::Plots.PlotlyJS.Plot) = show(io, mm, "PlotlyJS Plot with $(length(p.data)) traces")
 
 function _empty_plot(backend::Plots.PlotlyJSBackend)
@@ -33,8 +34,14 @@ function _dataframe_plots_internal(
     interval =
         Dates.Millisecond(Dates.Hour(1)) / Dates.Millisecond(time_range[2] - time_range[1])
 
-    plot_data = convert(Matrix, no_datetime(variable))
     isnothing(plot) && _empty_plot()
+
+    if isempty(variable)
+        @warn "Plot dataframe empty: skipping plot creation"
+        plot_data = Array{Float64}(undef, 0, 0)
+    else
+        plot_data = convert(Matrix, no_datetime(variable))
+    end
 
     plot_kwargs = Dict()
     if bar
@@ -88,6 +95,7 @@ function _dataframe_plots_internal(
         Plots.PlotlyJS.attr(; showticklabels = !bar, title = "$time_interval")
     layout_kwargs[:title] = "$title"
     layout_kwargs[:barmode] = stack ? "stack" : "group"
+    merge!(layout_kwargs, kwargs)
     Plots.PlotlyJS.relayout!(plot, Plots.PlotlyJS.Layout(; layout_kwargs...))
 
     get(kwargs, :set_display, true) && display(Plots.PlotlyJS.plot(plot))
