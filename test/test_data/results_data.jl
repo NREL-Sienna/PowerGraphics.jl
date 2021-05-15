@@ -14,22 +14,49 @@ function add_re!(sys)
     )
     add_component!(sys, re)
     copy_time_series!(re, get_component(PowerLoad, sys, "bus2"))
+
+    # TODO: move this to PSB
+    for g in get_components(HydroEnergyReservoir, sys)
+        tpc = get_operation_cost(g)
+        smc = StorageManagementCost(
+            variable = get_variable(tpc),
+            fixed = get_fixed(tpc),
+            start_up = 0.0,
+            shut_down = 0.0,
+            energy_shortage_cost = 10.0,
+            energy_surplus_cost = 10.0,
+        )
+        set_operation_cost!(g, smc)
+    end
 end
 
 function run_test_sim(result_dir::String)
     sim_name = "results_sim"
     sim_path = joinpath(result_dir, sim_name)
-    c_sys5_hy_uc = PSB.build_system(PSB.SIIPExampleSystems, "5_bus_hydro_uc_sys")
-    c_sys5_hy_ed = PSB.build_system(PSB.SIIPExampleSystems, "5_bus_hydro_ed_sys")
-
-    add_re!(c_sys5_hy_uc)
-    add_re!(c_sys5_hy_ed)
 
     if ispath(sim_path)
+        c_sys5_hy_uc = System(joinpath(sim_path, "..", "c_sys5_hy_uc.json"))
+        c_sys5_hy_ed = System(joinpath(sim_path, "..", "c_sys5_hy_ed.json"))
         executions = tryparse.(Int, readdir(sim_path))
         sim = joinpath(sim_path, string(maximum(executions)))
         @info "Reading results from last execution" sim
     else
+        c_sys5_hy_uc = PSB.build_system(
+            PSB.SIIPExampleSystems,
+            "5_bus_hydro_uc_sys",
+            force_build = true,
+        ) # TODO: remove force when IS#234 is resolved
+        c_sys5_hy_ed = PSB.build_system(
+            PSB.SIIPExampleSystems,
+            "5_bus_hydro_ed_sys",
+            force_build = true,
+        ) # TODO: remove force when IS#234 is resolved
+
+        add_re!(c_sys5_hy_uc)
+        add_re!(c_sys5_hy_ed)
+        to_json(c_sys5_hy_uc, joinpath(sim_path, "..", "c_sys5_hy_uc.json"))
+        to_json(c_sys5_hy_ed, joinpath(sim_path, "..", "c_sys5_hy_ed.json"))
+
         mkpath(result_dir)
         GLPK_optimizer =
             optimizer_with_attributes(GLPK.Optimizer, "msg_lev" => GLPK.GLP_MSG_OFF)
@@ -56,12 +83,14 @@ function run_test_sim(result_dir::String)
                 template_hydro_st_uc,
                 c_sys5_hy_uc,
                 optimizer = GLPK_optimizer,
+                system_to_file = false,
             ),
             ED = OperationsProblem(
                 template_hydro_st_ed,
                 c_sys5_hy_ed,
                 optimizer = GLPK_optimizer,
                 constraint_duals = [:CopperPlateBalance],
+                system_to_file = false,
                 balance_slack_variables = true,
             ),
         )
@@ -110,7 +139,8 @@ function run_test_sim(result_dir::String)
 end
 
 function run_test_prob()
-    c_sys5_hy_uc = PSB.build_system(PSB.SIIPExampleSystems, "5_bus_hydro_uc_sys")
+    c_sys5_hy_uc =
+        PSB.build_system(PSB.SIIPExampleSystems, "5_bus_hydro_uc_sys", force_build = true)
     add_re!(c_sys5_hy_uc)
     GLPK_optimizer =
         optimizer_with_attributes(GLPK.Optimizer, "msg_lev" => GLPK.GLP_MSG_OFF)

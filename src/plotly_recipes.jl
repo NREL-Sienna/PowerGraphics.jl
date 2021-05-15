@@ -40,7 +40,7 @@ function _dataframe_plots_internal(
         @warn "Plot dataframe empty: skipping plot creation"
         plot_data = Array{Float64}(undef, 0, 0)
     else
-        plot_data = convert(Matrix, no_datetime(variable))
+        plot_data = Matrix(no_datetime(variable))
     end
 
     plot_kwargs = Dict()
