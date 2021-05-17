@@ -131,8 +131,7 @@ function run_test_sim(result_dir::String)
 end
 
 function run_test_prob()
-    c_sys5_hy_uc =
-        PSB.build_system(PSB.SIIPExampleSystems, "5_bus_hydro_uc_sys")
+    c_sys5_hy_uc = PSB.build_system(PSB.SIIPExampleSystems, "5_bus_hydro_uc_sys")
     add_re!(c_sys5_hy_uc)
     GLPK_optimizer =
         optimizer_with_attributes(GLPK.Optimizer, "msg_lev" => GLPK.GLP_MSG_OFF)
