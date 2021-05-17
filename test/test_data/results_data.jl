@@ -41,16 +41,8 @@ function run_test_sim(result_dir::String)
         sim = joinpath(sim_path, string(maximum(executions)))
         @info "Reading results from last execution" sim
     else
-        c_sys5_hy_uc = PSB.build_system(
-            PSB.SIIPExampleSystems,
-            "5_bus_hydro_uc_sys",
-            force_build = true,
-        ) # TODO: remove force when IS#234 is resolved
-        c_sys5_hy_ed = PSB.build_system(
-            PSB.SIIPExampleSystems,
-            "5_bus_hydro_ed_sys",
-            force_build = true,
-        ) # TODO: remove force when IS#234 is resolved
+        c_sys5_hy_uc = PSB.build_system(PSB.SIIPExampleSystems, "5_bus_hydro_uc_sys")
+        c_sys5_hy_ed = PSB.build_system(PSB.SIIPExampleSystems, "5_bus_hydro_ed_sys")
 
         add_re!(c_sys5_hy_uc)
         add_re!(c_sys5_hy_ed)
