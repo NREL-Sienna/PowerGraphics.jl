@@ -15,7 +15,6 @@ function add_re!(sys)
     add_component!(sys, re)
     copy_time_series!(re, get_component(PowerLoad, sys, "bus2"))
 
-    # TODO: move this to PSB
     for g in get_components(HydroEnergyReservoir, sys)
         tpc = get_operation_cost(g)
         smc = StorageManagementCost(
