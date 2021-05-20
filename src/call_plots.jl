@@ -1,4 +1,3 @@
-
 function _empty_plot()
     backend = Plots.backend()
     return _empty_plot(backend)

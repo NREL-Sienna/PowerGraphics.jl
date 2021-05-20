@@ -44,7 +44,7 @@ function _dataframe_plots_internal(
         @warn "Plot dataframe empty: skipping plot creation"
         p = Plots.plot!()
     else
-        data = convert(Matrix, no_datetime(variable))
+        data = Matrix(no_datetime(variable))
         labels = DataFrames.names(no_datetime(variable))
         if stack
             plot_data = cumsum(data, dims = 2)
