@@ -60,7 +60,8 @@ PLOTLY_FUEL_DEFAULT = getfield.(get_palette(), :RGB)
 CATEGORY_DEFAULT = getfield.(get_palette(), :category)
 
 SUPPORTED_EXTRA_PLOT_KWARGS = [:linestyle, :linewidth]
-SUPPORTED_PLOTLY_SAVE_KWARGS = [:height, :width, :format, :scale, :js]
+SUPPORTED_PLOTLY_SAVE_KWARGS =
+    [:autoplay, :post_script, :full_html, :animation_opts, :default_width, :default_height]
 
 PSI_NAME_DELIMITER = "__"
 

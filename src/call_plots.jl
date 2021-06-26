@@ -350,8 +350,6 @@ save_plot(plot, "my_plot.png")
 ```
 
 # Accepted Key Words (currently only implemented for PlotlyJS backend)
-- `format::String = "png"`: set a different format ["html"] for saving a PlotlyJS plot
-- `js::Symbol = :embed,` : options are [:embed, :local, :remote] see PlotlyJS.jl docs...
 - `width::Union{Nothing,Int}=nothing`
 - `height::Union{Nothing,Int}=nothing`
 - `scale::Union{Nothing,Real}=nothing`

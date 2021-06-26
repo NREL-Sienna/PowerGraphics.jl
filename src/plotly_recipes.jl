@@ -111,15 +111,11 @@ function save_plot(plot, filename::String, backend::Plots.PlotlyJSBackend; kwarg
     save_kwargs = Dict{Symbol, Any}((
         (k, v) for (k, v) in kwargs if k in SUPPORTED_PLOTLY_SAVE_KWARGS
     ))
-    save_kwargs[:height] = get(kwargs, :height, 450)
-    save_kwargs[:width] = get(kwargs, :width, 800)
     @info "saving plot" filename
-    if get(save_kwargs, :format, "png") == "html"
-        Plots.PlotlyJS.savehtml(
-            Plots.PlotlyJS.plot(plot),
-            filename,
-            get(save_kwargs, :js, :embed),
-        )
+    if last(splitext(filename)) == ".html"
+        open(filename, "w") do io
+            show(io, MIME("text/html"), plot; save_kwargs...)
+        end
     else
         Plots.PlotlyJS.savefig(plot, filename; save_kwargs...)
     end
