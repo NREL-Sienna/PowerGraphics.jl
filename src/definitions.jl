@@ -93,8 +93,8 @@ SLACKVARS = Dict(
     UNSERVEDENERGY_VARIABLE => "Unserved Energy",
 )
 
-LOAD_PARAMETER = :P__max_active_power__PowerLoad
-ILOAD_PARAMETER = :P__max_active_power__InterruptibleLoad
+LOAD_PARAMETER = :P__max_active_power__PowerLoad_max_active_power
+ILOAD_PARAMETER = :P__max_active_power__InterruptibleLoad_max_active_power
 ILOAD_VARIABLE = :P__InterruptibleLoad
 
 GENERATOR_MAPPING_FILE = joinpath(
