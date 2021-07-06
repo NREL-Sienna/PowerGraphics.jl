@@ -50,9 +50,7 @@ end
     gen = PG.get_generation_data(results_uc)
 
     cat = PG.make_fuel_dictionary(results_uc.system)
-    @test isempty(
-        symdiff(keys(cat), ["Coal", "Wind", "Hydropower", "NG-CC", "NG-CT"]),
-    )
+    @test isempty(symdiff(keys(cat), ["Coal", "Wind", "Hydropower", "NG-CC", "NG-CT"]))
 
     fuel = PG.categorize_data(gen.data, cat)
     @test length(fuel) == 6

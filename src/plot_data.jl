@@ -153,7 +153,12 @@ function _get_matching_param(var_name)
 end
 
 function _get_matching_var(param_name)
-    var_name = Symbol(join(["P", split(split(string(param_name), "__")[end], "_")[1]], PSI_NAME_DELIMITER))
+    var_name = Symbol(
+        join(
+            ["P", split(split(string(param_name), "__")[end], "_")[1]],
+            PSI_NAME_DELIMITER,
+        ),
+    )
     return var_name
 end
 
