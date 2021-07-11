@@ -186,7 +186,7 @@ function _curtailment_parameters(parameters::Vector{Symbol}, variables::Vector{S
         Vector{NamedTuple{(:parameter, :variable), Tuple{Symbol, Symbol}}}()
     for var in variables
         var_param = Symbol(
-            join([CURTAILMENTPARAMPREFIX, split(string(var), PSI_NAME_DELIMITER)[end]]),
+            join([CURTAILMENTPARAMPREFIX, split(string(var), PSI_NAME_DELIMITER)[end]]) * CURTAILMENTPARAMP_END,
         )
         if var_param in parameters
             push!(curtailment_parameters, (parameter = var_param, variable = var))
