@@ -27,12 +27,12 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         out_path = joinpath(file_path, backend_pkg * "_plots")
         !isdir(out_path) && mkdir(out_path)
         plot_dataframe(
-            gen_uc.data[:P__ThermalStandard],
+            gen_uc.data[:P__RenewableDispatch],
             gen_uc.time,
             set_display = set_display,
             title = "df_line",
             save = out_path,
-        )
+        );
         plot_dataframe(
             gen_uc.data[:P__ThermalStandard],
             gen_uc.time,

@@ -53,7 +53,7 @@ plot = plot_demand(res)
 - `result::Union{IS.Results, PSY.System}` : simulation results or PowerSystems.System
 
 # Accepted Key Words
-- `display::Bool`: set to false to prevent the plots from displaying
+- `set_display::Bool`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
 - `format::String = "png"`: set a different format for saving a PlotlyJS plot
 - `seriescolor::Array`: Set different colors for the plots
@@ -133,7 +133,7 @@ plot = plot_dataframe(df, time_range)
 ```
 
 # Accepted Key Words
-- `display::Bool`: set to false to prevent the plots from displaying
+- `set_display::Bool`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
 - `format::String = "png"`: set a different format for saving a PlotlyJS plot
 - `seriescolor::Array`: Set different colors for the plots
@@ -234,7 +234,7 @@ plot = plot_fuel(res)
 ```
 
 # Accepted Key Words
-- `display::Bool = true`: set to false to prevent the plots from displaying
+- `set_display::Bool = true`: set to false to prevent the plots from displaying
 - `slacks::Bool = true` : display slack variables
 - `load::Bool = true` : display load line
 - `curtailment::Bool = true`: To plot the curtailment in the stack plot
@@ -309,7 +309,7 @@ function plot_fuel(p, result::IS.Results; kwargs...)
             nofill = true,
             title = title,
             y_label = y_label,
-            set_display = set_display,
+            set_display = false,
             stack = stack,
             seriescolor = ["black"],
             kwargs...,
@@ -320,8 +320,11 @@ function plot_fuel(p, result::IS.Results; kwargs...)
     # TODO: how to display this?
 
     if set_display
-        backend == Plots.PlotlyJSBackend() && Plots.PlotlyJS.plot(p)
-        display(p)
+        if backend == Plots.PlotlyJSBackend()
+            display(Plots.PlotlyJS.plot(p))
+        else
+            display(p)
+        end
     end
     if !isnothing(save_fig)
         title = replace(title, " " => "_")
