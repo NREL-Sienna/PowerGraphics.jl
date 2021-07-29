@@ -32,7 +32,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             set_display = set_display,
             title = "df_line",
             save = out_path,
-        );
+        )
         plot_dataframe(
             gen_uc.data[:P__ThermalStandard],
             gen_uc.time,
