@@ -10,7 +10,7 @@
         names = [
             :P__ThermalStandard,
             :P__RenewableDispatch,
-            :P__max_active_power__RenewableDispatch,
+            :P__max_active_power__RenewableDispatch_max_active_power,
         ],
         initial_time = Dates.DateTime("2020-01-02T02:00:00"),
         len = 3,
@@ -25,7 +25,7 @@
 
     load = PG.get_load_data(
         results_ed,
-        names = [:P__max_active_power__PowerLoad],
+        names = [:P__max_active_power__PowerLoad_max_active_power],
         initial_time = Dates.DateTime("2020-01-02T02:00:00"),
         len = 3,
     )
@@ -51,7 +51,7 @@ end
 
     cat = PG.make_fuel_dictionary(results_uc.system)
     @test isempty(
-        symdiff(keys(cat), ["Coal", "Wind", "Hydropower", "Storage", "NG-CC", "NG-CT"]),
+        symdiff(keys(cat), ["Coal", "Wind", "Hydropower", "NG-CC", "NG-CT", "Storage"]),
     )
 
     fuel = PG.categorize_data(gen.data, cat)

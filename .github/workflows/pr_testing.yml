@@ -6,6 +6,10 @@ on:
 
 jobs:
   test:
+    env:
+      GKS_ENCODING: "utf8"
+      GKSwstype: "100"
+
     name: Julia ${{ matrix.julia-version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
