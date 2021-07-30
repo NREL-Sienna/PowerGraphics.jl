@@ -15,7 +15,7 @@
         initial_time = Dates.DateTime("2020-01-02T02:00:00"),
         len = 3,
     )
-    @test length(gen.data) == 2
+    @test length(gen.data) == 3
     @test length(gen.time) == 3
 
     load = PG.get_load_data(results_ed)
@@ -50,13 +50,13 @@ end
     gen = PG.get_generation_data(results_uc)
 
     cat = PG.make_fuel_dictionary(results_uc.system)
-    @test isempty(symdiff(keys(cat), ["Coal", "Wind", "Hydropower", "NG-CC", "NG-CT"]))
+    @test isempty(symdiff(keys(cat), ["Coal", "Wind", "Hydropower", "NG-CC", "NG-CT", "Storage"]))
 
     fuel = PG.categorize_data(gen.data, cat)
-    @test length(fuel) == 6
+    @test length(fuel) == 7
 
     fuel_agg = PG.combine_categories(fuel)
-    @test size(fuel_agg) == (48, 5)
+    @test size(fuel_agg) == (48, 6)
 end
 
 @testset "test html saving" begin
