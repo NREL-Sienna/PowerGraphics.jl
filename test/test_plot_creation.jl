@@ -32,7 +32,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             set_display = set_display,
             title = "df_line",
             save = out_path,
-        );
+        )
         plot_dataframe(
             gen_uc.data[:P__ThermalStandard],
             gen_uc.time,
@@ -40,7 +40,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             title = "df_stack",
             save = out_path,
             stack = true,
-        );
+        )
         plot_dataframe(
             gen_uc.data[:P__ThermalStandard],
             gen_uc.time,
@@ -48,7 +48,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             title = "df_stair",
             save = out_path,
             stair = true,
-        );
+        )
         plot_dataframe(
             gen_uc.data[:P__ThermalStandard],
             gen_uc.time,
@@ -56,7 +56,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             title = "df_bar",
             save = out_path,
             bar = true,
-        );
+        )
         plot_dataframe(
             gen_uc.data[:P__ThermalStandard],
             gen_uc.time,
@@ -65,7 +65,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             save = out_path,
             bar = true,
             stack = true,
-        );
+        )
         plot_dataframe(
             plot_dataframe(
                 gen_uc.data[:P__ThermalStandard],
@@ -78,7 +78,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             set_display = set_display,
             title = "df_gen_load",
             save = out_path,
-        );
+        )
 
         list = readdir(out_path)
         expected_files = [
@@ -109,7 +109,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             save = out_path,
             bar = false,
             stack = false,
-        );
+        )
         PG.plot_pgdata(
             gen_uc,
             set_display = set_display,
@@ -117,7 +117,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             save = out_path,
             bar = false,
             stack = true,
-        );
+        )
         PG.plot_pgdata(
             gen_uc,
             set_display = set_display,
@@ -125,7 +125,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             save = out_path,
             bar = true,
             stack = false,
-        );
+        )
         PG.plot_pgdata(
             gen_uc,
             set_display = set_display,
@@ -133,7 +133,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             save = out_path,
             bar = true,
             stack = true,
-        );
+        )
 
         list = readdir(out_path)
         expected_files =
@@ -158,7 +158,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             bar = false,
             stack = false,
             nofill = false,
-        );
+        )
         PG.plot_demand(
             results_uc,
             set_display = set_display,
@@ -167,7 +167,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             bar = false,
             stack = true,
             nofill = false,
-        );
+        )
         PG.plot_demand(
             results_uc,
             set_display = set_display,
@@ -176,7 +176,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             bar = true,
             stack = false,
             nofill = false,
-        );
+        )
         PG.plot_demand(
             results_uc,
             set_display = set_display,
@@ -185,7 +185,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             bar = true,
             stack = true,
             nofill = false,
-        );
+        )
         PG.plot_demand(
             results_uc,
             set_display = set_display,
@@ -194,7 +194,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             bar = false,
             stack = false,
             nofill = true,
-        );
+        )
         PG.plot_demand(
             results_uc,
             set_display = set_display,
@@ -203,7 +203,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             bar = false,
             stack = true,
             nofill = true,
-        );
+        )
         PG.plot_demand(
             results_uc,
             set_display = set_display,
@@ -212,7 +212,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             bar = true,
             stack = false,
             nofill = true,
-        );
+        )
         PG.plot_demand(
             results_uc,
             set_display = set_display,
@@ -221,7 +221,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             bar = true,
             stack = true,
             nofill = true,
-        );
+        )
 
         p = PG.plot_demand(
             results_uc.system,
@@ -229,7 +229,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             title = "sysdemand",
             save = out_path,
             aggregation = System,
-        );
+        )
         plot_length = backend_pkg == "gr" ? length(p.series_list) : length(p.data)
         @test plot_length == 1
 
@@ -239,7 +239,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             title = "sysdemand_bus",
             save = out_path,
             aggregation = Bus,
-        );
+        )
         plot_length = backend_pkg == "gr" ? length(p.series_list) : length(p.data)
         @test plot_length == 3
 
@@ -276,7 +276,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             save = out_path,
             bar = false,
             stack = false,
-        );
+        )
         PG.plot_fuel(
             results_uc,
             set_display = set_display,
@@ -284,7 +284,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             save = out_path,
             bar = false,
             stack = true,
-        );
+        )
         PG.plot_fuel(
             results_uc,
             set_display = set_display,
@@ -292,7 +292,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             save = out_path,
             bar = true,
             stack = false,
-        );
+        )
         PG.plot_fuel(
             results_uc,
             set_display = set_display,
@@ -300,7 +300,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             save = out_path,
             bar = true,
             stack = true,
-        );
+        )
 
         list = readdir(out_path)
         expected_files =
