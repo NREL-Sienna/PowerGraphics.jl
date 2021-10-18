@@ -68,9 +68,9 @@ PSI_NAME_DELIMITER = "__"
 VARIABLE_TYPES = ["P", "Spin", "Reg", "Flex"]
 
 SUPPORTEDVARPREFIX = ["P__", "Pout__"]
-SUPPORTEDPARAMPREFIX = "P_"
-CURTAILMENTPARAMPREFIX = "P__max_active_power__"
-CURTAILMENTPARAMP_END = "_max_active_power"
+SUPPORTEDPARAMPREFIX = "P"
+CURTAILMENTPARAMPREFIX = "P__max_active_power_"
+CURTAILMENTPARAMSUFFIX = "max_active_power"
 
 SUPPORTEDLOADPARAMS = ["PowerLoad", "InterruptibleLoad"]
 
