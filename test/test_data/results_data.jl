@@ -35,9 +35,15 @@ function run_test_sim(result_dir::String)
 
     if ispath(sim_path)
         @info "Reading UC system from" sim_path
-        c_sys5_hy_uc = System(joinpath(sim_path, "..", "c_sys5_hy_uc.json"), time_series_read_only = true)
+        c_sys5_hy_uc = System(
+            joinpath(sim_path, "..", "c_sys5_hy_uc.json"),
+            time_series_read_only = true,
+        )
         @info "Reading ED system from" sim_path
-        c_sys5_hy_ed = System(joinpath(sim_path, "..", "c_sys5_hy_ed.json"), time_series_read_only = true)
+        c_sys5_hy_ed = System(
+            joinpath(sim_path, "..", "c_sys5_hy_ed.json"),
+            time_series_read_only = true,
+        )
         executions = tryparse.(Int, readdir(sim_path))
         sim = joinpath(sim_path, string(maximum(executions)))
         @info "Reading results from last execution" sim

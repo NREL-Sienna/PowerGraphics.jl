@@ -154,7 +154,15 @@ end
 
 function _get_matching_var(param_name)
     var_name = Symbol(
-        join([s for s in vcat(split.(split(string(param_name), "max_active_power"), "_")...) if !isempty(s)], PSI_NAME_DELIMITER),    )
+        join(
+            [
+                s for s in
+                vcat(split.(split(string(param_name), "max_active_power"), "_")...) if
+                !isempty(s)
+            ],
+            PSI_NAME_DELIMITER,
+        ),
+    )
     return var_name
 end
 
@@ -181,7 +189,11 @@ function _curtailment_parameters(parameters::Vector{Symbol}, variables::Vector{S
     curtailment_parameters =
         Vector{NamedTuple{(:parameter, :variable), Tuple{Symbol, Symbol}}}()
     for var in variables
-        if any(length.(collect.(eachmatch.(Regex(CURTAILMENTPARAMSUFFIX), string.(parameters)))) .> 1)
+        if any(
+            length.(
+                collect.(eachmatch.(Regex(CURTAILMENTPARAMSUFFIX), string.(parameters))),
+            ) .> 1,
+        )
             prefix = CURTAILMENTPARAMPREFIX
         else
             prefix = SUPPORTEDPARAMPREFIX
