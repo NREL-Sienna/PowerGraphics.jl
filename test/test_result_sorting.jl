@@ -1,4 +1,5 @@
 (results_uc, results_ed) = run_test_sim(TEST_RESULT_DIR)
+problem_results = run_test_prob()
 
 @testset "test filter results" begin
     gen = PG.get_generation_data(results_uc, curtailment = false)
@@ -44,6 +45,20 @@
     )
     @test length(srv.data) == 1
     @test length(srv.time) == 5
+end
+
+@testset "test curtailment calculations" begin
+    curtailment_params = PG._curtailment_parameters(
+        PG.get_generation_parameter_names(results_uc),
+        PG.get_generation_variable_names(results_uc),
+    )
+    @test length(curtailment_params) == 1
+
+    curtailment_params = PG._curtailment_parameters(
+        PG.get_generation_parameter_names(problem_results),
+        PG.get_generation_variable_names(problem_results),
+    )
+    @test length(curtailment_params) == 1
 end
 
 @testset "test data aggregation" begin

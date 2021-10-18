@@ -10,6 +10,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
     end
     set_display = false
     cleanup = true
+    @info("running tests with $backend_pkg with dispalay $set_display and cleanup $cleanup")
 
     (results_uc, results_ed) = run_test_sim(TEST_RESULT_DIR)
     problem_results = run_test_prob()
@@ -316,6 +317,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
 end
 try
     test_plots(file_path, backend_pkg = "gr")
+    @info("done with GR, starting plotlyjs")
     test_plots(file_path, backend_pkg = "plotlyjs")
 finally
     nothing

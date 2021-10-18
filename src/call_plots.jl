@@ -102,7 +102,13 @@ function plot_demand(p, result::Union{IS.Results, PSY.System}; kwargs...)
         kwargs...,
     )
 
-    set_display && display(p)
+    if set_display
+        if backend == Plots.PlotlyJSBackend()
+            display(Plots.PlotlyJS.plot(p))
+        else
+            display(p)
+        end
+    end
     if !isnothing(save_fig)
         title = replace(title, " " => "_")
         save_plot(p, joinpath(save_fig, "$(title).png"), backend; kwargs...)
