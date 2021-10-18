@@ -1,7 +1,7 @@
 name = "PowerGraphics"
 uuid = "5f7eddb3-86b1-49e8-a95a-ddc0f45eea41"
 authors = ["Clayton Barrows", "Lily Hanig", "Jose Daniel Lara"]
-version = "0.11.1"
+version = "0.11.2"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
@@ -26,7 +26,7 @@ DataFrames = "1"
 DataStructures = "0.18"
 InfrastructureSystems = "1"
 Plots = "1"
-PowerSimulations = "~0.14"
+PowerSimulations = "0.14.4 - 0.14"
 PowerSystems = "1"
 Reexport = "1"
 Requires = "1"
