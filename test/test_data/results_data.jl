@@ -34,15 +34,20 @@ function run_test_sim(result_dir::String)
     sim_path = joinpath(result_dir, sim_name)
 
     if ispath(sim_path)
-        c_sys5_hy_uc = System(joinpath(sim_path, "..", "c_sys5_hy_uc.json"))
-        c_sys5_hy_ed = System(joinpath(sim_path, "..", "c_sys5_hy_ed.json"))
+        @info "Reading UC system from" sim_path
+        c_sys5_hy_uc = System(joinpath(sim_path, "..", "c_sys5_hy_uc.json"), time_series_read_only = true)
+        @info "Reading ED system from" sim_path
+        c_sys5_hy_ed = System(joinpath(sim_path, "..", "c_sys5_hy_ed.json"), time_series_read_only = true)
         executions = tryparse.(Int, readdir(sim_path))
         sim = joinpath(sim_path, string(maximum(executions)))
         @info "Reading results from last execution" sim
     else
+        @info "Building UC system from"
         c_sys5_hy_uc = PSB.build_system(PSB.SIIPExampleSystems, "5_bus_hydro_uc_sys")
+        @info "Building ED system from"
         c_sys5_hy_ed = PSB.build_system(PSB.SIIPExampleSystems, "5_bus_hydro_ed_sys")
 
+        @info "Adding extra RE"
         add_re!(c_sys5_hy_uc)
         add_re!(c_sys5_hy_ed)
         to_json(c_sys5_hy_uc, joinpath(sim_path, "..", "c_sys5_hy_uc.json"))
