@@ -225,7 +225,6 @@ function plot_pgdata(p, pgdata::PGData; kwargs...)
     kwargs =
         Dict{Symbol, Any}((k, v) for (k, v) in kwargs if k ∉ [:title, :save, :set_display])
 
-
     p = plot_dataframe(p, data, pgdata.time; set_display = false, kwargs...)
 
     if set_display
