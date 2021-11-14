@@ -98,6 +98,7 @@ function plot_demand(p, result::Union{IS.Results, PSY.System}; kwargs...)
         line_dash = string(linestyle),
         linewidth = get(kwargs, :linewidth, 1),
         y_label = y_label,
+        set_display = false,
         title = title,
         kwargs...,
     )
@@ -209,6 +210,11 @@ function plot_pgdata(pgdata::PGData; kwargs...)
 end
 
 function plot_pgdata(p, pgdata::PGData; kwargs...)
+    backend = Plots.backend()
+    title = get(kwargs, :title, "")
+    set_display = get(kwargs, :set_display, true)
+    save_fig = get(kwargs, :save, nothing)
+
     if get(kwargs, :combine_categories, true)
         aggregate = get(kwargs, :aggregate, nothing)
         names = get(kwargs, :names, nothing)
@@ -216,7 +222,24 @@ function plot_pgdata(p, pgdata::PGData; kwargs...)
     else
         data = pgdata.data
     end
-    plot_dataframe(p, data, pgdata.time; kwargs...)
+    kwargs =
+        Dict{Symbol, Any}((k, v) for (k, v) in kwargs if k ∉ [:title, :save, :set_display])
+
+
+    p = plot_dataframe(p, data, pgdata.time; set_display = false, kwargs...)
+
+    if set_display
+        if backend == Plots.PlotlyJSBackend()
+            display(Plots.PlotlyJS.plot(p))
+        else
+            display(p)
+        end
+    end
+    if !isnothing(save_fig)
+        title = replace(title, " " => "_")
+        format = get(kwargs, :format, "png")
+        save_plot(p, joinpath(save_fig, "$title.$format"), backend; kwargs...)
+    end
     return p
 end
 
