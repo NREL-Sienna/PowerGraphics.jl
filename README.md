@@ -1,6 +1,8 @@
 # PowerGraphics
 
-[![codecov](https://codecov.io/gh/nrel-siip/PowerGraphics.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/nrel-siip/PowerGraphics.jl)
+[![Master - CI](https://github.com/NREL-SIIP/PowerGraphics.jl/workflows/Master%20-%20CI/badge.svg)](https://github.com/NREL-SIIP/PowerGraphics.jl/actions/workflows/master-tests.yml)
+[![codecov](https://codecov.io/gh/NREL-SIIP/PowerGraphics.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/NREL-SIIP/PowerGraphics.jl)
+[<img src="https://img.shields.io/badge/slack-@SIIP/PSY-blue.svg?logo=slack">](https://join.slack.com/t/nrel-siip/shared_invite/zt-glam9vdu-o8A9TwZTZqqNTKHa7q3BpQ)
 
 PowerGraphics.jl is a Julia package for plotting results from [PowerSimulations.jl](https://github.com/NREL/PowerSimulations.jl).
 
@@ -8,8 +10,9 @@ PowerGraphics.jl is a Julia package for plotting results from [PowerSimulations.
 
 ```julia
 julia> ]
-(v1.3) pkg> add PowerGraphics
+(v1.6) pkg> add PowerGraphics
 ```
+
 ## Usage
 
 `PowerGraphics.jl` uses [PowerSystems.jl](https://github.com/NREL/PowerSystems.jl) and [PowerSimulations.jl](https://github.com/NREL/PowerSimulations.jl) to handle the data and execution power system simulations.
@@ -28,7 +31,7 @@ using Pkg
 Pkg.add("PlotlyJS")
 ```
 
-When using `PowerGraphics.jl` within a jupyter notebook, `WebIO.jl` is also required (*and depending on the local configuration of nbextensions, some [additional steps](https://juliagizmos.github.io/WebIO.jl/latest/troubleshooting/not-detected/) may be required):
+When using `PowerGraphics.jl` within a jupyter notebook, `WebIO.jl` is also required:
 
 ```julia
 Pkg.add("WebIO")
@@ -45,7 +48,7 @@ plot_fuel(res)
 
 ## Development
 
-Contributions to the development and enahancement of PowerGraphics is welcome. Please see [CONTRIBUTING.md](https://github.com/NREL-SIIP/PowerGraphics.jl/blob/master/CONTRIBUTING.md) for code contribution guidelines.
+Contributions to the development and enhancement of PowerGraphics is welcome. Please see [CONTRIBUTING.md](https://github.com/NREL-SIIP/PowerGraphics.jl/blob/master/CONTRIBUTING.md) for code contribution guidelines.
 
 ## License
 
