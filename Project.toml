@@ -20,7 +20,7 @@ TimeSeries = "9e3dc215-6440-5c97-bce1-76c03772f85e"
 YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
 
 [compat]
-CSV = "≥0.8"
+CSV = "0.8 - 0.9"
 Colors = "~0.12"
 DataFrames = "1"
 DataStructures = "0.18"
