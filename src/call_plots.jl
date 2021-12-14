@@ -184,8 +184,15 @@ plot = plot_dataframe(df, time_range)
 - `stair::Bool`: Make a stair plot instead of a stack plot
 """
 
-function plot_dataframe(df::DataFrames.DataFrame, kwargs...)
+function plot_dataframe(df::DataFrames.DataFrame; kwargs...)
     return plot_dataframe!(_empty_plot(), no_datetime(df), df.DateTime; kwargs...)
+end
+function plot_dataframe(
+    df::DataFrames.DataFrame,
+    time_range::Union{DataFrames.DataFrame, Array, StepRange};
+    kwargs...,
+)
+    return plot_dataframe!(_empty_plot(), df, time_range; kwargs...)
 end
 
 """
@@ -214,7 +221,7 @@ If only the dataframe is provided, it must have a column of `DateTime` values.
 - `stair::Bool`: Make a stair plot instead of a stack plot
 """
 
-function plot_dataframe!(p, df::DataFrames.DataFrame, kwargs...)
+function plot_dataframe!(p, df::DataFrames.DataFrame; kwargs...)
     return plot_dataframe!(p, no_datetime(df), df.DateTime; kwargs...)
 end
 
@@ -324,7 +331,7 @@ and assigns each fuel type a specific color.
 
 # Arguments
 
-- `res::Results` : results to be plotted
+- `res::PSI.Results` : results to be plotted
 
 # Example
 
@@ -363,7 +370,7 @@ and assigns each fuel type a specific color.
 # Arguments
 
 - `plot` : existing plot handle (optional)
-- `res::Results` : results to be plotted
+- `res::PSI.Results` : results to be plotted
 
 # Accepted Key Words
 - `generator_mapping_file` = "file_path" : file path to yaml definig generator category by fuel and primemover

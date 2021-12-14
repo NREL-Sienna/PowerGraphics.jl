@@ -29,7 +29,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         !isdir(out_path) && mkdir(out_path)
         plot_dataframe(
             gen_uc.data[:P__RenewableDispatch],
-            gen_uc.time,
+            gen_uc.time;
             set_display = set_display,
             title = "df_line",
             save = out_path,
@@ -67,7 +67,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             bar = true,
             stack = true,
         )
-        plot_dataframe(
+        plot_dataframe!(
             plot_dataframe(
                 gen_uc.data[:P__ThermalStandard],
                 gen_uc.time,
