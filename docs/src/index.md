@@ -11,7 +11,7 @@ PowerGraphics.jl relies on Plots.jl to enable plotting via different backends. C
 
 ## Making Figures
 
-Each of the [`plot`* functions](@ref api) exported by PowerGraphics will create a plot the specified backend (see above).
+Each of the [`plot`* functions](@ref api) exported by PowerGraphics will create a plot via the specified backend (see above).
 Some control on the appearance of those figures is available with the following key word arguments passed to the `plot_`* command.
 
 ### Arguments to control figure visibility, colors, and display

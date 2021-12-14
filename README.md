@@ -2,7 +2,8 @@
 
 [![Master - CI](https://github.com/NREL-SIIP/PowerGraphics.jl/workflows/Master%20-%20CI/badge.svg)](https://github.com/NREL-SIIP/PowerGraphics.jl/actions/workflows/master-tests.yml)
 [![codecov](https://codecov.io/gh/NREL-SIIP/PowerGraphics.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/NREL-SIIP/PowerGraphics.jl)
-[<img src="https://img.shields.io/badge/slack-@SIIP/PSY-blue.svg?logo=slack">](https://join.slack.com/t/nrel-siip/shared_invite/zt-glam9vdu-o8A9TwZTZqqNTKHa7q3BpQ)
+[![Documentation Build](https://github.com/NREL-SIIP/PowerGraphics.jl/workflows/Documentation/badge.svg?)](https://nrel-siip.github.io/PowerGraphics.jl/stable)
+[<img src="https://img.shields.io/badge/slack-@SIIP/PG-blue.svg?logo=slack">](https://join.slack.com/t/nrel-siip/shared_invite/zt-glam9vdu-o8A9TwZTZqqNTKHa7q3BpQ)
 
 PowerGraphics.jl is a Julia package for plotting results from [PowerSimulations.jl](https://github.com/NREL/PowerSimulations.jl).
 
