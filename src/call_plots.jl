@@ -34,6 +34,7 @@ end
 
 """
     plot_demand(results)
+    plot_demand(system)
 
 This function makes a plot of the demand in the system.
 
@@ -44,31 +45,61 @@ This function makes a plot of the demand in the system.
 # Example
 
 ```julia
-res = solve_op_problem!(OpProblem)
+res = PSI.solve_op_problem!(OpProblem)
 plot = plot_demand(res)
 ```
 
-# Arguments
-- `plot` : existing plot handle (optional)
-- `result::Union{IS.Results, PSY.System}` : simulation results or PowerSystems.System
-
 # Accepted Key Words
-- `set_display::Bool`: set to false to prevent the plots from displaying
+
+- `linestyle::Symbol = :dash` : set line style
+- `title::String`: Set a title for the plots
+- `horizon::Int64`: To plot a shorter window of time than the full results
+- `initial_time::DateTime`: To start the plot at a different time other than the results initial time
+- `aggregate::String = "System", "PowerLoad", or "Bus"`: aggregate the demand other than by generator
+- `set_display::Bool = true`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
 - `format::String = "png"`: set a different format for saving a PlotlyJS plot
 - `seriescolor::Array`: Set different colors for the plots
-- `linestyle::Symbol = :dash` : set line style
 - `title::String = "Title"`: Set a title for the plots
-- `horizon::Int64 = 12`: To plot a shorter window of time than the full results
-- `initial_time::DateTime`: To start the plot at a different time other than the results initial time
-- `aggregate::String = "System", "PowerLoad", or "Bus"`: aggregate the demand other than by generator
+- `stack::Bool = true`: stack plot traces
+- `bar::Bool` : create bar plot
+- `nofill::Bool` : force empty area fill
+- `stair::Bool`: Make a stair plot instead of a stack plot
 """
 
 function plot_demand(result::Union{IS.Results, PSY.System}; kwargs...)
-    return plot_demand(_empty_plot(), result; kwargs...)
+    return plot_demand!(_empty_plot(), result; kwargs...)
 end
 
-function plot_demand(p, result::Union{IS.Results, PSY.System}; kwargs...)
+"""
+    plot_demand!(plot, results)
+    plot_demand!(plot, system)
+
+This function makes a plot of the demand in the system.
+
+# Arguments
+
+- `plot` : existing plot handle
+- `result::Union{IS.Results, PSY.System}` : simulation results or PowerSystems.System
+
+# Accepted Key Words
+
+- `linestyle::Symbol = :dash` : set line style
+- `title::String`: Set a title for the plots
+- `horizon::Int64`: To plot a shorter window of time than the full results
+- `initial_time::DateTime`: To start the plot at a different time other than the results initial time
+- `aggregate::String = "System", "PowerLoad", or "Bus"`: aggregate the demand other than by generator
+- `set_display::Bool = true`: set to false to prevent the plots from displaying
+- `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "png"`: set a different format for saving a PlotlyJS plot
+- `seriescolor::Array`: Set different colors for the plots
+- `title::String = "Title"`: Set a title for the plots
+- `stack::Bool = true`: stack plot traces
+- `bar::Bool` : create bar plot
+- `nofill::Bool` : force empty area fill
+- `stair::Bool`: Make a stair plot instead of a stack plot
+"""
+function plot_demand!(p, result::Union{IS.Results, PSY.System}; kwargs...)
     backend = Plots.backend()
     set_display = get(kwargs, :set_display, true)
     save_fig = get(kwargs, :save, nothing)
@@ -89,7 +120,7 @@ function plot_demand(p, result::Union{IS.Results, PSY.System}; kwargs...)
         Throw(error("No load data found"))
     end
 
-    p = plot_dataframe(
+    p = plot_dataframe!(
         p,
         load_agg,
         load.time;
@@ -120,15 +151,16 @@ end
 ################################# Plotting a Single DataFrame ##########################
 
 """
+    plot_dataframe(df)
     plot_dataframe(df, time_range)
-    plot_dataframe(plot, variable, time_range)
 
-This function makes a plot of a specific dataframe and time range, not necessarily from the results
+Plots data from DataFrame where each row represents a time period and each column represents a trace
 
 # Arguments
 
-- `df::DataFrames.DataFrame`: The dataframe to be plotted
-- `time_range::Union{Array, DataFrame}`: The time range to be plotted
+- `df::DataFrames.DataFrame`: DataFrame where each row represents a time period and each column represents a trace.
+If only the dataframe is provided, it must have a column of `DateTime` values.
+- `time_range:::Union{DataFrames.DataFrame, Array, StepRange}`: The time periods of the data
 
 # Example
 
@@ -140,25 +172,53 @@ plot = plot_dataframe(df, time_range)
 ```
 
 # Accepted Key Words
-- `set_display::Bool`: set to false to prevent the plots from displaying
+- `curtailment::Bool`: plot the curtailment with the variable
+- `set_display::Bool = true`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
 - `format::String = "png"`: set a different format for saving a PlotlyJS plot
 - `seriescolor::Array`: Set different colors for the plots
 - `title::String = "Title"`: Set a title for the plots
-- `curtailment::Bool`: plot the curtailment with the variable
-- `stack::Bool`: stack plot traces
+- `stack::Bool = true`: stack plot traces
 - `bar::Bool` : create bar plot
 - `nofill::Bool` : force empty area fill
+- `stair::Bool`: Make a stair plot instead of a stack plot
 """
-function plot_dataframe(
-    variable::DataFrames.DataFrame,
-    time_range::Union{DataFrames.DataFrame, Array, StepRange};
-    kwargs...,
-)
-    return plot_dataframe(_empty_plot(), variable, time_range; kwargs...)
+
+function plot_dataframe(df::DataFrames.DataFrame, kwargs...)
+    return plot_dataframe!(_empty_plot(), no_datetime(df), df.DateTime; kwargs...)
 end
 
-function plot_dataframe(
+"""
+    plot_dataframe!(plot, df)
+    plot_dataframe!(plot, df, time_range)
+
+Plots data from DataFrame where each row represents a time period and each column represents a trace
+
+# Arguments
+
+- `plot`: existing plot handle
+- `df::DataFrames.DataFrame`: DataFrame where each row represents a time period and each column represents a trace.
+If only the dataframe is provided, it must have a column of `DateTime` values.
+- `time_range:::Union{DataFrames.DataFrame, Array, StepRange}`: The time periods of the data
+
+# Accepted Key Words
+- `curtailment::Bool`: plot the curtailment with the variable
+- `set_display::Bool = true`: set to false to prevent the plots from displaying
+- `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "png"`: set a different format for saving a PlotlyJS plot
+- `seriescolor::Array`: Set different colors for the plots
+- `title::String = "Title"`: Set a title for the plots
+- `stack::Bool = true`: stack plot traces
+- `bar::Bool` : create bar plot
+- `nofill::Bool` : force empty area fill
+- `stair::Bool`: Make a stair plot instead of a stack plot
+"""
+
+function plot_dataframe!(p, df::DataFrames.DataFrame, kwargs...)
+    return plot_dataframe!(p, no_datetime(df), df.DateTime; kwargs...)
+end
+
+function plot_dataframe!(
     p,
     variable::DataFrames.DataFrame,
     time_range::Union{DataFrames.DataFrame, Array, StepRange};
@@ -175,7 +235,32 @@ end
 
 """
     plot_pgdata(pgdata, time_range)
-    plot_pgdata(plot, pgdata, time_range)
+
+This function makes a plot of a PGdata object
+
+# Arguments
+
+- `pgdata::PGData`: The dataframe to be plotted
+
+# Accepted Key Words
+- `combine_categories::Bool = false` : plot category values or each value in a category
+- `curtailment::Bool`: plot the curtailment with the variable
+- `set_display::Bool = true`: set to false to prevent the plots from displaying
+- `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "png"`: set a different format for saving a PlotlyJS plot
+- `seriescolor::Array`: Set different colors for the plots
+- `title::String = "Title"`: Set a title for the plots
+- `stack::Bool = true`: stack plot traces
+- `bar::Bool` : create bar plot
+- `nofill::Bool` : force empty area fill
+- `stair::Bool`: Make a stair plot instead of a stack plot
+"""
+function plot_pgdata(pgdata::PGData; kwargs...)
+    return plot_pgdata!(_empty_plot(), pgdata; kwargs...)
+end
+
+"""
+    plot_pgdata!(plot, pgdata, time_range)
 
 This function makes a plot of a PGdata object
 
@@ -184,32 +269,20 @@ This function makes a plot of a PGdata object
 - `plot` : existing plot handle (optional)
 - `pgdata::PGData`: The dataframe to be plotted
 
-# Example
-
-```julia
-var_name = :P__ThermalStandard
-df = PSI.read_realized_variables(results, names = [var_name])[var_name]
-time_range = PSI.get_realized_timestamps(results)
-plot = plot_dataframe(df, time_range)
-```
-
 # Accepted Key Words
 - `combine_categories::Bool = false` : plot category values or each value in a category
-- `display::Bool`: set to false to prevent the plots from displaying
+- `curtailment::Bool`: plot the curtailment with the variable
+- `set_display::Bool = true`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
 - `format::String = "png"`: set a different format for saving a PlotlyJS plot
 - `seriescolor::Array`: Set different colors for the plots
 - `title::String = "Title"`: Set a title for the plots
-- `curtailment::Bool`: plot the curtailment with the variable
-- `stack::Bool`: stack plot traces
+- `stack::Bool = true`: stack plot traces
 - `bar::Bool` : create bar plot
 - `nofill::Bool` : force empty area fill
+- `stair::Bool`: Make a stair plot instead of a stack plot
 """
-function plot_pgdata(pgdata::PGData; kwargs...)
-    return plot_pgdata(_empty_plot(), pgdata; kwargs...)
-end
-
-function plot_pgdata(p, pgdata::PGData; kwargs...)
+function plot_pgdata!(p, pgdata::PGData; kwargs...)
     backend = Plots.backend()
     title = get(kwargs, :title, "")
     set_display = get(kwargs, :set_display, true)
@@ -225,7 +298,7 @@ function plot_pgdata(p, pgdata::PGData; kwargs...)
     kwargs =
         Dict{Symbol, Any}((k, v) for (k, v) in kwargs if k ∉ [:title, :save, :set_display])
 
-    p = plot_dataframe(p, data, pgdata.time; set_display = false, kwargs...)
+    p = plot_dataframe!(p, data, pgdata.time; set_display = false, kwargs...)
 
     if set_display
         if backend == Plots.PlotlyJSBackend()
@@ -251,7 +324,6 @@ and assigns each fuel type a specific color.
 
 # Arguments
 
-- `plot` : existing plot handle (optional)
 - `res::Results` : results to be plotted
 
 # Example
@@ -262,10 +334,12 @@ plot = plot_fuel(res)
 ```
 
 # Accepted Key Words
-- `set_display::Bool = true`: set to false to prevent the plots from displaying
+- `generator_mapping_file` = "file_path" : file path to yaml definig generator category by fuel and primemover
+- `variables::Union{Nothing, Vector{Symbol}}` = nothing : specific variables to plot
 - `slacks::Bool = true` : display slack variables
 - `load::Bool = true` : display load line
 - `curtailment::Bool = true`: To plot the curtailment in the stack plot
+- `set_display::Bool = true`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
 - `format::String = "png"`: set a different format for saving a PlotlyJS plot
 - `seriescolor::Array`: Set different colors for the plots
@@ -274,15 +348,40 @@ plot = plot_fuel(res)
 - `bar::Bool` : create bar plot
 - `nofill::Bool` : force empty area fill
 - `stair::Bool`: Make a stair plot instead of a stack plot
-- `generator_mapping_file` = "file_path" : file path to yaml definig generator category by fuel and primemover
-- `variables::Union{Nothing, Vector{Symbol}}` = nothing : specific variables to plot
 """
 
 function plot_fuel(result::IS.Results; kwargs...)
-    return plot_fuel(_empty_plot(), result; kwargs...)
+    return plot_fuel!(_empty_plot(), result; kwargs...)
 end
 
-function plot_fuel(p, result::IS.Results; kwargs...)
+"""
+    plot_fuel!(plot, results)
+
+This function makes a stack plot of the results by fuel type
+and assigns each fuel type a specific color.
+
+# Arguments
+
+- `plot` : existing plot handle (optional)
+- `res::Results` : results to be plotted
+
+# Accepted Key Words
+- `generator_mapping_file` = "file_path" : file path to yaml definig generator category by fuel and primemover
+- `variables::Union{Nothing, Vector{Symbol}}` = nothing : specific variables to plot
+- `slacks::Bool = true` : display slack variables
+- `load::Bool = true` : display load line
+- `curtailment::Bool = true`: To plot the curtailment in the stack plot
+- `set_display::Bool = true`: set to false to prevent the plots from displaying
+- `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "png"`: set a different format for saving a PlotlyJS plot
+- `seriescolor::Array`: Set different colors for the plots
+- `title::String = "Title"`: Set a title for the plots
+- `stack::Bool = true`: stack plot traces
+- `bar::Bool` : create bar plot
+- `nofill::Bool` : force empty area fill
+- `stair::Bool`: Make a stair plot instead of a stack plot
+"""
+function plot_fuel!(p, result::IS.Results; kwargs...)
     backend = Plots.backend()
     set_display = get(kwargs, :set_display, true)
     save_fig = get(kwargs, :save, nothing)
@@ -314,7 +413,8 @@ function plot_fuel(p, result::IS.Results; kwargs...)
     )
 
     seriescolor = get(kwargs, :seriescolor, match_fuel_colors(fuel_agg, backend))
-    p = plot_dataframe(
+    p = plot_dataframe!(
+        p,
         fuel_agg,
         gen.time;
         stack = stack,
@@ -331,7 +431,7 @@ function plot_fuel(p, result::IS.Results; kwargs...)
 
     if load
         # load line
-        p = plot_demand(
+        p = plot_demand!(
             p,
             result;
             nofill = true,

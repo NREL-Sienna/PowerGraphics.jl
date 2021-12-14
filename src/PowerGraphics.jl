@@ -6,6 +6,10 @@ export plot_demand
 export plot_dataframe
 export plot_pgdata
 export plot_fuel
+export plot_demand!
+export plot_dataframe!
+export plot_pgdata!
+export plot_fuel!
 export make_fuel_dictionary
 export report
 export get_generation_data
