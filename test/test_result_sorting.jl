@@ -50,13 +50,13 @@ end
 @testset "test curtailment calculations" begin
     curtailment_params = PG._curtailment_parameters(
         PG.get_generation_parameter_names(results_uc),
-        PG.get_generation_variable_names(results_uc),
+        PG.get_generation_variable_keys(results_uc),
     )
     @test length(curtailment_params) == 1
 
     curtailment_params = PG._curtailment_parameters(
         PG.get_generation_parameter_names(problem_results),
-        PG.get_generation_variable_names(problem_results),
+        PG.get_generation_variable_keys(problem_results),
     )
     @test length(curtailment_params) == 1
 end
