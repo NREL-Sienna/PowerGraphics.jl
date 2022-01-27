@@ -63,40 +63,21 @@ SUPPORTED_EXTRA_PLOT_KWARGS = [:linestyle, :linewidth]
 SUPPORTED_PLOTLY_SAVE_KWARGS =
     [:autoplay, :post_script, :full_html, :animation_opts, :default_width, :default_height]
 
-PSI_NAME_DELIMITER = "__"
+NEGATIVE_PARAMETERS = [PSY.PowerLoad]
+SUPPORTED_CURTAILMENT_PARAMETERS = [PSI.ActivePowerTimeSeriesParameter]
 
-VARIABLE_TYPES = ["P", "Spin", "Reg", "Flex"]
+SUPPORTED_CURTAILMENT_VARIABLES = [PSI.ActivePowerVariable]
+SUPPORTED_LOAD_VARIABLES = [PSI.ActivePowerVariable]
+SUPPORTED_STORAGE_VARIABLES = [PSI.ActivePowerInVariable, PSI.ActivePowerOutVariable]
+SUPPORTED_SERVICE_VARIABLES = [PSI.ActivePowerReserveVariable]
 
-SUPPORTEDVARPREFIX = ["P__", "Pout__"]
-SUPPORTEDPARAMPREFIX = "P"
-CURTAILMENTPARAMPREFIX = "P__max_active_power_"
-CURTAILMENTPARAMSUFFIX = "max_active_power"
-
-SUPPORTEDLOADPARAMS = ["PowerLoad", "InterruptibleLoad"]
-
-NEGATIVE_PARAMETERS = ["PowerLoad"]
-
-SUPPORTEDSERVICEPARAMS = [
-    "VariableReserve_ReserveUp",
-    "VariableReserve_ReserveDown",
-    "StaticReserve_ReserveUp",
-    "StaticReserve_ReserveDown",
-]
-
-UP_RESERVES = ["VariableReserve_ReserveUp", "StaticReserve_ReserveUp"]
-
-DOWN_RESERVES = ["VariableReserve_ReserveDown", "StaticReserve_ReserveDown"]
-
+# TODO: address slacks with new keys
 OVERGENERATION_VARIABLE = :γ⁻__P
 UNSERVEDENERGY_VARIABLE = :γ⁺__P
 SLACKVARS = Dict(
     OVERGENERATION_VARIABLE => "Over Generation",
     UNSERVEDENERGY_VARIABLE => "Unserved Energy",
 )
-
-LOAD_PARAMETER = :P__max_active_power__PowerLoad_max_active_power
-ILOAD_PARAMETER = :P__max_active_power__InterruptibleLoad_max_active_power
-ILOAD_VARIABLE = :P__InterruptibleLoad
 
 GENERATOR_MAPPING_FILE = joinpath(
     dirname(dirname(pathof(PowerGraphics))),
