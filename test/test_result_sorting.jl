@@ -69,7 +69,7 @@ end
         symdiff(keys(cat), ["Coal", "Wind", "Hydropower", "NG-CC", "NG-CT", "Storage"]),
     )
 
-    fuel = PG.categorize_data(gen.data, cat)
+    fuel = categorize_data(gen.data, cat)
     @test length(fuel) == 7
 
     fuel_agg = PG.combine_categories(fuel)

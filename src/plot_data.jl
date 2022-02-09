@@ -1,14 +1,3 @@
-struct PlotList # TODO: Is PlotList needed?
-    plots::Dict
-end
-function PlotList()
-    PlotList(Dict())
-end
-
-Base.show(io::IO, mm::MIME"text/html", p::PlotList) =
-    show(io, mm, "$(Plots.backend()) with $(length(p.plots)) plots, named $(keys(p.plots))")
-Base.show(io::IO, mm::MIME"text/plain", p::PlotList) =
-    show(io, mm, "$(Plots.backend()) with $(length(p.plots)) plots, named $(keys(p.plots))")
 
 # the fundamental struct for plotting
 struct PGData
@@ -219,23 +208,21 @@ function get_generation_data(results::R; kwargs...) where {R <: PSI.PSIResults}
     curtailment = get(kwargs, :curtailment, true)
     storage = get(kwargs, :storage, true)
 
-    # TODO: Update
-    # if curtailment && !isnothing(names)
-    #     @warn "Cannot guarantee curtailment calculations with specified keys"
-    # end
+    if curtailment && (haskey(kwargs, :variable_keys) || haskey(kwargs, :parameter_keys))
+        @warn "Cannot guarantee curtailment calculations with specified keys"
+    end
 
-    variable_keys = get_generation_variable_keys(results; keys = variable_keys)
-
+    injection_keys = get_generation_variable_keys(results; keys = variable_keys)
     if storage
-        variable_keys =
-            vcat(variable_keys, get_storage_variable_keys(results; keys = variable_keys))
+        injection_keys =
+            vcat(injection_keys, get_storage_variable_keys(results; keys = variable_keys))
     end
 
     parameter_keys = get_generation_parameter_keys(results; keys = parameter_keys)
 
     variables = PSI.read_realized_variables_with_keys(
         results,
-        variable_keys;
+        injection_keys;
         initial_time = initial_time,
         count = count,
     )
@@ -249,7 +236,7 @@ function get_generation_data(results::R; kwargs...) where {R <: PSI.PSIResults}
     add_fixed_parameters!(variables, parameters)
 
     if curtailment
-        curtailment_parameters = _curtailment_parameters(parameter_keys, variable_keys)
+        curtailment_parameters = _curtailment_parameters(parameter_keys, injection_keys)
         _filter_curtailment!(variables, parameters, curtailment_parameters)
     end
 
@@ -412,7 +399,7 @@ Re-categorizes data according to an aggregation dictionary
 
 ```julia
 aggregation = PG.make_fuel_dictionary(results_uc.system)
-PG.categorize_data(gen_uc.data, aggregation)
+categorize_data(gen_uc.data, aggregation)
 ```
 
 """
@@ -441,8 +428,16 @@ function categorize_data(
         end
         category_dataframes[string(category)] = category_df
     end
-    if curtailment && haskey(data, :Curtailment)
-        category_dataframes["Curtailment"] = data[:Curtailment]
+    if curtailment
+        dfs = []
+        for (key, val) in data
+            if endswith(string(key), "Curtailment")
+                push!(dfs, val)
+            end
+        end
+        if !isempty(dfs)
+            category_dataframes["Curtailment"] = hcat(dfs...)
+        end
     end
     for (slack, slack_name) in SLACKVARS
         if slacks && haskey(data, slack)
