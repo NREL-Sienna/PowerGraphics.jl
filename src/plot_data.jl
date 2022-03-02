@@ -202,7 +202,7 @@ end
 
 function get_generation_data(results::R; kwargs...) where {R <: PSI.PSIResults}
     initial_time = get(kwargs, :initial_time, nothing)
-    count = get(kwargs, :horizon, get(kwargs, :count, nothing))
+    len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     variable_keys = get(kwargs, :variable_keys, PSI.list_variable_keys(results))
     parameter_keys = get(kwargs, :parameter_keys, PSI.list_parameter_keys(results))
     curtailment = get(kwargs, :curtailment, true)
@@ -220,17 +220,17 @@ function get_generation_data(results::R; kwargs...) where {R <: PSI.PSIResults}
 
     parameter_keys = get_generation_parameter_keys(results; keys = parameter_keys)
 
-    variables = PSI.read_realized_variables_with_keys(
+    variables = PSI.read_variables_with_keys(
         results,
         injection_keys;
         initial_time = initial_time,
-        count = count,
+        len = len,
     )
-    parameters = PSI.read_realized_parameters_with_keys(
+    parameters = PSI.read_parameters_with_keys(
         results,
         parameter_keys;
         initial_time = initial_time,
-        count = count,
+        len = len,
     )
 
     add_fixed_parameters!(variables, parameters)
@@ -241,36 +241,36 @@ function get_generation_data(results::R; kwargs...) where {R <: PSI.PSIResults}
     end
 
     timestamps =
-        PSI.get_realized_timestamps(results; initial_time = initial_time, len = count)
+        PSI.get_realized_timestamps(results; initial_time = initial_time, len = len)
     return PGData(variables, timestamps)
 end
 
 function get_load_data(results::R; kwargs...) where {R <: PSI.PSIResults}
     initial_time = get(kwargs, :initial_time, nothing)
-    count = get(kwargs, :horizon, get(kwargs, :count, nothing))
+    len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     variable_keys = get(kwargs, :variable_keys, PSI.list_variable_keys(results))
     parameter_keys = get(kwargs, :parameter_keys, PSI.list_parameter_keys(results))
 
     variable_keys = get_load_variable_keys(results; keys = variable_keys)
     parameter_keys = get_load_parameter_keys(results; keys = parameter_keys)
 
-    variables = PSI.read_realized_variables_with_keys(
+    variables = PSI.read_variables_with_keys(
         results,
         variable_keys;
         initial_time = initial_time,
-        count = count,
+        len = len,
     )
-    parameters = PSI.read_realized_parameters_with_keys(
+    parameters = PSI.read_parameters_with_keys(
         results,
         parameter_keys;
         initial_time = initial_time,
-        count = count,
+        len = len,
     )
 
     add_fixed_parameters!(variables, parameters)
 
     timestamps =
-        PSI.get_realized_timestamps(results; initial_time = initial_time, len = count)
+        PSI.get_realized_timestamps(results; initial_time = initial_time, len = len)
     return PGData(variables, timestamps)
 end
 
@@ -340,20 +340,20 @@ end
 
 function get_service_data(results::R; kwargs...) where {R <: PSI.PSIResults}
     initial_time = get(kwargs, :initial_time, nothing)
-    count = get(kwargs, :horizon, get(kwargs, :count, nothing))
+    len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     variable_keys = get(kwargs, :variable_keys, PSI.list_variable_keys(results))
     parameter_keys = get(kwargs, :parameter_keys, PSI.list_parameter_keys(results))
 
     variable_keys = get_service_variable_keys(results; keys = variable_keys)
 
-    variables = PSI.read_realized_variables_with_keys(
+    variables = PSI.read_variables_with_keys(
         results,
         variable_keys;
         initial_time = initial_time,
-        count = count,
+        len = len,
     )
     timestamps =
-        PSI.get_realized_timestamps(results; initial_time = initial_time, len = count)
+        PSI.get_realized_timestamps(results; initial_time = initial_time, len = len)
 
     return PGData(variables, timestamps)
 end

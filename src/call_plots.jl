@@ -166,7 +166,7 @@ If only the dataframe is provided, it must have a column of `DateTime` values.
 
 ```julia
 var_name = :P__ThermalStandard
-df = PSI.read_realized_variables(results, names = [var_name])[var_name]
+df = PSI.read_variables_with_keys(results, names = [var_name])[var_name]
 time_range = PSI.get_realized_timestamps(results)
 plot = plot_dataframe(df, time_range)
 ```
@@ -241,7 +241,7 @@ end
 ################################# Plotting PGData ##########################
 
 """
-    plot_pgdata(pgdata, time_range)
+    plot_pgdata(pgdata)
 
 This function makes a plot of a PGdata object
 
@@ -267,7 +267,7 @@ function plot_pgdata(pgdata::PGData; kwargs...)
 end
 
 """
-    plot_pgdata!(plot, pgdata, time_range)
+    plot_pgdata!(plot, pgdata)
 
 This function makes a plot of a PGdata object
 
