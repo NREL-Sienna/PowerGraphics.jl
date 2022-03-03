@@ -21,8 +21,10 @@ function get_generation_variable_keys(
     # TODO: add slacks
     filter_keys = Vector{PSI.OptimizationContainerKey}()
     for k in variable_keys
-        if (PSI.get_component_type(k) <: PSY.Generator &&
-           PSI.get_entry_type(k) == PSI.ActivePowerVariable) || PSI.get_entry_type(k) ∈ keys(BALANCE_SLACKVARS)
+        if (
+            PSI.get_component_type(k) <: PSY.Generator &&
+            PSI.get_entry_type(k) == PSI.ActivePowerVariable
+        ) || PSI.get_entry_type(k) ∈ keys(BALANCE_SLACKVARS)
             push!(filter_keys, k)
         end
     end
@@ -186,8 +188,7 @@ function _filter_curtailment!(
         )
 
         curt =
-            parameter_values[curtailment.parameter] .-
-            variable_values[curtailment.variable]
+            parameter_values[curtailment.parameter] .- variable_values[curtailment.variable]
         if haskey(variable_values, curtailment_var_key)
             variable_values[curtailment_var_key] =
                 hcat(variable_values[curtailment_var_key], no_datetime(curt))
@@ -211,8 +212,10 @@ function get_generation_data(results::R; kwargs...) where {R <: PSI.PSIResults}
 
     injection_keys = get_generation_variable_keys(results; variable_keys = variable_keys)
     if storage
-        injection_keys =
-            vcat(injection_keys, get_storage_variable_keys(results; variable_keys = variable_keys))
+        injection_keys = vcat(
+            injection_keys,
+            get_storage_variable_keys(results; variable_keys = variable_keys),
+        )
     end
 
     parameter_keys = get_generation_parameter_keys(results; parameter_keys = parameter_keys)
@@ -339,7 +342,7 @@ function get_service_data(results::R; kwargs...) where {R <: PSI.PSIResults}
     initial_time = get(kwargs, :initial_time, nothing)
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     variable_keys = get(kwargs, :variable_keys, PSI.list_variable_keys(results))
-    parameter_keys = get(kwargs, :parameter_keys, PSI.list_parameter_keys(results))
+    #parameter_keys = get(kwargs, :parameter_keys, PSI.list_parameter_keys(results))
 
     variable_keys = get_service_variable_keys(results; variable_keys = variable_keys)
 
@@ -349,6 +352,7 @@ function get_service_data(results::R; kwargs...) where {R <: PSI.PSIResults}
         initial_time = initial_time,
         len = len,
     )
+
     timestamps =
         PSI.get_realized_timestamps(results; initial_time = initial_time, len = len)
 
@@ -438,7 +442,7 @@ function categorize_data(
     end
     if slacks
         for (slack, slack_name) in BALANCE_SLACKVARS
-            for id in findall(x->occursin(string(slack), x), string.(keys(data)))
+            for id in findall(x -> occursin(string(slack), x), string.(keys(data)))
                 slack_key = collect(keys(data))[id]
                 category_dataframes[slack_name] = data[slack_key]
             end

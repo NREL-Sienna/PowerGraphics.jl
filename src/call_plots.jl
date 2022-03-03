@@ -107,11 +107,7 @@ function plot_demand!(p, result::Union{IS.Results, PSY.System}; kwargs...)
     linestyle = get(kwargs, :linestyle, :solid)
 
     title = get(kwargs, :title, "Demand")
-    y_label = get(
-        kwargs,
-        :y_label,
-        bar ? "MWh" : "MW",
-    )
+    y_label = get(kwargs, :y_label, bar ? "MWh" : "MW")
 
     load = get_load_data(result; kwargs...)
     load_agg = combine_categories(load.data)
@@ -413,11 +409,7 @@ function plot_fuel!(p, result::IS.Results; kwargs...)
     # passing names here enforces order
     # TODO: enable custom sort with kwarg
     fuel_agg = combine_categories(fuel; names = intersect(CATEGORY_DEFAULT, keys(fuel)))
-    y_label = get(
-        kwargs,
-        :y_label,
-        bar ? "MWh" : "MW",
-    )
+    y_label = get(kwargs, :y_label, bar ? "MWh" : "MW")
 
     seriescolor = get(kwargs, :seriescolor, match_fuel_colors(fuel_agg, backend))
     p = plot_dataframe!(
