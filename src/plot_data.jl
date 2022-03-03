@@ -16,13 +16,13 @@ end
 #### Generation Names ####
 function get_generation_variable_keys(
     results::IS.Results;
-    keys::Vector{T} = PSI.list_variable_keys(results),
+    variable_keys::Vector{T} = PSI.list_variable_keys(results),
 ) where {T <: PSI.OptimizationContainerKey}
     # TODO: add slacks
     filter_keys = Vector{PSI.OptimizationContainerKey}()
-    for k in keys
-        if PSI.get_component_type(k) <: PSY.Generator &&
-           PSI.get_entry_type(k) == PSI.ActivePowerVariable
+    for k in variable_keys
+        if (PSI.get_component_type(k) <: PSY.Generator &&
+           PSI.get_entry_type(k) == PSI.ActivePowerVariable) || PSI.get_entry_type(k) ∈ keys(BALANCE_SLACKVARS)
             push!(filter_keys, k)
         end
     end
@@ -32,10 +32,10 @@ end
 
 function get_storage_variable_keys(
     results::IS.Results;
-    keys::Vector{T} = PSI.list_variable_keys(results),
+    variable_keys::Vector{T} = PSI.list_variable_keys(results),
 ) where {T <: PSI.OptimizationContainerKey}
     filter_keys = Vector{PSI.OptimizationContainerKey}()
-    for k in keys
+    for k in variable_keys
         if PSI.get_component_type(k) <: PSY.Storage &&
            PSI.get_entry_type(k) ∈ SUPPORTED_STORAGE_VARIABLES
             push!(filter_keys, k)
@@ -46,10 +46,10 @@ end
 
 function get_generation_parameter_keys(
     results::IS.Results;
-    keys::Vector{T} = PSI.list_parameter_keys(results),
+    parameter_keys::Vector{T} = PSI.list_parameter_keys(results),
 ) where {T <: PSI.OptimizationContainerKey}
     filter_keys = Vector{PSI.OptimizationContainerKey}()
-    for k in keys
+    for k in parameter_keys
         if PSI.get_component_type(k) <: PSY.Generator &&
            PSI.get_entry_type(k) == PSI.ActivePowerTimeSeriesParameter
             push!(filter_keys, k)
@@ -62,10 +62,10 @@ end
 #### Load Names ####
 function get_load_variable_keys(
     results::IS.Results;
-    keys::Vector{T} = PSI.list_variable_keys(results),
+    variable_keys::Vector{T} = PSI.list_variable_keys(results),
 ) where {T <: PSI.OptimizationContainerKey}
     filter_keys = Vector{PSI.OptimizationContainerKey}()
-    for k in keys
+    for k in variable_keys
         if PSI.get_component_type(k) <: PSY.ElectricLoad &&
            PSI.get_entry_type(k) ∈ SUPPORTED_LOAD_VARIABLES
             push!(filter_keys, k)
@@ -76,10 +76,10 @@ end
 
 function get_load_parameter_keys(
     results::IS.Results;
-    keys::Vector{T} = PSI.list_parameter_keys(results),
+    parameter_keys::Vector{T} = PSI.list_parameter_keys(results),
 ) where {T <: PSI.OptimizationContainerKey}
     filter_keys = Vector{PSI.OptimizationContainerKey}()
-    for k in keys
+    for k in parameter_keys
         if PSI.get_component_type(k) <: PSY.ElectricLoad &&
            PSI.get_entry_type(k) == PSI.ActivePowerTimeSeriesParameter
             push!(filter_keys, k)
@@ -92,10 +92,10 @@ end
 #### Service Names ####
 function get_service_variable_keys(
     results::IS.Results;
-    keys::Vector{T} = PSI.list_variable_keys(results),
+    variable_keys::Vector{T} = PSI.list_variable_keys(results),
 ) where {T <: PSI.OptimizationContainerKey}
     filter_keys = Vector{PSI.OptimizationContainerKey}()
-    for k in keys
+    for k in variable_keys
         if PSI.get_component_type(k) <: PSY.Service &&
            PSI.get_entry_type(k) ∈ SUPPORTED_SERVICE_VARIABLES
             push!(filter_keys, k)
@@ -106,10 +106,10 @@ end
 
 function get_service_parameter_names(
     results::IS.Results;
-    keys::Vector{T} = PSI.list_parameter_keys(results),
+    parameter_keys::Vector{T} = PSI.list_parameter_keys(results),
 ) where {T <: PSI.OptimizationContainerKey}
     filter_keys = Vector{PSI.OptimizationContainerKey}()
-    for k in keys
+    for k in parameter_keys
         if PSI.get_component_type(k) <: PSY.ElectricLoad &&
            PSI.get_entry_type(k) == PSI.RequirementTimeSeriesParameter
             push!(filter_keys, k)
@@ -209,13 +209,13 @@ function get_generation_data(results::R; kwargs...) where {R <: PSI.PSIResults}
         @warn "Cannot guarantee curtailment calculations with specified keys"
     end
 
-    injection_keys = get_generation_variable_keys(results; keys = variable_keys)
+    injection_keys = get_generation_variable_keys(results; variable_keys = variable_keys)
     if storage
         injection_keys =
-            vcat(injection_keys, get_storage_variable_keys(results; keys = variable_keys))
+            vcat(injection_keys, get_storage_variable_keys(results; variable_keys = variable_keys))
     end
 
-    parameter_keys = get_generation_parameter_keys(results; keys = parameter_keys)
+    parameter_keys = get_generation_parameter_keys(results; parameter_keys = parameter_keys)
 
     variables = PSI.read_variables_with_keys(
         results,
@@ -248,8 +248,8 @@ function get_load_data(results::R; kwargs...) where {R <: PSI.PSIResults}
     variable_keys = get(kwargs, :variable_keys, PSI.list_variable_keys(results))
     parameter_keys = get(kwargs, :parameter_keys, PSI.list_parameter_keys(results))
 
-    variable_keys = get_load_variable_keys(results; keys = variable_keys)
-    parameter_keys = get_load_parameter_keys(results; keys = parameter_keys)
+    variable_keys = get_load_variable_keys(results; variable_keys = variable_keys)
+    parameter_keys = get_load_parameter_keys(results; parameter_keys = parameter_keys)
 
     variables = PSI.read_variables_with_keys(
         results,
@@ -341,7 +341,7 @@ function get_service_data(results::R; kwargs...) where {R <: PSI.PSIResults}
     variable_keys = get(kwargs, :variable_keys, PSI.list_variable_keys(results))
     parameter_keys = get(kwargs, :parameter_keys, PSI.list_parameter_keys(results))
 
-    variable_keys = get_service_variable_keys(results; keys = variable_keys)
+    variable_keys = get_service_variable_keys(results; variable_keys = variable_keys)
 
     variables = PSI.read_variables_with_keys(
         results,
@@ -436,9 +436,12 @@ function categorize_data(
             category_dataframes["Curtailment"] = hcat(dfs...)
         end
     end
-    for (slack, slack_name) in SLACKVARS
-        if slacks && haskey(data, slack)
-            category_dataframes[slack_name] = data[slack]
+    if slacks
+        for (slack, slack_name) in BALANCE_SLACKVARS
+            for id in findall(x->occursin(string(slack), x), string.(keys(data)))
+                slack_key = collect(keys(data))[id]
+                category_dataframes[slack_name] = data[slack_key]
+            end
         end
     end
 
