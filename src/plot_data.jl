@@ -184,18 +184,15 @@ function _filter_curtailment!(
             PSI.get_component_type(curtailment.variable),
             "Curtailment",
         )
-        if !haskey(variable_values, curtailment_var_key)
-            variable_values[curtailment_var_key] = parameter_values[curtailment.parameter]
+
+        curt =
+            parameter_values[curtailment.parameter] .-
+            variable_values[curtailment.variable]
+        if haskey(variable_values, curtailment_var_key)
+            variable_values[curtailment_var_key] =
+                hcat(variable_values[curtailment_var_key], no_datetime(curt))
         else
-            curt =
-                parameter_values[curtailment.parameter] .-
-                variable_values[curtailment.variable]
-            if haskey(variable_values, curtailment_var_key)
-                variable_values[curtailment_var_key] =
-                    hcat(variable_values[curtailment_var_key], no_datetime(curt))
-            else
-                variable_values[curtailment_var_key] = curt
-            end
+            variable_values[curtailment_var_key] = curt
         end
     end
 end
