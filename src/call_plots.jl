@@ -110,7 +110,7 @@ function plot_demand!(p, result::Union{IS.Results, PSY.System}; kwargs...)
     y_label = get(
         kwargs,
         :y_label,
-        _make_ylabel(get_base_power(result), variable = "Demand", time = bar ? "h" : ""),
+        bar ? "MWh" : "MW",
     )
 
     load = get_load_data(result; kwargs...)
@@ -416,7 +416,7 @@ function plot_fuel!(p, result::IS.Results; kwargs...)
     y_label = get(
         kwargs,
         :y_label,
-        _make_ylabel(get_base_power(result), variable = "", time = bar ? "h" : ""),
+        bar ? "MWh" : "MW",
     )
 
     seriescolor = get(kwargs, :seriescolor, match_fuel_colors(fuel_agg, backend))
