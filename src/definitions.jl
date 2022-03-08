@@ -71,12 +71,16 @@ SUPPORTED_LOAD_VARIABLES = [PSI.ActivePowerVariable]
 SUPPORTED_STORAGE_VARIABLES = [PSI.ActivePowerInVariable, PSI.ActivePowerOutVariable]
 SUPPORTED_SERVICE_VARIABLES = [PSI.ActivePowerReserveVariable]
 
-# TODO: address slacks with new keys
 SUPPORTED_OVERGENERATION_VARIABLE = PSI.SystemBalanceSlackUp
 SUPPORTED_UNSERVEDENERGY_VARIABLES = PSI.SystemBalanceSlackDown
 BALANCE_SLACKVARS = Dict(
     SUPPORTED_OVERGENERATION_VARIABLE => "Over Generation",
     SUPPORTED_UNSERVEDENERGY_VARIABLES => "Unserved Energy",
+)
+
+LOAD_RENAMING = Dict(
+    :ActivePowerTimeSeriesParameter__PowerLoad => :Load,
+    :ActivePowerVariable__PowerLoad => :Dispatchable_Load,
 )
 
 GENERATOR_MAPPING_FILE = joinpath(

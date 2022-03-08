@@ -10,7 +10,35 @@ function PGData(
     time::Union{StepRange{Dates.DateTime}, Vector{Dates.DateTime}},
 )
     d = Dict(zip(Symbol.(PSI.encode_keys_as_strings(keys(data))), values(data)))
+
+    rename_load!(d)
     return PGData(d, time)
+end
+
+function PGData(
+    data::Dict{String, DataFrames.DataFrame},
+    time::Union{StepRange{Dates.DateTime}, Vector{Dates.DateTime}},
+)
+    d = Dict(zip(Symbol.(keys(data))), values(data))
+
+    rename_load!(d)
+    return PGData(d, time)
+end
+
+function PGData(data::Dict{String, DataFrames.DataFrame})
+    d = Dict(zip(Symbol.(keys(data)), no_datetime.(values(data))))
+    return PGData(d, first(values(data)).DateTime)
+end
+
+# Rename Load variables: TODO: find a better way to do this
+function rename_load!(load_values::Dict)
+    for (k, v) in load_values
+        if haskey(LOAD_RENAMING, k)
+            @debug "renaming" k => LOAD_RENAMING[k]
+            load_values[LOAD_RENAMING[k]] = v
+            pop!(load_values, k)
+        end
+    end
 end
 
 #### Generation Names ####
@@ -427,13 +455,15 @@ function categorize_data(
                 )
             end
         end
-        category_dataframes[string(category)] = category_df
+        if !isempty(category_df)
+            category_dataframes[string(category)] = category_df
+        end
     end
     if curtailment
         dfs = []
         for (key, val) in data
             if endswith(string(key), "Curtailment")
-                push!(dfs, val)
+                push!(dfs, no_datetime(val))
             end
         end
         if !isempty(dfs)

@@ -5,10 +5,12 @@ module PowerGraphics
 export plot_demand
 export plot_dataframe
 export plot_pgdata
+export plot_results
 export plot_fuel
 export plot_demand!
 export plot_dataframe!
 export plot_pgdata!
+export plot_results!
 export plot_fuel!
 export make_fuel_dictionary
 export report
