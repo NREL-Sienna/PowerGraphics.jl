@@ -251,13 +251,13 @@ function get_generation_data(results::IS.Results; kwargs...)
     variables = PSI.read_variables_with_keys(
         results,
         injection_keys;
-        initial_time = initial_time,
+        start_time = initial_time,
         len = len,
     )
     parameters = PSI.read_parameters_with_keys(
         results,
         parameter_keys;
-        initial_time = initial_time,
+        start_time = initial_time,
         len = len,
     )
 
@@ -269,7 +269,7 @@ function get_generation_data(results::IS.Results; kwargs...)
     end
 
     timestamps =
-        PSI.get_realized_timestamps(results; initial_time = initial_time, len = len)
+        PSI.get_realized_timestamps(results; start_time = initial_time, len = len)
     return PGData(variables, timestamps)
 end
 
@@ -285,20 +285,20 @@ function get_load_data(results::IS.Results; kwargs...)
     variables = PSI.read_variables_with_keys(
         results,
         variable_keys;
-        initial_time = initial_time,
+        start_time = initial_time,
         len = len,
     )
     parameters = PSI.read_parameters_with_keys(
         results,
         parameter_keys;
-        initial_time = initial_time,
+        start_time = initial_time,
         len = len,
     )
 
     add_fixed_parameters!(variables, parameters)
 
     timestamps =
-        PSI.get_realized_timestamps(results; initial_time = initial_time, len = len)
+        PSI.get_realized_timestamps(results; start_time = initial_time, len = len)
     return PGData(variables, timestamps)
 end
 
@@ -377,12 +377,12 @@ function get_service_data(results::IS.Results; kwargs...)
     variables = PSI.read_variables_with_keys(
         results,
         variable_keys;
-        initial_time = initial_time,
+        start_time = initial_time,
         len = len,
     )
 
     timestamps =
-        PSI.get_realized_timestamps(results; initial_time = initial_time, len = len)
+        PSI.get_realized_timestamps(results; start_time = initial_time, len = len)
 
     return PGData(variables, timestamps)
 end
