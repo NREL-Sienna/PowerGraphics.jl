@@ -226,8 +226,8 @@ function _filter_curtailment!(
     end
 end
 
-function get_generation_data(results::IS.Results; kwargs...)
-    initial_time = get(kwargs, :initial_time, nothing)
+function get_generation_data(results::R; kwargs...) where {R <: PSI.PSIResults}
+    initial_time = get(kwargs, :initial_time, get(kwargs, :start_time, nothing))
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     variable_keys = get(kwargs, :variable_keys, PSI.list_variable_keys(results))
     parameter_keys = get(kwargs, :parameter_keys, PSI.list_parameter_keys(results))
@@ -273,8 +273,8 @@ function get_generation_data(results::IS.Results; kwargs...)
     return PGData(variables, timestamps)
 end
 
-function get_load_data(results::IS.Results; kwargs...)
-    initial_time = get(kwargs, :initial_time, nothing)
+function get_load_data(results::R; kwargs...) where {R <: PSI.PSIResults}
+    initial_time = get(kwargs, :initial_time, get(kwargs, :start_time, nothing))
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     variable_keys = get(kwargs, :variable_keys, PSI.list_variable_keys(results))
     parameter_keys = get(kwargs, :parameter_keys, PSI.list_parameter_keys(results))
@@ -366,8 +366,8 @@ function get_load_data(
     return PGData(parameters, time_range)
 end
 
-function get_service_data(results::IS.Results; kwargs...)
-    initial_time = get(kwargs, :initial_time, nothing)
+function get_service_data(results::R; kwargs...) where {R <: PSI.PSIResults}
+    initial_time = get(kwargs, :initial_time, get(kwargs, :start_time, nothing))
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     variable_keys = get(kwargs, :variable_keys, PSI.list_variable_keys(results))
     #parameter_keys = get(kwargs, :parameter_keys, PSI.list_parameter_keys(results))

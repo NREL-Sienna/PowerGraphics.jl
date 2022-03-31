@@ -74,7 +74,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
                 set_display = set_display,
                 stack = true,
             ),
-            PG.no_datetime(load_uc.data[:ActivePowerTimeSeriesParameter__PowerLoad]) .* -1,
+            PG.no_datetime(load_uc.data[:Load]) .* -1,
             gen_uc.time,
             set_display = set_display,
             title = "df_gen_load",

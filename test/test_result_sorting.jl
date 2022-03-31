@@ -27,7 +27,7 @@ problem_results = run_test_prob()
     @test length(load.data) == 1
     @test length(load.time) == 48
     @test !any(
-        Matrix(PG.no_datetime(load.data[:ActivePowerTimeSeriesParameter__PowerLoad])) .<
+        Matrix(PG.no_datetime(load.data[:Load])) .<
         0.0,
     )
 
@@ -42,7 +42,7 @@ problem_results = run_test_prob()
     @test length(load.data) == 1
     @test length(load.time) == 3
     @test !any(
-        Matrix(PG.no_datetime(load.data[:ActivePowerTimeSeriesParameter__PowerLoad])) .<
+        Matrix(PG.no_datetime(load.data[:Load])) .<
         0.0,
     )
 
@@ -90,7 +90,7 @@ end
     @test isempty(
         symdiff(
             keys(cat),
-            ["Coal", "Wind", "Hydropower", "NG-CC", "NG-CT", "Storage", "PV"],
+            ["Coal", "Wind", "Hydropower", "NG-CC", "NG-CT", "Storage", "PV", "Load"],
         ),
     )
 

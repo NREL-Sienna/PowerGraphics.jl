@@ -167,9 +167,9 @@ function run_test_sim(result_dir::String)
     end
 
     results = SimulationResults(sim)
-    results_uc = get_problem_results(results, "UC")
+    results_uc = get_decision_problem_results(results, "UC")
     set_system!(results_uc, c_sys5_hy_uc)
-    results_ed = get_problem_results(results, "ED")
+    results_ed = get_decision_problem_results(results, "ED")
     set_system!(results_ed, c_sys5_hy_ed)
 
     return results_uc, results_ed
