@@ -1,14 +1,3 @@
-struct PlotList # TODO: Is PlotList needed?
-    plots::Dict
-end
-function PlotList()
-    PlotList(Dict())
-end
-
-Base.show(io::IO, mm::MIME"text/html", p::PlotList) =
-    show(io, mm, "$(Plots.backend()) with $(length(p.plots)) plots, named $(keys(p.plots))")
-Base.show(io::IO, mm::MIME"text/plain", p::PlotList) =
-    show(io, mm, "$(Plots.backend()) with $(length(p.plots)) plots, named $(keys(p.plots))")
 
 # the fundamental struct for plotting
 struct PGData
@@ -16,291 +5,298 @@ struct PGData
     time::Union{StepRange{Dates.DateTime}, Vector{Dates.DateTime}}
 end
 
+function PGData(
+    data::Dict{PSI.OptimizationContainerKey, DataFrames.DataFrame},
+    time::Union{StepRange{Dates.DateTime}, Vector{Dates.DateTime}},
+)
+    d = Dict(zip(Symbol.(PSI.encode_keys_as_strings(keys(data))), values(data)))
+
+    rename_load!(d)
+    return PGData(d, time)
+end
+
+function PGData(
+    data::Dict{String, DataFrames.DataFrame},
+    time::Union{StepRange{Dates.DateTime}, Vector{Dates.DateTime}},
+)
+    d = Dict(zip(Symbol.(keys(data))), values(data))
+
+    rename_load!(d)
+    return PGData(d, time)
+end
+
+function PGData(data::Dict{String, DataFrames.DataFrame})
+    d = Dict(zip(Symbol.(keys(data)), no_datetime.(values(data))))
+    return PGData(d, first(values(data)).DateTime)
+end
+
+# Rename Load variables: TODO: find a better way to do this
+function rename_load!(load_values::Dict)
+    for (k, v) in load_values
+        if haskey(LOAD_RENAMING, k)
+            @debug "renaming" k => LOAD_RENAMING[k]
+            load_values[LOAD_RENAMING[k]] = v
+            pop!(load_values, k)
+        end
+    end
+end
+
 #### Generation Names ####
-function get_generation_variable_names(
+function get_generation_variable_keys(
     results::IS.Results;
-    names::Union{Nothing, Vector{Symbol}} = nothing,
-)
-    existing_names = PSI.get_existing_variables(results)
-    names = isnothing(names) ? existing_names : [n for n in names if n ∈ existing_names]
-    filter_names = Vector{Symbol}()
-    for name in names
-        name_string = string(name)
-        if any(startswith.(name_string, SUPPORTEDVARPREFIX))
-            if any(endswith.(name_string, all_subtypes(PSY.Generator)))
-                push!(filter_names, name)
-            end
-        elseif any(name .== keys(SLACKVARS))
-            push!(filter_names, name)
+    variable_keys::Vector{T} = PSI.list_variable_keys(results),
+) where {T <: PSI.OptimizationContainerKey}
+    # TODO: add slacks
+    filter_keys = Vector{PSI.OptimizationContainerKey}()
+    for k in variable_keys
+        if (
+            PSI.get_component_type(k) <: PSY.Generator &&
+            PSI.get_entry_type(k) == PSI.ActivePowerVariable
+        ) || PSI.get_entry_type(k) ∈ keys(BALANCE_SLACKVARS)
+            push!(filter_keys, k)
         end
     end
-    return filter_names
+
+    return filter_keys
 end
 
-function get_storage_variable_names(
+function get_storage_variable_keys(
     results::IS.Results;
-    names::Union{Nothing, Vector{Symbol}} = nothing,
-)
-    existing_names = PSI.get_existing_variables(results)
-    names = isnothing(names) ? existing_names : [n for n in names if n ∈ existing_names]
-    filter_names = Vector{Symbol}()
-    for name in names
-        name_string = string(name)
-        if any(startswith.(name_string, SUPPORTEDVARPREFIX))
-            if any(endswith.(name_string, all_subtypes(PSY.Storage)))
-                push!(filter_names, name)
-            end
+    variable_keys::Vector{T} = PSI.list_variable_keys(results),
+) where {T <: PSI.OptimizationContainerKey}
+    filter_keys = Vector{PSI.OptimizationContainerKey}()
+    for k in variable_keys
+        if PSI.get_component_type(k) <: PSY.Storage &&
+           PSI.get_entry_type(k) ∈ SUPPORTED_STORAGE_VARIABLES
+            push!(filter_keys, k)
         end
     end
-    return filter_names
+    return filter_keys
 end
 
-function get_generation_parameter_names(
+function get_generation_parameter_keys(
     results::IS.Results;
-    names::Union{Nothing, Vector{Symbol}} = nothing,
-)
-    existing_names = PSI.get_existing_parameters(results)
-    names = isnothing(names) ? existing_names : [n for n in names if n ∈ existing_names]
-    filter_names = Vector{Symbol}()
-    for name in names
-        name_string = string(name)
-        if any(startswith.(name_string, SUPPORTEDPARAMPREFIX))
-            if any(occursin.(all_subtypes(PSY.Generator), name_string))
-                push!(filter_names, name)
-            end
+    parameter_keys::Vector{T} = PSI.list_parameter_keys(results),
+) where {T <: PSI.OptimizationContainerKey}
+    filter_keys = Vector{PSI.OptimizationContainerKey}()
+    for k in parameter_keys
+        if PSI.get_component_type(k) <: PSY.Generator &&
+           PSI.get_entry_type(k) == PSI.ActivePowerTimeSeriesParameter
+            push!(filter_keys, k)
         end
     end
-    return filter_names
+
+    return filter_keys
 end
 
 #### Load Names ####
-function get_load_variable_names(
+function get_load_variable_keys(
     results::IS.Results;
-    names::Union{Nothing, Vector{Symbol}} = nothing,
-)
-    existing_names = PSI.get_existing_variables(results)
-    names = isnothing(names) ? existing_names : [n for n in names if n ∈ existing_names]
-    filter_names = Vector{Symbol}()
-    for name in names
-        name_string = string(name)
-        if any(startswith.(name_string, SUPPORTEDVARPREFIX))
-            if any(occursin.(SUPPORTEDLOADPARAMS, name_string))
-                push!(filter_names, name)
-            end
+    variable_keys::Vector{T} = PSI.list_variable_keys(results),
+) where {T <: PSI.OptimizationContainerKey}
+    filter_keys = Vector{PSI.OptimizationContainerKey}()
+    for k in variable_keys
+        if PSI.get_component_type(k) <: PSY.ElectricLoad &&
+           PSI.get_entry_type(k) ∈ SUPPORTED_LOAD_VARIABLES
+            push!(filter_keys, k)
         end
     end
-    return filter_names
+    return filter_keys
 end
 
-function get_load_parameter_names(
+function get_load_parameter_keys(
     results::IS.Results;
-    names::Union{Nothing, Vector{Symbol}} = nothing,
-)
-    existing_names = PSI.get_existing_parameters(results)
-    names = isnothing(names) ? existing_names : [n for n in names if n ∈ existing_names]
-    filter_names = Vector{Symbol}()
-    for name in names
-        name_string = string(name)
-        if any(startswith.(name_string, SUPPORTEDPARAMPREFIX))
-            if any(occursin.(SUPPORTEDLOADPARAMS, name_string))
-                push!(filter_names, name)
-            end
+    parameter_keys::Vector{T} = PSI.list_parameter_keys(results),
+) where {T <: PSI.OptimizationContainerKey}
+    filter_keys = Vector{PSI.OptimizationContainerKey}()
+    for k in parameter_keys
+        if PSI.get_component_type(k) <: PSY.ElectricLoad &&
+           PSI.get_entry_type(k) == PSI.ActivePowerTimeSeriesParameter
+            push!(filter_keys, k)
         end
     end
-    return filter_names
+
+    return filter_keys
 end
 
 #### Service Names ####
-function get_service_variable_names(
+function get_service_variable_keys(
     results::IS.Results;
-    names::Union{Nothing, Vector{Symbol}} = nothing,
-)
-    existing_names = PSI.get_existing_variables(results)
-    names = isnothing(names) ? existing_names : [n for n in names if n ∈ existing_names]
-    filter_names = Vector{Symbol}()
-    for name in names
-        name_string = string(name)
-        if any(endswith.(name_string, SUPPORTEDSERVICEPARAMS))
-            push!(filter_names, name)
+    variable_keys::Vector{T} = PSI.list_variable_keys(results),
+) where {T <: PSI.OptimizationContainerKey}
+    filter_keys = Vector{PSI.OptimizationContainerKey}()
+    for k in variable_keys
+        if PSI.get_component_type(k) <: PSY.Service &&
+           PSI.get_entry_type(k) ∈ SUPPORTED_SERVICE_VARIABLES
+            push!(filter_keys, k)
         end
     end
-    return filter_names
+    return filter_keys
 end
 
 function get_service_parameter_names(
     results::IS.Results;
-    names::Union{Nothing, Vector{Symbol}} = nothing,
-)
-    existing_names = PSI.get_existing_parameters(results)
-    names = isnothing(names) ? existing_names : [n for n in names if n ∈ existing_names]
-    filter_names = Vector{Symbol}()
-    for name in names
-        name_string = string(name)
-        if any(endswith.(name_string, SUPPORTEDSERVICEPARAMS))
-            push!(filter_names, name)
+    parameter_keys::Vector{T} = PSI.list_parameter_keys(results),
+) where {T <: PSI.OptimizationContainerKey}
+    filter_keys = Vector{PSI.OptimizationContainerKey}()
+    for k in parameter_keys
+        if PSI.get_component_type(k) <: PSY.ElectricLoad &&
+           PSI.get_entry_type(k) == PSI.RequirementTimeSeriesParameter
+            push!(filter_keys, k)
         end
     end
-    return filter_names
-end
 
-#### get data ###
-
-function _get_matching_param(var_name)
-    param_name = Symbol(
-        join([SUPPORTEDPARAMPREFIX, split(string(var_name), PSI_NAME_DELIMITER)[end]]),
-    )
-    return param_name
-end
-
-function _get_matching_var(param_name)
-    var_name = Symbol(
-        join(
-            [
-                s for s in
-                vcat(split.(split(string(param_name), "max_active_power"), "_")...) if
-                !isempty(s)
-            ],
-            PSI_NAME_DELIMITER,
-        ),
-    )
-    return var_name
+    return filter_keys
 end
 
 no_datetime(df::DataFrames.DataFrame) = df[:, propertynames(df) .!== :DateTime]
 
 function add_fixed_parameters!(
-    variables::Dict{Symbol, DataFrames.DataFrame},
-    parameters::Dict{Symbol, DataFrames.DataFrame},
-)
+    variables::Dict{V, DataFrames.DataFrame},
+    parameters::Dict{P, DataFrames.DataFrame},
+) where {V <: PSI.OptimizationContainerKey, P <: PSI.OptimizationContainerKey}
     # fixed output should be added to plots when there exists a parameter of the form
     # :P__max_active_power__* but there is no corresponding :P__* variable
-    for (param_name, param) in parameters
-        var_name = _get_matching_var(param_name)
-        if !haskey(variables, var_name)
-            mult = any(occursin.(NEGATIVE_PARAMETERS, string(param_name))) ? -1.0 : 1.0
-            variables[var_name] = param
-            variables[var_name][:, propertynames(param) .!== :DateTime] .*= mult
+    for (param_key, param) in parameters
+        PSI.get_component_type(param_key) ∈ PSI.get_component_type.(keys(variables)) &&
+            continue
+        if !haskey(variables, param_key)
+            mult = PSI.get_component_type(param_key) ∈ NEGATIVE_PARAMETERS ? -1.0 : 1.0
+            variables[param_key] = param
+            variables[param_key][:, propertynames(param) .!== :DateTime] .*= mult
         end
     end
 end
 
 # finds the parameters corresponding to variables for curtailment calculations
-function _curtailment_parameters(parameters::Vector{Symbol}, variables::Vector{Symbol})
-    curtailment_parameters =
-        Vector{NamedTuple{(:parameter, :variable), Tuple{Symbol, Symbol}}}()
-    for var in variables
-        if any(
-            length.(
-                collect.(eachmatch.(Regex(CURTAILMENTPARAMSUFFIX), string.(parameters))),
-            ) .> 1,
-        )
-            prefix = CURTAILMENTPARAMPREFIX
-        else
-            prefix = SUPPORTEDPARAMPREFIX
-        end
-        var_param = Symbol(
-            join([prefix, split(string(var), "_")[end], CURTAILMENTPARAMSUFFIX], "_"),
-        )
-        if var_param in parameters
-            push!(curtailment_parameters, (parameter = var_param, variable = var))
+function _curtailment_parameters(
+    parameter_keys::Vector{PSI.OptimizationContainerKey},
+    variable_keys::Vector{PSI.OptimizationContainerKey},
+)
+    curtailable_parameters = parameter_keys[findall(
+        in(SUPPORTED_CURTAILMENT_PARAMETERS),
+        PSI.get_entry_type.(parameter_keys),
+    )]
+    curtailable_variables = variable_keys[findall(
+        in(SUPPORTED_CURTAILMENT_VARIABLES),
+        PSI.get_entry_type.(variable_keys),
+    )]
+
+    curtailment_parameters = Vector{
+        NamedTuple{
+            (:parameter, :variable),
+            Tuple{PSI.OptimizationContainerKey, PSI.OptimizationContainerKey},
+        },
+    }()
+    for pk in curtailable_parameters
+        for cv in curtailable_variables[PSI.get_component_type.(
+            curtailable_variables,
+        ) .== PSI.get_component_type(pk)]
+            push!(curtailment_parameters, (parameter = pk, variable = cv))
         end
     end
-    return curtailment_parameters
+    return unique(curtailment_parameters)
 end
 
 function _filter_curtailment!(
     variable_values::Dict,
     parameter_values::Dict,
     curtailment_parameters::Vector{
-        NamedTuple{(:parameter, :variable), Tuple{Symbol, Symbol}},
+        NamedTuple{
+            (:parameter, :variable),
+            Tuple{PSI.OptimizationContainerKey, PSI.OptimizationContainerKey},
+        },
     },
 )
     for curtailment in curtailment_parameters
-        if !haskey(variable_values, curtailment.variable)
-            variable_values[curtailment.variable] = parameter_values[curtailment.parameter]
+        curtailment_var_key = PSI.VariableKey(
+            PSI.get_entry_type(curtailment.variable),
+            PSI.get_component_type(curtailment.variable),
+            "Curtailment",
+        )
+
+        curt =
+            parameter_values[curtailment.parameter] .- variable_values[curtailment.variable]
+        if haskey(variable_values, curtailment_var_key)
+            variable_values[curtailment_var_key] =
+                hcat(variable_values[curtailment_var_key], no_datetime(curt))
         else
-            curt =
-                parameter_values[curtailment.parameter] .-
-                variable_values[curtailment.variable]
-            if haskey(variable_values, :Curtailment)
-                variable_values[:Curtailment] =
-                    hcat(variable_values[:Curtailment], no_datetime(curt))
-            else
-                variable_values[:Curtailment] = curt
-            end
+            variable_values[curtailment_var_key] = curt
         end
     end
 end
 
-function get_generation_data(results::R; kwargs...) where {R <: PSI.PSIResults}
-    initial_time = get(kwargs, :initial_time, nothing)
+function get_generation_data(results::R; kwargs...) where {R <: IS.Results}
+    initial_time = get(kwargs, :initial_time, get(kwargs, :start_time, nothing))
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
-    names = get(kwargs, :names, nothing)
+    variable_keys = get(kwargs, :variable_keys, PSI.list_variable_keys(results))
+    parameter_keys = get(kwargs, :parameter_keys, PSI.list_parameter_keys(results))
     curtailment = get(kwargs, :curtailment, true)
     storage = get(kwargs, :storage, true)
 
-    if curtailment && !isnothing(names)
-        @warn "Cannot guarantee curtailment calculations with specified names"
+    if curtailment && (haskey(kwargs, :variable_keys) || haskey(kwargs, :parameter_keys))
+        @warn "Cannot guarantee curtailment calculations with specified keys"
     end
 
-    var_names = get_generation_variable_names(results; names = names)
-
+    injection_keys = get_generation_variable_keys(results; variable_keys = variable_keys)
     if storage
-        var_names = vcat(var_names, get_storage_variable_names(results; names))
+        injection_keys = vcat(
+            injection_keys,
+            get_storage_variable_keys(results; variable_keys = variable_keys),
+        )
     end
 
-    param_names = get_generation_parameter_names(results; names = names)
+    parameter_keys = get_generation_parameter_keys(results; parameter_keys = parameter_keys)
 
-    variables = PSI.read_realized_variables(
-        results;
-        names = var_names,
-        initial_time = initial_time,
+    variables = PSI.read_variables_with_keys(
+        results,
+        injection_keys;
+        start_time = initial_time,
         len = len,
     )
-    parameters = PSI.read_realized_parameters(
-        results;
-        names = param_names,
-        initial_time = initial_time,
+    parameters = PSI.read_parameters_with_keys(
+        results,
+        parameter_keys;
+        start_time = initial_time,
         len = len,
     )
 
     add_fixed_parameters!(variables, parameters)
 
     if curtailment
-        curtailment_parameters = _curtailment_parameters(param_names, var_names)
+        curtailment_parameters = _curtailment_parameters(parameter_keys, injection_keys)
         _filter_curtailment!(variables, parameters, curtailment_parameters)
     end
 
-    timestamps =
-        PSI.get_realized_timestamps(results; initial_time = initial_time, len = len)
+    timestamps = PSI.get_realized_timestamps(results; start_time = initial_time, len = len)
     return PGData(variables, timestamps)
 end
 
-function get_load_data(results::R; kwargs...) where {R <: PSI.PSIResults}
-    initial_time = get(kwargs, :initial_time, nothing)
+function get_load_data(results::R; kwargs...) where {R <: IS.Results}
+    initial_time = get(kwargs, :initial_time, get(kwargs, :start_time, nothing))
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
-    names = get(kwargs, :names, nothing)
+    variable_keys = get(kwargs, :variable_keys, PSI.list_variable_keys(results))
+    parameter_keys = get(kwargs, :parameter_keys, PSI.list_parameter_keys(results))
 
-    var_names = get_load_variable_names(results; names = names)
-    param_names = get_load_parameter_names(results; names = names)
+    variable_keys = get_load_variable_keys(results; variable_keys = variable_keys)
+    parameter_keys = get_load_parameter_keys(results; parameter_keys = parameter_keys)
 
-    variables = PSI.read_realized_variables(
-        results;
-        names = var_names,
-        initial_time = initial_time,
+    variables = PSI.read_variables_with_keys(
+        results,
+        variable_keys;
+        start_time = initial_time,
         len = len,
     )
-    parameters = PSI.read_realized_parameters(
-        results;
-        names = param_names,
-        initial_time = initial_time,
+    parameters = PSI.read_parameters_with_keys(
+        results,
+        parameter_keys;
+        start_time = initial_time,
         len = len,
     )
 
     add_fixed_parameters!(variables, parameters)
 
-    timestamps =
-        PSI.get_realized_timestamps(results; initial_time = initial_time, len = len)
+    timestamps = PSI.get_realized_timestamps(results; start_time = initial_time, len = len)
     return PGData(variables, timestamps)
 end
 
@@ -368,21 +364,22 @@ function get_load_data(
     return PGData(parameters, time_range)
 end
 
-function get_service_data(results::R; kwargs...) where {R <: PSI.PSIResults}
-    initial_time = get(kwargs, :initial_time, nothing)
+function get_service_data(results::R; kwargs...) where {R <: IS.Results}
+    initial_time = get(kwargs, :initial_time, get(kwargs, :start_time, nothing))
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
-    names = get(kwargs, :names, nothing)
+    variable_keys = get(kwargs, :variable_keys, PSI.list_variable_keys(results))
+    #parameter_keys = get(kwargs, :parameter_keys, PSI.list_parameter_keys(results))
 
-    var_names = get_service_variable_names(results; names = names)
+    variable_keys = get_service_variable_keys(results; variable_keys = variable_keys)
 
-    variables = PSI.read_realized_variables(
-        results;
-        names = var_names,
-        initial_time = initial_time,
+    variables = PSI.read_variables_with_keys(
+        results,
+        variable_keys;
+        start_time = initial_time,
         len = len,
     )
-    timestamps =
-        PSI.get_realized_timestamps(results; initial_time = initial_time, len = len)
+
+    timestamps = PSI.get_realized_timestamps(results; start_time = initial_time, len = len)
 
     return PGData(variables, timestamps)
 end
@@ -428,7 +425,7 @@ Re-categorizes data according to an aggregation dictionary
 
 ```julia
 aggregation = PG.make_fuel_dictionary(results_uc.system)
-PG.categorize_data(gen_uc.data, aggregation)
+categorize_data(gen_uc.data, aggregation)
 ```
 
 """
@@ -455,14 +452,27 @@ function categorize_data(
                 )
             end
         end
-        category_dataframes[string(category)] = category_df
+        if !isempty(category_df)
+            category_dataframes[string(category)] = category_df
+        end
     end
-    if curtailment && haskey(data, :Curtailment)
-        category_dataframes["Curtailment"] = data[:Curtailment]
+    if curtailment
+        dfs = []
+        for (key, val) in data
+            if endswith(string(key), "Curtailment")
+                push!(dfs, no_datetime(val))
+            end
+        end
+        if !isempty(dfs)
+            category_dataframes["Curtailment"] = hcat(dfs...)
+        end
     end
-    for (slack, slack_name) in SLACKVARS
-        if slacks && haskey(data, slack)
-            category_dataframes[slack_name] = data[slack]
+    if slacks
+        for (slack, slack_name) in BALANCE_SLACKVARS
+            for id in findall(x -> occursin(string(slack), x), string.(keys(data)))
+                slack_key = collect(keys(data))[id]
+                category_dataframes[slack_name] = data[slack_key]
+            end
         end
     end
 

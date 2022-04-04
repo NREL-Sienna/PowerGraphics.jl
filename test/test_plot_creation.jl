@@ -28,14 +28,14 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         out_path = joinpath(file_path, backend_pkg * "_plots")
         !isdir(out_path) && mkdir(out_path)
         plot_dataframe(
-            gen_uc.data[:P__RenewableDispatch],
+            gen_uc.data[:ActivePowerVariable__RenewableDispatch],
             gen_uc.time;
             set_display = set_display,
             title = "df_line",
             save = out_path,
         )
         plot_dataframe(
-            gen_uc.data[:P__ThermalStandard],
+            gen_uc.data[:ActivePowerVariable__ThermalStandard],
             gen_uc.time,
             set_display = set_display,
             title = "df_stack",
@@ -43,7 +43,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             stack = true,
         )
         plot_dataframe(
-            gen_uc.data[:P__ThermalStandard],
+            gen_uc.data[:ActivePowerVariable__ThermalStandard],
             gen_uc.time,
             set_display = set_display,
             title = "df_stair",
@@ -51,7 +51,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             stair = true,
         )
         plot_dataframe(
-            gen_uc.data[:P__ThermalStandard],
+            gen_uc.data[:ActivePowerVariable__ThermalStandard],
             gen_uc.time,
             set_display = set_display,
             title = "df_bar",
@@ -59,7 +59,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             bar = true,
         )
         plot_dataframe(
-            gen_uc.data[:P__ThermalStandard],
+            gen_uc.data[:ActivePowerVariable__ThermalStandard],
             gen_uc.time,
             set_display = set_display,
             title = "df_bar_stack",
@@ -69,12 +69,12 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         )
         plot_dataframe!(
             plot_dataframe(
-                gen_uc.data[:P__ThermalStandard],
+                gen_uc.data[:ActivePowerVariable__ThermalStandard],
                 gen_uc.time,
                 set_display = set_display,
                 stack = true,
             ),
-            PG.no_datetime(load_uc.data[:P__PowerLoad]) .* -1,
+            PG.no_datetime(load_uc.data[:Load]) .* -1,
             gen_uc.time,
             set_display = set_display,
             title = "df_gen_load",

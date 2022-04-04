@@ -3,15 +3,19 @@ problem_results = run_test_prob()
 
 @testset "test filter results" begin
     gen = PG.get_generation_data(results_uc, curtailment = false)
-    @test length(gen.data) == 4
+    @test length(gen.data) == 7
     @test length(gen.time) == 48
 
     gen = PG.get_generation_data(
         results_uc,
-        names = [
-            :P__ThermalStandard,
-            :P__RenewableDispatch,
-            :P__max_active_power__RenewableDispatch_max_active_power,
+        variable_keys = [
+            PowerSimulations.VariableKey{ActivePowerVariable, ThermalStandard}(""),
+            PowerSimulations.VariableKey{ActivePowerVariable, RenewableDispatch}(""),
+        ],
+        parameter_keys = [
+            PowerSimulations.ParameterKey{ActivePowerTimeSeriesParameter, RenewableDispatch}(
+                "",
+            ),
         ],
         initial_time = Dates.DateTime("2020-01-02T02:00:00"),
         len = 3,
@@ -22,24 +26,36 @@ problem_results = run_test_prob()
     load = PG.get_load_data(results_ed)
     @test length(load.data) == 1
     @test length(load.time) == 48
-    @test !any(Matrix(PG.no_datetime(load.data[:P__PowerLoad])) .< 0.0)
+    @test !any(Matrix(PG.no_datetime(load.data[:Load])) .< 0.0)
 
     load = PG.get_load_data(
         results_ed,
-        names = [:P__max_active_power__PowerLoad_max_active_power],
+        parameter_keys = [
+            PowerSimulations.ParameterKey{ActivePowerTimeSeriesParameter, PowerLoad}(""),
+        ],
         initial_time = Dates.DateTime("2020-01-02T02:00:00"),
         len = 3,
     )
     @test length(load.data) == 1
     @test length(load.time) == 3
-    @test !any(Matrix(PG.no_datetime(load.data[:P__PowerLoad])) .< 0.0)
+    @test !any(Matrix(PG.no_datetime(load.data[:Load])) .< 0.0)
 
     srv = PG.get_service_data(results_ed)
     @test length(srv.data) == 0
 
+    srv = PG.get_service_data(results_uc)
+    @test length(srv.data) == 1
+
     srv = PG.get_service_data(
         results_uc,
-        names = [:REG1__VariableReserve_ReserveUp],
+        variable_keys = [
+            PowerSimulations.VariableKey{
+                ActivePowerReserveVariable,
+                VariableReserve{ReserveUp},
+            }(
+                "REG1",
+            ),
+        ],
         initial_time = Dates.DateTime("2020-01-02T02:00:00"),
         len = 5,
     )
@@ -49,14 +65,14 @@ end
 
 @testset "test curtailment calculations" begin
     curtailment_params = PG._curtailment_parameters(
-        PG.get_generation_parameter_names(results_uc),
-        PG.get_generation_variable_names(results_uc),
+        PG.get_generation_parameter_keys(results_uc),
+        PG.get_generation_variable_keys(results_uc),
     )
     @test length(curtailment_params) == 1
 
     curtailment_params = PG._curtailment_parameters(
-        PG.get_generation_parameter_names(problem_results),
-        PG.get_generation_variable_names(problem_results),
+        PG.get_generation_parameter_keys(problem_results),
+        PG.get_generation_variable_keys(problem_results),
     )
     @test length(curtailment_params) == 1
 end
@@ -66,14 +82,17 @@ end
 
     cat = PG.make_fuel_dictionary(results_uc.system)
     @test isempty(
-        symdiff(keys(cat), ["Coal", "Wind", "Hydropower", "NG-CC", "NG-CT", "Storage"]),
+        symdiff(
+            keys(cat),
+            ["Coal", "Wind", "Hydropower", "NG-CC", "NG-CT", "Storage", "PV", "Load"],
+        ),
     )
 
-    fuel = PG.categorize_data(gen.data, cat)
-    @test length(fuel) == 7
+    fuel = categorize_data(gen.data, cat)
+    @test length(fuel) == 8
 
     fuel_agg = PG.combine_categories(fuel)
-    @test size(fuel_agg) == (48, 6)
+    @test size(fuel_agg) == (48, 8)
 end
 
 @testset "test html saving" begin

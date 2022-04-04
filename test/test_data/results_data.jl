@@ -15,6 +15,20 @@ function add_re!(sys)
     add_component!(sys, re)
     copy_time_series!(re, get_component(PowerLoad, sys, "bus2"))
 
+    fx = RenewableFix(
+        "RoofTopSolar",
+        true,
+        get_component(Bus, sys, "bus5"),
+        0.0,
+        0.0,
+        1.100,
+        PrimeMovers.PVe,
+        1.0,
+        10.0,
+    )
+    add_component!(sys, fx)
+    copy_time_series!(fx, get_component(PowerLoad, sys, "bus2"))
+
     for g in get_components(HydroEnergyReservoir, sys)
         tpc = get_operation_cost(g)
         smc = StorageManagementCost(
@@ -27,6 +41,24 @@ function add_re!(sys)
         )
         set_operation_cost!(g, smc)
     end
+
+    batt = GenericBattery(
+        "test_batt",
+        true,
+        get_component(Bus, sys, "bus4"),
+        PrimeMovers.BA,
+        0.0,
+        (min = 0.0, max = 1.0),
+        1.0,
+        0.0,
+        (min = 0.0, max = 1.0),
+        (min = 0.0, max = 1.0),
+        (in = 1.0, out = 1.0),
+        0.0,
+        nothing,
+        10.0,
+    )
+    add_component!(sys, batt)
 end
 
 function run_test_sim(result_dir::String)
@@ -56,8 +88,8 @@ function run_test_sim(result_dir::String)
         @info "Adding extra RE"
         add_re!(c_sys5_hy_uc)
         add_re!(c_sys5_hy_ed)
-        to_json(c_sys5_hy_uc, joinpath(sim_path, "..", "c_sys5_hy_uc.json"))
-        to_json(c_sys5_hy_ed, joinpath(sim_path, "..", "c_sys5_hy_ed.json"))
+        to_json(c_sys5_hy_uc, joinpath(sim_path, "..", "c_sys5_hy_uc.json"), force = true)
+        to_json(c_sys5_hy_ed, joinpath(sim_path, "..", "c_sys5_hy_ed.json"), force = true)
 
         mkpath(result_dir)
         GLPK_optimizer =
@@ -70,60 +102,63 @@ function run_test_sim(result_dir::String)
             HydroEnergyReservoir,
             HydroDispatchReservoirStorage,
         )
+        set_device_model!(template_hydro_st_uc, GenericBattery, BookKeeping)
 
-        template_hydro_st_ed = template_economic_dispatch()
+        template_hydro_st_ed = template_economic_dispatch(
+            network = CopperPlatePowerModel,
+            use_slacks = true,
+            duals = [CopperPlateBalanceConstraint],
+        )
         set_device_model!(template_hydro_st_ed, HydroDispatch, FixedOutput)
         set_device_model!(
             template_hydro_st_ed,
             HydroEnergyReservoir,
             HydroDispatchReservoirStorage,
         )
+        set_device_model!(template_hydro_st_ed, GenericBattery, BookKeeping)
         template_hydro_st_ed.services = Dict() #remove ed services
-
-        problems = SimulationProblems(
-            UC = OperationsProblem(
-                template_hydro_st_uc,
-                c_sys5_hy_uc,
-                optimizer = GLPK_optimizer,
-                system_to_file = false,
-            ),
-            ED = OperationsProblem(
-                template_hydro_st_ed,
-                c_sys5_hy_ed,
-                optimizer = GLPK_optimizer,
-                constraint_duals = [:CopperPlateBalance],
-                system_to_file = false,
-                balance_slack_variables = true,
-            ),
+        models = SimulationModels(
+            decision_models = [
+                DecisionModel(
+                    template_hydro_st_uc,
+                    c_sys5_hy_uc,
+                    optimizer = GLPK_optimizer,
+                    name = "UC",
+                    system_to_file = false,
+                ),
+                DecisionModel(
+                    template_hydro_st_ed,
+                    c_sys5_hy_ed,
+                    optimizer = GLPK_optimizer,
+                    name = "ED",
+                    system_to_file = false,
+                ),
+            ],
         )
 
         sequence = SimulationSequence(
-            problems = problems,
-            feedforward_chronologies = Dict(("UC" => "ED") => Synchronize(periods = 24)),
-            intervals = Dict(
-                "UC" => (Hour(24), Consecutive()),
-                "ED" => (Hour(1), Consecutive()),
-            ),
-            feedforward = Dict(
-                ("ED", :devices, :ThermalStandard) => SemiContinuousFF(
-                    binary_source_problem = PSI.ON,
-                    affected_variables = [PSI.ACTIVE_POWER],
-                ),
-                ("ED", :devices, :HydroEnergyReservoir) => IntegralLimitFF(
-                    variable_source_problem = PSI.ACTIVE_POWER,
-                    affected_variables = [PSI.ACTIVE_POWER],
-                ),
-            ),
-            cache = Dict(
-                ("UC",) => TimeStatusChange(PSY.ThermalStandard, PSI.ON),
-                ("UC", "ED") => StoredEnergy(PSY.HydroEnergyReservoir, PSI.ENERGY),
+            models = models,
+            feedforwards = feedforward = Dict(
+                "ED" => [
+                    SemiContinuousFeedforward(
+                        component_type = ThermalStandard,
+                        source = OnVariable,
+                        affected_values = [ActivePowerVariable],
+                    ),
+                    EnergyLimitFeedforward(
+                        component_type = HydroEnergyReservoir,
+                        source = ActivePowerVariable,
+                        affected_values = [ActivePowerVariable],
+                        number_of_periods = 12,
+                    ),
+                ],
             ),
             ini_cond_chronology = InterProblemChronology(),
         )
         sim = Simulation(
             name = "results_sim",
             steps = 2,
-            problems = problems,
+            models = models,
             sequence = sequence,
             simulation_folder = result_dir,
         )
@@ -132,9 +167,9 @@ function run_test_sim(result_dir::String)
     end
 
     results = SimulationResults(sim)
-    results_uc = get_problem_results(results, "UC")
+    results_uc = get_decision_problem_results(results, "UC")
     set_system!(results_uc, c_sys5_hy_uc)
-    results_ed = get_problem_results(results, "ED")
+    results_ed = get_decision_problem_results(results, "ED")
     set_system!(results_ed, c_sys5_hy_ed)
 
     return results_uc, results_ed
@@ -154,12 +189,11 @@ function run_test_prob()
         HydroDispatchReservoirStorage,
     )
 
-    prob = OperationsProblem(
+    prob = DecisionModel(
         template_hydro_st_uc,
         c_sys5_hy_uc,
         optimizer = GLPK_optimizer,
         horizon = 12,
-        use_parameters = true,
     )
     build!(prob, output_dir = mktempdir())
     solve!(prob)

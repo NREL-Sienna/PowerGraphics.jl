@@ -107,11 +107,7 @@ function plot_demand!(p, result::Union{IS.Results, PSY.System}; kwargs...)
     linestyle = get(kwargs, :linestyle, :solid)
 
     title = get(kwargs, :title, "Demand")
-    y_label = get(
-        kwargs,
-        :y_label,
-        _make_ylabel(get_base_power(result), variable = "Demand", time = bar ? "h" : ""),
-    )
+    y_label = get(kwargs, :y_label, bar ? "MWh" : "MW")
 
     load = get_load_data(result; kwargs...)
     load_agg = combine_categories(load.data)
@@ -166,7 +162,7 @@ If only the dataframe is provided, it must have a column of `DateTime` values.
 
 ```julia
 var_name = :P__ThermalStandard
-df = PSI.read_realized_variables(results, names = [var_name])[var_name]
+df = PSI.read_variables_with_keys(results, names = [var_name])[var_name]
 time_range = PSI.get_realized_timestamps(results)
 plot = plot_dataframe(df, time_range)
 ```
@@ -241,7 +237,7 @@ end
 ################################# Plotting PGData ##########################
 
 """
-    plot_pgdata(pgdata, time_range)
+    plot_pgdata(pgdata)
 
 This function makes a plot of a PGdata object
 
@@ -267,7 +263,7 @@ function plot_pgdata(pgdata::PGData; kwargs...)
 end
 
 """
-    plot_pgdata!(plot, pgdata, time_range)
+    plot_pgdata!(plot, pgdata)
 
 This function makes a plot of a PGdata object
 
@@ -319,6 +315,60 @@ function plot_pgdata!(p, pgdata::PGData; kwargs...)
         format = get(kwargs, :format, "png")
         save_plot(p, joinpath(save_fig, "$title.$format"), backend; kwargs...)
     end
+    return p
+end
+
+"""
+    plot_results(results)
+
+This function makes a plot of a results dictionary object
+
+# Arguments
+
+- `results::Dict{String, DataFrame`: The results to be plotted
+
+# Accepted Key Words
+- `combine_categories::Bool = false` : plot category values or each value in a category
+- `curtailment::Bool`: plot the curtailment with the variable
+- `set_display::Bool = true`: set to false to prevent the plots from displaying
+- `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "png"`: set a different format for saving a PlotlyJS plot
+- `seriescolor::Array`: Set different colors for the plots
+- `title::String = "Title"`: Set a title for the plots
+- `stack::Bool = true`: stack plot traces
+- `bar::Bool` : create bar plot
+- `nofill::Bool` : force empty area fill
+- `stair::Bool`: Make a stair plot instead of a stack plot
+"""
+function plot_results(results::Dict{String, DataFrames.DataFrame}; kwargs...)
+    return plot_pgdata!(_empty_plot(), PGData(results); kwargs...)
+end
+
+"""
+    plot_results!(plot, results)
+
+This function makes a plot of a results dictionary
+
+# Arguments
+
+- `plot` : existing plot handle (optional)
+- `results::Dict{String, DataFrame}`: The results to be plotted
+
+# Accepted Key Words
+- `combine_categories::Bool = false` : plot category values or each value in a category
+- `curtailment::Bool`: plot the curtailment with the variable
+- `set_display::Bool = true`: set to false to prevent the plots from displaying
+- `save::String = "file_path"`: set a file path to save the plots
+- `format::String = "png"`: set a different format for saving a PlotlyJS plot
+- `seriescolor::Array`: Set different colors for the plots
+- `title::String = "Title"`: Set a title for the plots
+- `stack::Bool = true`: stack plot traces
+- `bar::Bool` : create bar plot
+- `nofill::Bool` : force empty area fill
+- `stair::Bool`: Make a stair plot instead of a stack plot
+"""
+function plot_results!(p, results::Dict{String, DataFrames.DataFrame}; kwargs...)
+    return plot_pgdata!(p, PGData(results); kwargs...)
     return p
 end
 
@@ -413,11 +463,7 @@ function plot_fuel!(p, result::IS.Results; kwargs...)
     # passing names here enforces order
     # TODO: enable custom sort with kwarg
     fuel_agg = combine_categories(fuel; names = intersect(CATEGORY_DEFAULT, keys(fuel)))
-    y_label = get(
-        kwargs,
-        :y_label,
-        _make_ylabel(get_base_power(result), variable = "", time = bar ? "h" : ""),
-    )
+    y_label = get(kwargs, :y_label, bar ? "MWh" : "MW")
 
     seriescolor = get(kwargs, :seriescolor, match_fuel_colors(fuel_agg, backend))
     p = plot_dataframe!(

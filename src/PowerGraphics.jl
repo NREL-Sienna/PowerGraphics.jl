@@ -5,10 +5,12 @@ module PowerGraphics
 export plot_demand
 export plot_dataframe
 export plot_pgdata
+export plot_results
 export plot_fuel
 export plot_demand!
 export plot_dataframe!
 export plot_pgdata!
+export plot_results!
 export plot_fuel!
 export make_fuel_dictionary
 export report
@@ -37,7 +39,6 @@ const IS = InfrastructureSystems
 const PSI = PowerSimulations
 
 include("definitions.jl")
-include("problem_results.jl")
 include("plot_data.jl")
 include("fuel_results.jl")
 include("plot_recipes.jl")
