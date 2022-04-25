@@ -86,6 +86,19 @@ function get_generation_parameter_keys(
         end
     end
 
+    function get_generation_aux_variable_keys(
+        results::IS.Results;
+        aux_variable_keys::Vector{T} = PSI.list_aux_variable_keys(results),
+    ) where {T <: PSI.OptimizationContainerKey}
+        # TODO: add slacks
+        filter_keys = Vector{PSI.OptimizationContainerKey}()
+        for k in aux__variable_keys
+            if PSI.get_component_type(k) <: PSY.Generator &&
+               PSI.get_entry_type(k) == PSI.PowerOutput
+                push!(filter_keys, k)
+            end
+        end
+
     return filter_keys
 end
 
@@ -231,6 +244,7 @@ function get_generation_data(results::R; kwargs...) where {R <: IS.Results}
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     variable_keys = get(kwargs, :variable_keys, PSI.list_variable_keys(results))
     parameter_keys = get(kwargs, :parameter_keys, PSI.list_parameter_keys(results))
+    aux_variable_keys = get(kwargs, :aux_variable_keys, PSI.list_aux_variable_keys(results))
     curtailment = get(kwargs, :curtailment, true)
     storage = get(kwargs, :storage, true)
 
@@ -248,6 +262,8 @@ function get_generation_data(results::R; kwargs...) where {R <: IS.Results}
 
     parameter_keys = get_generation_parameter_keys(results; parameter_keys = parameter_keys)
 
+    aux_variable_keys = get_generation_aux_variable_keys(results; aux_variable_keys = aux_variable_keys)
+
     variables = PSI.read_variables_with_keys(
         results,
         injection_keys;
@@ -261,7 +277,14 @@ function get_generation_data(results::R; kwargs...) where {R <: IS.Results}
         len = len,
     )
 
-    add_fixed_parameters!(variables, parameters)
+    aux_variables = PSI.read_aux_variables_with_keys(
+        results,
+        aux_variable_keys;
+        start_time = initial_time,
+        len = len,
+    )
+
+    add_fixed_parameters!(variables, parameters, aux_variables)
 
     if curtailment
         curtailment_parameters = _curtailment_parameters(parameter_keys, injection_keys)
