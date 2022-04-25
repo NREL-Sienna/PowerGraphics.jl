@@ -168,10 +168,12 @@ no_datetime(df::DataFrames.DataFrame) = df[:, propertynames(df) .!== :DateTime]
 function add_fixed_parameters!(
     variables::Dict{V, DataFrames.DataFrame},
     parameters::Dict{P, DataFrames.DataFrame},
-) where {V <: PSI.OptimizationContainerKey, P <: PSI.OptimizationContainerKey}
+    aux_variables::Dict{A, DataFrames.DataFrame},
+) where {V <: PSI.OptimizationContainerKey, P <: PSI.OptimizationContainerKey, A <: PSI.OptimizationContainerKey}
     # fixed output should be added to plots when there exists a parameter of the form
     # :P__max_active_power__* but there is no corresponding :P__* variable
     for (param_key, param) in parameters
+        PSI.get_component_type(param_key) ∈ PSI.get_component_type.(keys(aux_variables)) &&
         PSI.get_component_type(param_key) ∈ PSI.get_component_type.(keys(variables)) &&
             continue
         if !haskey(variables, param_key)
