@@ -85,20 +85,21 @@ function get_generation_parameter_keys(
             push!(filter_keys, k)
         end
     end
+    return filter_keys
+end
 
-    function get_generation_aux_variable_keys(
-        results::IS.Results;
-        aux_variable_keys::Vector{T} = PSI.list_aux_variable_keys(results),
-    ) where {T <: PSI.OptimizationContainerKey}
-        # TODO: add slacks
-        filter_keys = Vector{PSI.OptimizationContainerKey}()
-        for k in aux__variable_keys
-            if PSI.get_component_type(k) <: PSY.Generator &&
-               PSI.get_entry_type(k) == PSI.PowerOutput
-                push!(filter_keys, k)
-            end
+function get_generation_aux_variable_keys(
+    results::IS.Results;
+    aux_variable_keys::Vector{T} = PSI.list_aux_variable_keys(results),
+) where {T <: PSI.OptimizationContainerKey}
+    # TODO: add slacks
+    filter_keys = Vector{PSI.OptimizationContainerKey}()
+    for k in aux__variable_keys
+        if PSI.get_component_type(k) <: PSY.Generator &&
+           PSI.get_entry_type(k) == PSI.PowerOutput
+            push!(filter_keys, k)
         end
-
+    end
     return filter_keys
 end
 
