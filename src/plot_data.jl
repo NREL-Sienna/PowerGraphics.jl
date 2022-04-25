@@ -94,7 +94,7 @@ function get_generation_aux_variable_keys(
 ) where {T <: PSI.OptimizationContainerKey}
     # TODO: add slacks
     filter_keys = Vector{PSI.OptimizationContainerKey}()
-    for k in aux__variable_keys
+    for k in aux_variable_keys
         if PSI.get_component_type(k) <: PSY.Generator &&
            PSI.get_entry_type(k) == PSI.PowerOutput
             push!(filter_keys, k)
