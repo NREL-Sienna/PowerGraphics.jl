@@ -168,12 +168,10 @@ no_datetime(df::DataFrames.DataFrame) = df[:, propertynames(df) .!== :DateTime]
 function add_fixed_parameters!(
     variables::Dict{V, DataFrames.DataFrame},
     parameters::Dict{P, DataFrames.DataFrame},
-    aux_variables::Dict{A, DataFrames.DataFrame},
-) where {V <: PSI.OptimizationContainerKey, P <: PSI.OptimizationContainerKey, A <: PSI.OptimizationContainerKey}
+) where {V <: PSI.OptimizationContainerKey, P <: PSI.OptimizationContainerKey}
     # fixed output should be added to plots when there exists a parameter of the form
     # :P__max_active_power__* but there is no corresponding :P__* variable
     for (param_key, param) in parameters
-        PSI.get_component_type(param_key) ∈ PSI.get_component_type.(keys(aux_variables)) &&
         PSI.get_component_type(param_key) ∈ PSI.get_component_type.(keys(variables)) &&
             continue
         if !haskey(variables, param_key)
@@ -181,10 +179,23 @@ function add_fixed_parameters!(
             variables[param_key] = param
             variables[param_key][:, propertynames(param) .!== :DateTime] .*= mult
         end
-        if !haskey(aux_variables, param_key)
+    end
+end
+
+function add_aux_variables!(
+    variables::Dict{V, DataFrames.DataFrame},
+    aux_variables::Dict{A, DataFrames.DataFrame},
+) where {V <: PSI.OptimizationContainerKey, A <: PSI.OptimizationContainerKey}
+    # fixed output should be added to plots when there exists a parameter of the form
+    # :P__max_active_power__* but there is no corresponding :P__* variable
+    for (param_key, param) in aux_variables
+        PSI.get_component_type(param_key) ∈ PSI.get_component_type.(keys(variables)) &&
+            continue
+        if !haskey(variables, param_key)
             mult = PSI.get_component_type(param_key) ∈ NEGATIVE_PARAMETERS ? -1.0 : 1.0
-            aux_variables[param_key] = param
-            aux_variables[param_key][:, propertynames(param) .!== :DateTime] .*= mult
+            variables[param_key] = param
+            variables[param_key][:, propertynames(param) .!== :DateTime] .*= mult
+        end
     end
 end
 
@@ -291,7 +302,8 @@ function get_generation_data(results::R; kwargs...) where {R <: IS.Results}
         len = len,
     )
 
-    add_fixed_parameters!(variables, parameters, aux_variables)
+    add_fixed_parameters!(variables, parameters)
+    add_aux_variables!(variables, aux_variables)
 
     if curtailment
         curtailment_parameters = _curtailment_parameters(parameter_keys, injection_keys)
@@ -299,7 +311,7 @@ function get_generation_data(results::R; kwargs...) where {R <: IS.Results}
     end
 
     timestamps = PSI.get_realized_timestamps(results; start_time = initial_time, len = len)
-    return PGData(variables, timestamps) && PGData(aux_variables, timestamps)
+    return PGData(variables, timestamps)
 end
 
 function get_load_data(results::R; kwargs...) where {R <: IS.Results}
@@ -332,7 +344,7 @@ function get_load_data(results::R; kwargs...) where {R <: IS.Results}
         len = len,
     )
 
-    add_fixed_parameters!(variables, parameters, aux_variables)
+    add_fixed_parameters!(variables, parameters)
 
     timestamps = PSI.get_realized_timestamps(results; start_time = initial_time, len = len)
     return PGData(variables, timestamps)
