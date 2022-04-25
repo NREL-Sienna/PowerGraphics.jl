@@ -181,6 +181,10 @@ function add_fixed_parameters!(
             variables[param_key] = param
             variables[param_key][:, propertynames(param) .!== :DateTime] .*= mult
         end
+        if !haskey(aux_variables, param_key)
+            mult = PSI.get_component_type(param_key) ∈ NEGATIVE_PARAMETERS ? -1.0 : 1.0
+            aux_variables[param_key] = param
+            aux_variables[param_key][:, propertynames(param) .!== :DateTime] .*= mult
     end
 end
 
@@ -295,7 +299,7 @@ function get_generation_data(results::R; kwargs...) where {R <: IS.Results}
     end
 
     timestamps = PSI.get_realized_timestamps(results; start_time = initial_time, len = len)
-    return PGData(variables, timestamps)
+    return PGData(variables, timestamps) && PGData(aux_variables, timestamps)
 end
 
 function get_load_data(results::R; kwargs...) where {R <: IS.Results}
