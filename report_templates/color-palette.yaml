@@ -43,7 +43,7 @@ BECCS:
 UPV:
   RGB: "rgba(255, 201, 3, 1)"
   order: 28
-Over generation:
+Over Generation:
   RGB: "rgba(12, 244, 252, 1)"
   order: 56
 EGS:
@@ -106,7 +106,7 @@ Renewable Energy (RE):
 PV + battery:
   RGB: "rgba(209, 194, 2, 1)"
   order: 27
-Unserved energy:
+Unserved Energy:
   RGB: "rgba(220, 2, 1, 1)"
   order: 55
 Storage:
