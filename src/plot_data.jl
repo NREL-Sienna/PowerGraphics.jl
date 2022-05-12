@@ -439,12 +439,10 @@ function categorize_data(
     var_types = Dict(zip(last.(split.(string.(keys(data)), "_")), keys(data)))
     for (category, list) in aggregation
         category_df = DataFrames.DataFrame()
-        for tuple in list
-            if haskey(var_types, tuple[1])
-                category_data = data[var_types[tuple[1]]]
-                colname =
-                    typeof(names(category_data)[1]) == String ? "$(tuple[2])" :
-                    Symbol(tuple[2])
+        for (component_type, variable) in list
+            if haskey(var_types, component_type)
+                category_data = data[var_types[component_type]]
+                colname = typeof(names(category_data)[1]) == String ? "$variable" : variable
                 DataFrames.insertcols!(
                     category_df,
                     (colname => category_data[:, colname]),

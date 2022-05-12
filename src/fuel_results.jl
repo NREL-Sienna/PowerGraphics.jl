@@ -86,7 +86,7 @@ function make_fuel_dictionary(sys::PSY.System, mapping::Dict{NamedTuple, String}
                 PSY.get_prime_mover(gen) : nothing
             category = get_generator_category(fuel, pm, mapping)
         end
-        push!(gen_categories["$category"], (string(typeof(gen)), (PSY.get_name(gen))))
+        push!(gen_categories["$category"], (string(nameof(typeof(gen))), PSY.get_name(gen)))
     end
     [delete!(gen_categories, "$k") for (k, v) in gen_categories if isempty(v)]
     return gen_categories
