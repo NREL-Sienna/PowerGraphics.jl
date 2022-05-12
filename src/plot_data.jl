@@ -442,9 +442,7 @@ function categorize_data(
         for (component_type, variable) in list
             if haskey(var_types, component_type)
                 category_data = data[var_types[component_type]]
-                colname =
-                    typeof(names(category_data)[1]) == String ? "$variable" :
-                    variable
+                colname = typeof(names(category_data)[1]) == String ? "$variable" : variable
                 DataFrames.insertcols!(
                     category_df,
                     (colname => category_data[:, colname]),
