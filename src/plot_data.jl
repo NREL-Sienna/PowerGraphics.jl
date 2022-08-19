@@ -85,7 +85,21 @@ function get_generation_parameter_keys(
             push!(filter_keys, k)
         end
     end
+    return filter_keys
+end
 
+function get_generation_aux_variable_keys(
+    results::IS.Results;
+    aux_variable_keys::Vector{T} = PSI.list_aux_variable_keys(results),
+) where {T <: PSI.OptimizationContainerKey}
+    # TODO: add slacks
+    filter_keys = Vector{PSI.OptimizationContainerKey}()
+    for k in aux_variable_keys
+        if PSI.get_component_type(k) <: PSY.Generator &&
+           PSI.get_entry_type(k) == PSI.PowerOutput
+            push!(filter_keys, k)
+        end
+    end
     return filter_keys
 end
 
@@ -168,6 +182,23 @@ function add_fixed_parameters!(
     end
 end
 
+function add_aux_variables!(
+    variables::Dict{V, DataFrames.DataFrame},
+    aux_variables::Dict{A, DataFrames.DataFrame},
+) where {V <: PSI.OptimizationContainerKey, A <: PSI.OptimizationContainerKey}
+    # fixed output should be added to plots when there exists a parameter of the form
+    # :P__max_active_power__* but there is no corresponding :P__* variable
+    for (param_key, param) in aux_variables
+        PSI.get_component_type(param_key) ∈ PSI.get_component_type.(keys(variables)) &&
+            continue
+        if !haskey(variables, param_key)
+            mult = PSI.get_component_type(param_key) ∈ NEGATIVE_PARAMETERS ? -1.0 : 1.0
+            variables[param_key] = param
+            variables[param_key][:, propertynames(param) .!== :DateTime] .*= mult
+        end
+    end
+end
+
 # finds the parameters corresponding to variables for curtailment calculations
 function _curtailment_parameters(
     parameter_keys::Vector{PSI.OptimizationContainerKey},
@@ -231,6 +262,7 @@ function get_generation_data(results::R; kwargs...) where {R <: IS.Results}
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     variable_keys = get(kwargs, :variable_keys, PSI.list_variable_keys(results))
     parameter_keys = get(kwargs, :parameter_keys, PSI.list_parameter_keys(results))
+    aux_variable_keys = get(kwargs, :aux_variable_keys, PSI.list_aux_variable_keys(results))
     curtailment = get(kwargs, :curtailment, true)
     storage = get(kwargs, :storage, true)
 
@@ -248,6 +280,8 @@ function get_generation_data(results::R; kwargs...) where {R <: IS.Results}
 
     parameter_keys = get_generation_parameter_keys(results; parameter_keys = parameter_keys)
 
+    aux_variable_keys = get_generation_aux_variable_keys(results; aux_variable_keys = aux_variable_keys)
+
     variables = PSI.read_variables_with_keys(
         results,
         injection_keys;
@@ -261,7 +295,15 @@ function get_generation_data(results::R; kwargs...) where {R <: IS.Results}
         len = len,
     )
 
+    aux_variables = PSI.read_aux_variables_with_keys(
+        results,
+        aux_variable_keys;
+        start_time = initial_time,
+        len = len,
+    )
+
     add_fixed_parameters!(variables, parameters)
+    add_aux_variables!(variables, aux_variables)
 
     if curtailment
         curtailment_parameters = _curtailment_parameters(parameter_keys, injection_keys)
@@ -277,6 +319,7 @@ function get_load_data(results::R; kwargs...) where {R <: IS.Results}
     len = get(kwargs, :horizon, get(kwargs, :len, nothing))
     variable_keys = get(kwargs, :variable_keys, PSI.list_variable_keys(results))
     parameter_keys = get(kwargs, :parameter_keys, PSI.list_parameter_keys(results))
+    aux_variable_keys = get(kwargs, :aux_variable_keys, PSI.list_aux_variable_keys(results))
 
     variable_keys = get_load_variable_keys(results; variable_keys = variable_keys)
     parameter_keys = get_load_parameter_keys(results; parameter_keys = parameter_keys)
@@ -290,6 +333,13 @@ function get_load_data(results::R; kwargs...) where {R <: IS.Results}
     parameters = PSI.read_parameters_with_keys(
         results,
         parameter_keys;
+        start_time = initial_time,
+        len = len,
+    )
+
+    aux_variables = PSI.read_aux_variables_with_keys(
+        results,
+        aux_variable_keys;
         start_time = initial_time,
         len = len,
     )
