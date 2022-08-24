@@ -280,7 +280,8 @@ function get_generation_data(results::R; kwargs...) where {R <: IS.Results}
 
     parameter_keys = get_generation_parameter_keys(results; parameter_keys = parameter_keys)
 
-    aux_variable_keys = get_generation_aux_variable_keys(results; aux_variable_keys = aux_variable_keys)
+    aux_variable_keys =
+        get_generation_aux_variable_keys(results; aux_variable_keys = aux_variable_keys)
 
     variables = PSI.read_variables_with_keys(
         results,
