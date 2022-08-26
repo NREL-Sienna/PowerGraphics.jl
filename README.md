@@ -22,7 +22,7 @@ julia> ]
 using PowerGraphics
 # where "res" is a PowerSimulations.SimulationResults object
 gen = get_generation_data(res)
-plot_pgdata(gen)
+plot_powerdata(gen)
 ```
 
 `PowerGraphics.jl` creates figures using a number of optional backends using `Plots.jl`. For interactive figures, it is recommended to use the `PlotlyJS.jl` backend, which requires the `PlotlyJS.jl`:

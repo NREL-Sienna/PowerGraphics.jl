@@ -8,6 +8,7 @@ date : 1-14
 
 ```julia; echo = false
 using PowerGraphics
+using PowerAnalytics
 using Plots
 
 if WEAVE_ARGS["backend"] == plotlyjs()
