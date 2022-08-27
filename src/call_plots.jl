@@ -3,6 +3,10 @@ function _empty_plot()
     return _empty_plot(backend)
 end
 
+function popkwargs(kwargs, kwarg)
+    return Dict{Symbol, Any}((k, v) for (k, v) in kwargs if k ≠ kwarg)
+end
+
 function _make_ylabel(
     base_power::Float64;
     variable::String = "Generation",
@@ -65,6 +69,7 @@ plot = plot_demand(res)
 - `bar::Bool` : create bar plot
 - `nofill::Bool` : force empty area fill
 - `stair::Bool`: Make a stair plot instead of a stack plot
+- `filter_func::Function = PowerSystems.get_available` : filter components included in plot
 """
 
 function plot_demand(result::Union{IS.Results, PSY.System}; kwargs...)
@@ -98,6 +103,7 @@ This function makes a plot of the demand in the system.
 - `bar::Bool` : create bar plot
 - `nofill::Bool` : force empty area fill
 - `stair::Bool`: Make a stair plot instead of a stack plot
+- `filter_func::Function = PowerSystems.get_available` : filter components included in plot
 """
 function plot_demand!(p, result::Union{IS.Results, PSY.System}; kwargs...)
     backend = Plots.backend()
@@ -110,6 +116,7 @@ function plot_demand!(p, result::Union{IS.Results, PSY.System}; kwargs...)
     y_label = get(kwargs, :y_label, bar ? "MWh" : "MW")
 
     load = PA.get_load_data(result; kwargs...)
+    kwargs = popkwargs(kwargs, :filter_func)
     load_agg = PA.combine_categories(load.data)
 
     if isnothing(load_agg)
@@ -405,6 +412,7 @@ plot = plot_fuel(res)
 - `bar::Bool` : create bar plot
 - `nofill::Bool` : force empty area fill
 - `stair::Bool`: Make a stair plot instead of a stack plot
+- `filter_func::Function = PowerSystems.get_available` : filter components included in plot
 """
 
 function plot_fuel(result::IS.Results; kwargs...)
@@ -437,6 +445,7 @@ and assigns each fuel type a specific color.
 - `bar::Bool` : create bar plot
 - `nofill::Bool` : force empty area fill
 - `stair::Bool`: Make a stair plot instead of a stack plot
+- `filter_func::Function = PowerSystems.get_available` : filter components included in plot
 """
 function plot_fuel!(p, result::IS.Results; kwargs...)
     backend = Plots.backend()
@@ -460,6 +469,9 @@ function plot_fuel!(p, result::IS.Results; kwargs...)
     cat = PA.make_fuel_dictionary(sys; kwargs...)
     fuel = PA.categorize_data(gen.data, cat; curtailment = curtailment, slacks = slacks)
 
+    filter_func = get(kwargs, :filter_func, PSY.get_available)
+    kwargs = popkwargs(kwargs, :filter_func)
+
     # passing names here enforces order
     # TODO: enable custom sort with kwarg
     fuel_agg = PA.combine_categories(fuel; names = intersect(CATEGORY_DEFAULT, keys(fuel)))
@@ -478,9 +490,11 @@ function plot_fuel!(p, result::IS.Results; kwargs...)
         kwargs...,
     )
 
-    kwargs = Dict{Symbol, Any}((k, v) for (k, v) in kwargs if k ∉ [:nofill, :seriescolor])
+    kwargs = popkwargs(popkwargs(kwargs, :nofill), :seriescolor)
+
     kwargs[:linestyle] = get(kwargs, :linestyle, :dash)
     kwargs[:linewidth] = get(kwargs, :linewidth, 3)
+    kwargs[:filter_func] = filter_func
 
     if load
         # load line

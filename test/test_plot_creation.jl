@@ -159,6 +159,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             bar = false,
             stack = false,
             nofill = false,
+            filter_func = x -> get_name(get_bus(x)) == "bus2",
         )
         PG.plot_demand(
             results_uc,
@@ -277,6 +278,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             save = out_path,
             bar = false,
             stack = false,
+            filter_func = x -> get_name(get_area(get_bus(x))) == "1",
         )
         PG.plot_fuel(
             results_uc,
