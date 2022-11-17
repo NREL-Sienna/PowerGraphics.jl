@@ -398,7 +398,7 @@ plot = plot_fuel(res)
 ```
 
 # Accepted Key Words
-- `generator_mapping_file` = "file_path" : file path to yaml definig generator category by fuel and primemover
+- `generator_mapping_file` = "file_path" : file path to yaml defining generator category by fuel and primemover
 - `variables::Union{Nothing, Vector{Symbol}}` = nothing : specific variables to plot
 - `slacks::Bool = true` : display slack variables
 - `load::Bool = true` : display load line
@@ -431,7 +431,7 @@ and assigns each fuel type a specific color.
 - `res::PowerSimulations.Results` : results to be plotted
 
 # Accepted Key Words
-- `generator_mapping_file` = "file_path" : file path to yaml definig generator category by fuel and primemover
+- `generator_mapping_file` = "file_path" : file path to yaml defining generator category by fuel and primemover
 - `variables::Union{Nothing, Vector{Symbol}}` = nothing : specific variables to plot
 - `slacks::Bool = true` : display slack variables
 - `load::Bool = true` : display load line
