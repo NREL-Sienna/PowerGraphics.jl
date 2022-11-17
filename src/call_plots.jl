@@ -3,6 +3,10 @@ function _empty_plot()
     return _empty_plot(backend)
 end
 
+function popkwargs(kwargs, kwarg)
+    return Dict{Symbol, Any}((k, v) for (k, v) in kwargs if k ≠ kwarg)
+end
+
 function _make_ylabel(
     base_power::Float64;
     variable::String = "Generation",
@@ -45,7 +49,7 @@ This function makes a plot of the demand in the system.
 # Example
 
 ```julia
-res = PSI.solve_op_problem!(OpProblem)
+res = PowerSimulations.solve_op_problem!(OpProblem)
 plot = plot_demand(res)
 ```
 
@@ -65,6 +69,7 @@ plot = plot_demand(res)
 - `bar::Bool` : create bar plot
 - `nofill::Bool` : force empty area fill
 - `stair::Bool`: Make a stair plot instead of a stack plot
+- `filter_func::Function = PowerSystems.get_available` : filter components included in plot
 """
 
 function plot_demand(result::Union{IS.Results, PSY.System}; kwargs...)
@@ -98,6 +103,7 @@ This function makes a plot of the demand in the system.
 - `bar::Bool` : create bar plot
 - `nofill::Bool` : force empty area fill
 - `stair::Bool`: Make a stair plot instead of a stack plot
+- `filter_func::Function = PowerSystems.get_available` : filter components included in plot
 """
 function plot_demand!(p, result::Union{IS.Results, PSY.System}; kwargs...)
     backend = Plots.backend()
@@ -109,8 +115,9 @@ function plot_demand!(p, result::Union{IS.Results, PSY.System}; kwargs...)
     title = get(kwargs, :title, "Demand")
     y_label = get(kwargs, :y_label, bar ? "MWh" : "MW")
 
-    load = get_load_data(result; kwargs...)
-    load_agg = combine_categories(load.data)
+    load = PA.get_load_data(result; kwargs...)
+    kwargs = popkwargs(kwargs, :filter_func)
+    load_agg = PA.combine_categories(load.data)
 
     if isnothing(load_agg)
         Throw(error("No load data found"))
@@ -162,8 +169,8 @@ If only the dataframe is provided, it must have a column of `DateTime` values.
 
 ```julia
 var_name = :P__ThermalStandard
-df = PSI.read_variables_with_keys(results, names = [var_name])[var_name]
-time_range = PSI.get_realized_timestamps(results)
+df = PowerSimulations.read_variables_with_keys(results, names = [var_name])[var_name]
+time_range = PowerSimulations.get_realized_timestamps(results)
 plot = plot_dataframe(df, time_range)
 ```
 
@@ -181,7 +188,7 @@ plot = plot_dataframe(df, time_range)
 """
 
 function plot_dataframe(df::DataFrames.DataFrame; kwargs...)
-    return plot_dataframe!(_empty_plot(), no_datetime(df), df.DateTime; kwargs...)
+    return plot_dataframe!(_empty_plot(), PA.no_datetime(df), df.DateTime; kwargs...)
 end
 function plot_dataframe(
     df::DataFrames.DataFrame,
@@ -218,7 +225,7 @@ If only the dataframe is provided, it must have a column of `DateTime` values.
 """
 
 function plot_dataframe!(p, df::DataFrames.DataFrame; kwargs...)
-    return plot_dataframe!(p, no_datetime(df), df.DateTime; kwargs...)
+    return plot_dataframe!(p, PA.no_datetime(df), df.DateTime; kwargs...)
 end
 
 function plot_dataframe!(
@@ -234,16 +241,16 @@ function plot_dataframe!(
     return p
 end
 
-################################# Plotting PGData ##########################
+################################# Plotting PowerData ##########################
 
 """
-    plot_pgdata(pgdata)
+    plot_powerdata(powerdata)
 
 This function makes a plot of a PGdata object
 
 # Arguments
 
-- `pgdata::PGData`: The dataframe to be plotted
+- `powerdata::PowerData`: The dataframe to be plotted
 
 # Accepted Key Words
 - `combine_categories::Bool = false` : plot category values or each value in a category
@@ -258,19 +265,19 @@ This function makes a plot of a PGdata object
 - `nofill::Bool` : force empty area fill
 - `stair::Bool`: Make a stair plot instead of a stack plot
 """
-function plot_pgdata(pgdata::PGData; kwargs...)
-    return plot_pgdata!(_empty_plot(), pgdata; kwargs...)
+function plot_powerdata(powerdata::PA.PowerData; kwargs...)
+    return plot_powerdata!(_empty_plot(), powerdata; kwargs...)
 end
 
 """
-    plot_pgdata!(plot, pgdata)
+    plot_powerdata!(plot, powerdata)
 
 This function makes a plot of a PGdata object
 
 # Arguments
 
 - `plot` : existing plot handle (optional)
-- `pgdata::PGData`: The dataframe to be plotted
+- `powerdata::PowerData`: The dataframe to be plotted
 
 # Accepted Key Words
 - `combine_categories::Bool = false` : plot category values or each value in a category
@@ -285,7 +292,7 @@ This function makes a plot of a PGdata object
 - `nofill::Bool` : force empty area fill
 - `stair::Bool`: Make a stair plot instead of a stack plot
 """
-function plot_pgdata!(p, pgdata::PGData; kwargs...)
+function plot_powerdata!(p, powerdata::PA.PowerData; kwargs...)
     backend = Plots.backend()
     title = get(kwargs, :title, "")
     set_display = get(kwargs, :set_display, true)
@@ -294,14 +301,14 @@ function plot_pgdata!(p, pgdata::PGData; kwargs...)
     if get(kwargs, :combine_categories, true)
         aggregate = get(kwargs, :aggregate, nothing)
         names = get(kwargs, :names, nothing)
-        data = combine_categories(pgdata.data; names = names, aggregate = aggregate)
+        data = PA.combine_categories(powerdata.data; names = names, aggregate = aggregate)
     else
-        data = pgdata.data
+        data = powerdata.data
     end
     kwargs =
         Dict{Symbol, Any}((k, v) for (k, v) in kwargs if k ∉ [:title, :save, :set_display])
 
-    p = plot_dataframe!(p, data, pgdata.time; set_display = false, kwargs...)
+    p = plot_dataframe!(p, data, powerdata.time; set_display = false, kwargs...)
 
     if set_display
         if backend == Plots.PlotlyJSBackend()
@@ -341,7 +348,7 @@ This function makes a plot of a results dictionary object
 - `stair::Bool`: Make a stair plot instead of a stack plot
 """
 function plot_results(results::Dict{String, DataFrames.DataFrame}; kwargs...)
-    return plot_pgdata!(_empty_plot(), PGData(results); kwargs...)
+    return plot_powerdata!(_empty_plot(), PA.PowerData(results); kwargs...)
 end
 
 """
@@ -368,7 +375,7 @@ This function makes a plot of a results dictionary
 - `stair::Bool`: Make a stair plot instead of a stack plot
 """
 function plot_results!(p, results::Dict{String, DataFrames.DataFrame}; kwargs...)
-    return plot_pgdata!(p, PGData(results); kwargs...)
+    return plot_powerdata!(p, PA.PowerData(results); kwargs...)
     return p
 end
 
@@ -381,7 +388,7 @@ and assigns each fuel type a specific color.
 
 # Arguments
 
-- `res::PSI.Results` : results to be plotted
+- `res::PowerSimulations.Results` : results to be plotted
 
 # Example
 
@@ -405,6 +412,7 @@ plot = plot_fuel(res)
 - `bar::Bool` : create bar plot
 - `nofill::Bool` : force empty area fill
 - `stair::Bool`: Make a stair plot instead of a stack plot
+- `filter_func::Function = PowerSystems.get_available` : filter components included in plot
 """
 
 function plot_fuel(result::IS.Results; kwargs...)
@@ -420,7 +428,7 @@ and assigns each fuel type a specific color.
 # Arguments
 
 - `plot` : existing plot handle (optional)
-- `res::PSI.Results` : results to be plotted
+- `res::PowerSimulations.Results` : results to be plotted
 
 # Accepted Key Words
 - `generator_mapping_file` = "file_path" : file path to yaml definig generator category by fuel and primemover
@@ -437,6 +445,7 @@ and assigns each fuel type a specific color.
 - `bar::Bool` : create bar plot
 - `nofill::Bool` : force empty area fill
 - `stair::Bool`: Make a stair plot instead of a stack plot
+- `filter_func::Function = PowerSystems.get_available` : filter components included in plot
 """
 function plot_fuel!(p, result::IS.Results; kwargs...)
     backend = Plots.backend()
@@ -452,17 +461,20 @@ function plot_fuel!(p, result::IS.Results; kwargs...)
         Dict{Symbol, Any}((k, v) for (k, v) in kwargs if k ∉ [:title, :save, :set_display])
 
     # Generation stack
-    gen = get_generation_data(result; kwargs...)
-    sys = PSI.get_system(result)
+    gen = PA.get_generation_data(result; kwargs...)
+    sys = PA.PSI.get_system(result)
     if sys === nothing
         Throw(error("No System data present: please run `set_system!(results, sys)`"))
     end
-    cat = make_fuel_dictionary(sys; kwargs...)
-    fuel = categorize_data(gen.data, cat; curtailment = curtailment, slacks = slacks)
+    cat = PA.make_fuel_dictionary(sys; kwargs...)
+    fuel = PA.categorize_data(gen.data, cat; curtailment = curtailment, slacks = slacks)
+
+    filter_func = get(kwargs, :filter_func, PSY.get_available)
+    kwargs = popkwargs(kwargs, :filter_func)
 
     # passing names here enforces order
     # TODO: enable custom sort with kwarg
-    fuel_agg = combine_categories(fuel; names = intersect(CATEGORY_DEFAULT, keys(fuel)))
+    fuel_agg = PA.combine_categories(fuel; names = intersect(CATEGORY_DEFAULT, keys(fuel)))
     y_label = get(kwargs, :y_label, bar ? "MWh" : "MW")
 
     seriescolor = get(kwargs, :seriescolor, match_fuel_colors(fuel_agg, backend))
@@ -478,9 +490,11 @@ function plot_fuel!(p, result::IS.Results; kwargs...)
         kwargs...,
     )
 
-    kwargs = Dict{Symbol, Any}((k, v) for (k, v) in kwargs if k ∉ [:nofill, :seriescolor])
+    kwargs = popkwargs(popkwargs(kwargs, :nofill), :seriescolor)
+
     kwargs[:linestyle] = get(kwargs, :linestyle, :dash)
     kwargs[:linewidth] = get(kwargs, :linewidth, 3)
+    kwargs[:filter_func] = filter_func
 
     if load
         # load line

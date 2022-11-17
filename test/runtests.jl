@@ -8,6 +8,7 @@ import InfrastructureSystems
 import InfrastructureSystems: Deterministic, Probabilistic, Scenarios, Forecast
 using PowerSystems
 using PowerGraphics
+using PowerAnalytics
 using PlotlyJS
 using PowerSimulations
 using GLPK
@@ -18,6 +19,7 @@ const PG = PowerGraphics
 const IS = InfrastructureSystems
 const PSY = PowerSystems
 const PSI = PowerSimulations
+const PA = PowerAnalytics
 const LOG_FILE = "PowerGraphics-test.log"
 
 const BASE_DIR = dirname(dirname(pathof(PowerGraphics)))

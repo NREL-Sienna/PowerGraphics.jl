@@ -20,3 +20,4 @@ Manifest.toml
 *.pdf
 *.out
 *.aux
+test/test_results

@@ -14,15 +14,15 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
 
     (results_uc, results_ed) = run_test_sim(TEST_RESULT_DIR)
     problem_results = run_test_prob()
-    gen_uc = PG.get_generation_data(results_uc)
-    gen_ed = PG.get_generation_data(results_ed)
-    gen_pb = PG.get_generation_data(problem_results)
-    load_uc = PG.get_load_data(results_uc)
-    load_ed = PG.get_load_data(results_ed)
-    load_pb = PG.get_load_data(problem_results)
-    svc_uc = PG.get_service_data(results_uc)
-    svc_ed = PG.get_service_data(results_ed)
-    svc_pb = PG.get_service_data(problem_results)
+    gen_uc = get_generation_data(results_uc)
+    gen_ed = get_generation_data(results_ed)
+    gen_pb = get_generation_data(problem_results)
+    load_uc = get_load_data(results_uc)
+    load_ed = get_load_data(results_ed)
+    load_pb = get_load_data(problem_results)
+    svc_uc = get_service_data(results_uc)
+    svc_ed = get_service_data(results_ed)
+    svc_pb = get_service_data(problem_results)
 
     @testset "test $backend_pkg plot production" begin
         out_path = joinpath(file_path, backend_pkg * "_plots")
@@ -74,7 +74,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
                 set_display = set_display,
                 stack = true,
             ),
-            PG.no_datetime(load_uc.data[:Load]) .* -1,
+            no_datetime(load_uc.data[:Load]) .* -1,
             gen_uc.time,
             set_display = set_display,
             title = "df_gen_load",
@@ -99,11 +99,11 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         cleanup && rm(out_path, recursive = true)
     end
 
-    @testset "test $backend_pkg pgdata plot production" begin
-        out_path = joinpath(file_path, backend_pkg * "_pgdata_plots")
+    @testset "test $backend_pkg powerdata plot production" begin
+        out_path = joinpath(file_path, backend_pkg * "_powerdata_plots")
         !isdir(out_path) && mkdir(out_path)
 
-        PG.plot_pgdata(
+        PG.plot_powerdata(
             gen_uc,
             set_display = set_display,
             title = "pg_data",
@@ -111,7 +111,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             bar = false,
             stack = false,
         )
-        PG.plot_pgdata(
+        PG.plot_powerdata(
             gen_uc,
             set_display = set_display,
             title = "pg_data_stack",
@@ -119,7 +119,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             bar = false,
             stack = true,
         )
-        PG.plot_pgdata(
+        PG.plot_powerdata(
             gen_uc,
             set_display = set_display,
             title = "pg_data_bar",
@@ -127,7 +127,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             bar = true,
             stack = false,
         )
-        PG.plot_pgdata(
+        PG.plot_powerdata(
             gen_uc,
             set_display = set_display,
             title = "pg_data_bar_stack",
@@ -159,6 +159,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             bar = false,
             stack = false,
             nofill = false,
+            filter_func = x -> get_name(get_bus(x)) == "bus2",
         )
         PG.plot_demand(
             results_uc,
@@ -277,6 +278,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             save = out_path,
             bar = false,
             stack = false,
+            filter_func = x -> get_name(get_area(get_bus(x))) == "1",
         )
         PG.plot_fuel(
             results_uc,
@@ -313,6 +315,17 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
 
         @info("removing test files")
         cleanup && rm(out_path, recursive = true)
+    end
+
+    @testset "test html saving" begin
+        plot_fuel(
+            results_ed,
+            set_display = false,
+            save = TEST_RESULT_DIR,
+            title = "fuel_html_output",
+            format = "html",
+        )
+        @test isfile(joinpath(TEST_RESULT_DIR, "fuel_html_output.html"))
     end
 end
 try

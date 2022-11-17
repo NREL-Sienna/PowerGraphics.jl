@@ -4,20 +4,15 @@ module PowerGraphics
 
 export plot_demand
 export plot_dataframe
-export plot_pgdata
+export plot_powerdata
 export plot_results
 export plot_fuel
 export plot_demand!
 export plot_dataframe!
-export plot_pgdata!
+export plot_powerdata!
 export plot_results!
 export plot_fuel!
-export make_fuel_dictionary
 export report
-export get_generation_data
-export get_load_data
-export get_service_data
-export categorize_data
 
 #I/O Imports
 import Dates
@@ -31,16 +26,14 @@ Reexport.@reexport using Plots
 import DataStructures: OrderedDict, SortedDict
 import PowerSystems
 import InfrastructureSystems
-import PowerSimulations
 import InteractiveUtils
+import PowerAnalytics
 
 const PSY = PowerSystems
 const IS = InfrastructureSystems
-const PSI = PowerSimulations
+const PA = PowerAnalytics
 
 include("definitions.jl")
-include("plot_data.jl")
-include("fuel_results.jl")
 include("plot_recipes.jl")
 include("plotly_recipes.jl")
 include("make_report.jl")

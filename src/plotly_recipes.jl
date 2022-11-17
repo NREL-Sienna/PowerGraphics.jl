@@ -12,7 +12,7 @@ function _dataframe_plots_internal(
     backend::Plots.PlotlyJSBackend;
     kwargs...,
 )
-    names = DataFrames.names(no_datetime(variable))
+    names = DataFrames.names(PA.no_datetime(variable))
     traces = plot.data
     plot_length = length(traces)
     seriescolor = permutedims(
@@ -40,7 +40,7 @@ function _dataframe_plots_internal(
         @warn "Plot dataframe empty: skipping plot creation"
         plot_data = Array{Float64}(undef, 0, 0)
     else
-        plot_data = Matrix(no_datetime(variable))
+        plot_data = Matrix(PA.no_datetime(variable))
     end
 
     plot_kwargs = Dict()
