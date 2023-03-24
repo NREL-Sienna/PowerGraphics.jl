@@ -20,7 +20,7 @@ function _dataframe_plots_internal(
     existing_colors = ones(length(plot.series_list))
     seriescolor = permutedims(
         set_seriescolor(
-            get(kwargs, :seriescolor, GR_DEFAULT),
+            get(kwargs, :seriescolor, get_palette_gr()),
             vcat(existing_colors, DataFrames.names(variable)),
         )[(length(existing_colors) + 1):end],
     )

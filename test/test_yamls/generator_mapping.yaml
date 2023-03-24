@@ -1,0 +1,41 @@
+# Parsing code ignores type=null.
+# - keys should match keys of test_yamls/color-palette.yaml
+# - primemover should match PowerSystems.PrimeMovers
+# - fuel should match PowerSystems.ThermalFuels
+PV:
+  - {gentype: Any, primemover: PVe, fuel: null}
+Wind:
+  - {gentype: Any, primemover: WT, fuel: null}
+Petroleum:
+  - {gentype: Any, primemover: null, fuel: DISTILLATE_FUEL_OIL}
+  - {gentype: Any, primemover: null, fuel: RESIDUAL_FUEL_OIL}
+  - {gentype: Any, primemover: null, fuel: WASTE_OIL}
+  - {gentype: Any, primemover: null, fuel: PETROLEUM_COKE}
+Battery:
+  - {gentype: Any, primemover: BA, fuel: null}
+  - {gentype: Any, primemover: PS, fuel: null}
+Natural Gas CT:
+  - {gentype: Any, primemover: CT, fuel: NATURAL_GAS}
+Natural Gas CC:
+  - {gentype: Any, primemover: CC, fuel: NATURAL_GAS}
+Natural Gas ST:
+  - {gentype: Any, primemover: ST, fuel: NATURAL_GAS}
+Natural Gas:
+  - {gentype: Any, primemover: null, fuel: NATURAL_GAS}
+  - {gentype: Any, primemover: null, fuel: OTHER_GAS}
+Hydropower:
+  - {gentype: Any, primemover: HY, fuel: null}
+Coal:
+  - {gentype: Any, primemover: null, fuel: COAL}
+Nuclear:
+  - {gentype: Any, primemover: null, fuel: NUCLEAR}
+Geothermal:
+  - {gentype: Any, primemover: null, fuel: GEOTHERMAL}
+Biopower:
+  - {gentype: Any, primemover: null, fuel: AG_BIPRODUCT}
+  - {gentype: Any, primemover: null, fuel: WOOD_WASTE}
+CSP:
+  - {gentype: Any, primemover: CP, fuel: null}
+Other:
+  - {gentype: Any, primemover: OT, fuel: OTHER}
+  - {gentype: Any, primemover: null, fuel: null}

@@ -22,18 +22,6 @@ function _make_ylabel(
     return ylabel
 end
 
-function get_default_seriescolor()
-    backend = Plots.backend()
-    return get_default_seriescolor(backend)
-end
-
-function get_default_seriescolor(backend)
-    return GR_DEFAULT
-end
-
-function get_default_seriescolor(backend::Plots.PlotlyJSBackend)
-    return PLOTLY_DEFAULT
-end
 ################################### DEMAND #################################
 
 """
@@ -464,7 +452,7 @@ function plot_fuel!(p, result::IS.Results; kwargs...)
     gen = PA.get_generation_data(result; kwargs...)
     sys = PA.PSI.get_system(result)
     if sys === nothing
-        Throw(error("No System data present: please run `set_system!(results, sys)`"))
+        throw(error("No System data present: please run `set_system!(results, sys)`"))
     end
     cat = PA.make_fuel_dictionary(sys; kwargs...)
     fuel = PA.categorize_data(gen.data, cat; curtailment = curtailment, slacks = slacks)
@@ -474,7 +462,7 @@ function plot_fuel!(p, result::IS.Results; kwargs...)
 
     # passing names here enforces order
     # TODO: enable custom sort with kwarg
-    fuel_agg = PA.combine_categories(fuel; names = intersect(CATEGORY_DEFAULT, keys(fuel)))
+    fuel_agg = PA.combine_categories(fuel; names = intersect(get_palette_category(), keys(fuel)))
     y_label = get(kwargs, :y_label, bar ? "MWh" : "MW")
 
     seriescolor = get(kwargs, :seriescolor, match_fuel_colors(fuel_agg, backend))

@@ -1,6 +1,6 @@
 
 # Color Definitions
-PALETTE_FILE = joinpath(
+DEFAULT_PALETTE_FILE = joinpath(
     dirname(dirname(pathof(PowerGraphics))),
     "report_templates",
     "color-palette.yaml",
@@ -20,8 +20,16 @@ function PaletteColor(category::String, RGB::String, order::Int64)
     return PaletteColor(category, RGB, color, order)
 end
 
-function get_palette(file = nothing)
-    file = isnothing(file) ? PALETTE_FILE : file
+
+function load_palette()
+    if haskey(ENV, "PG_PALETTE")
+        load_palette(ENV["PG_PALETTE"])
+    else
+        load_palette(DEFAULT_PALETTE_FILE)
+    end
+end
+
+function load_palette(file)
     palette_config = YAML.load_file(file)
     palette_colors = []
     for (k, v) in palette_config
@@ -30,6 +38,29 @@ function get_palette(file = nothing)
     sort!(palette_colors, by = x -> x.order)
     return palette_colors
 end
+
+_palette = load_palette()
+
+function get_palette()
+    global _palette
+    return _palette
+end
+
+function with_palette(f, palette_file::AbstractString)
+    with_palette(f, load_palette(palette_file))
+end
+
+function with_palette(f, palette_colors)
+    global _palette
+    old = _palette
+    try
+        _palette = palette_colors
+        f()
+    finally
+        _palette = old
+    end
+end
+
 function get_default_palette()
     default_palette = []
     palette = get_palette()
@@ -53,11 +84,39 @@ function all_subtypes(t::Type)
     return [split(string(s), ".")[end] for s in st]
 end
 
-GR_DEFAULT = permutedims(getfield.(get_default_palette(), :color))
-FUEL_DEFAULT = getfield.(get_palette(), :color)
-PLOTLY_DEFAULT = getfield.(get_default_palette(), :RGB)
-PLOTLY_FUEL_DEFAULT = getfield.(get_palette(), :RGB)
-CATEGORY_DEFAULT = getfield.(get_palette(), :category)
+function get_palette_gr()
+    permutedims(getfield.(get_palette(), :color))
+end
+
+function get_palette_fuel()
+    getfield.(get_palette(), :color)
+end
+
+function get_palette_plotly()
+    getfield.(get_default_palette(), :RGB)
+end
+
+function get_palette_plotly_fuel()
+    getfield.(get_palette(), :RGB)
+end
+
+function get_palette_category()
+    getfield.(get_palette(), :category)
+end
+
+function get_default_seriescolor()
+    backend = Plots.backend()
+    return get_default_seriescolor(backend)
+end
+
+function get_default_seriescolor(backend)
+    return get_palette_gr()
+end
+
+function get_default_seriescolor(backend::Plots.PlotlyJSBackend)
+    return get_palette_plotly()
+end
+
 
 SUPPORTED_EXTRA_PLOT_KWARGS = [:linestyle, :linewidth]
 SUPPORTED_PLOTLY_SAVE_KWARGS =
@@ -65,11 +124,11 @@ SUPPORTED_PLOTLY_SAVE_KWARGS =
 
 function match_fuel_colors(data::DataFrames.DataFrame, backend)
     if backend == Plots.PlotlyJSBackend()
-        color_range = PLOTLY_FUEL_DEFAULT
+        color_range = get_palette_plotly_fuel()
     else
-        color_range = FUEL_DEFAULT
+        color_range = get_palette_fuel()
     end
-    color_fuel = DataFrames.DataFrame(fuels = CATEGORY_DEFAULT, colors = color_range)
+    color_fuel = DataFrames.DataFrame(fuels = get_palette_category(), colors = color_range)
     names = DataFrames.names(data)
     default =
         [(color_fuel[findall(in(["$(names[1])"]), color_fuel.fuels), :][:, :colors])[1]]

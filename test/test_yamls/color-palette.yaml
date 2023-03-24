@@ -1,0 +1,165 @@
+Petroleum:
+  RGB: "rgba(133, 61, 101, 1)"
+  order: 7
+IGCC:
+  RGB: "rgba(82, 83, 82, 1)"
+  order: 5
+Deep-EGS:
+  RGB: "rgba(137, 111, 45, 1)"
+  order: 41
+Pulverized:
+  RGB: "rgba(34, 34, 34, 1)"
+  order: 4
+Binary:
+  RGB: "rgba(169, 98, 53, 1)"
+  order: 37
+2 hrs.:
+  RGB: "rgba(255, 127, 157, 1)"
+  order: 47
+Nuclear:
+  RGB: "rgba(130, 0, 0, 1)"
+  order: 1
+PSH:
+  RGB: "rgba(204, 0, 121, 1)"
+  order: 43
+Waste:
+  RGB: "rgba(136, 186, 65, 1)"
+  order: 31
+Battery:
+  RGB: "rgba(255, 74, 136, 1)"
+  order: 45
+Natural Gas CC:
+  RGB: "rgba(82, 133, 107, 1)"
+  order: 11
+4 hrs.:
+  RGB: "rgba(255, 104, 130, 1)"
+  order: 48
+Co-fired:
+  RGB: "rgba(102, 194, 56, 1)"
+  order: 34
+BECCS:
+  RGB: "rgba(168, 200, 57, 1)"
+  order: 33
+UPV:
+  RGB: "rgba(255, 201, 3, 1)"
+  order: 28
+Over Generation:
+  RGB: "rgba(12, 244, 252, 1)"
+  order: 56
+EGS:
+  RGB: "rgba(212, 158, 46, 1)"
+  order: 39
+6 hrs.:
+  RGB: "rgba(223, 82, 130, 1)"
+  order: 49
+Biopower:
+  RGB: "rgba(91, 152, 68, 1)"
+  order: 32
+Reserve curtailment:
+  RGB: "rgba(161, 167, 181, 1)"
+  order: 53
+Wind:
+  RGB: "rgba(0, 182, 239, 1)"
+  order: 18
+Non-CCS:
+  RGB: "rgba(112, 118, 133, 1)"
+  order: 6
+Near-EGS:
+  RGB: "rgba(95, 82, 45, 1)"
+  order: 40
+NG-CCS:
+  RGB: "rgba(94, 22, 136, 1)"
+  order: 12
+Non-powered dams (NPD):
+  RGB: "rgba(81, 143, 153, 1)"
+  order: 16
+Flash:
+  RGB: "rgba(180, 155, 129, 1)"
+  order: 38
+CSP:
+  RGB: "rgba(252, 118, 26, 1)"
+  order: 22
+Imports/Exports:
+  RGB: "rgba(25, 58, 113, 1)"
+  order: 54
+PV:
+  RGB: "rgba(255, 201, 3, 1)"
+  order: 25
+Curtailment:
+  RGB: "rgba(255, 105, 180, 1)"
+  order: 52
+Offshore:
+  RGB: "rgba(16, 107, 167, 1)"
+  order: 20
+Biomass:
+  RGB: "rgba(91, 152, 68, 1)"
+  order: 30
+Solar:
+  RGB: "rgba(255, 201, 3, 1)"
+  order: 21
+DUPV:
+  RGB: "rgba(255, 171, 2, 1)"
+  order: 26
+Renewable Energy (RE):
+  RGB: "rgba(127, 195, 64, 1)"
+  order: 13
+PV + battery:
+  RGB: "rgba(209, 194, 2, 1)"
+  order: 27
+Unserved Energy:
+  RGB: "rgba(220, 2, 1, 1)"
+  order: 55
+Battery:
+  RGB: "rgba(255, 74, 136, 1)"
+  order: 42
+New steam reach (NSR):
+  RGB: "rgba(130, 192, 192, 1)"
+  order: 17
+Other:
+  RGB: "rgba(255, 127, 187, 1)"
+  order: 46
+Hydrothermal:
+  RGB: "rgba(169, 98, 53, 1)"
+  order: 36
+Onshore:
+  RGB: "rgba(0, 182, 239, 1)"
+  order: 19
+Natural Gas:
+  RGB: "rgba(82, 33, 107, 1)"
+  order: 8
+DPV:
+  RGB: "rgba(254, 230, 3, 1)"
+  order: 29
+Natural Gas CT:
+  RGB: "rgba(194, 161, 219, 1)"
+  order: 10
+Upgrades:
+  RGB: "rgba(24, 127, 148, 1)"
+  order: 15
+8 hrs.:
+  RGB: "rgba(204, 1, 92, 1)"
+  order: 50
+Coal:
+  RGB: "rgba(34, 34, 34, 1)"
+  order: 2
+10 hrs.:
+  RGB: "rgba(155, 1, 79, 1)"
+  order: 51
+Natural Gas ST:
+  RGB: "rgba(61, 51, 118, 1)"
+  order: 9
+Geothermal:
+  RGB: "rgba(169, 98, 53, 1)"
+  order: 35
+CAES:
+  RGB: "rgba(255, 71, 65, 1)"
+  order: 44
+With thermal energy storage:
+  RGB: "rgba(252, 150, 46, 1)"
+  order: 23
+Without thermal energy storage:
+  RGB: "rgba(252, 150, 46, 1)"
+  order: 24
+Hydropower:
+  RGB: "rgba(24, 127, 148, 1)"
+  order: 14
