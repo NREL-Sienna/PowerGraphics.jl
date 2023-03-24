@@ -462,7 +462,8 @@ function plot_fuel!(p, result::IS.Results; kwargs...)
 
     # passing names here enforces order
     # TODO: enable custom sort with kwarg
-    fuel_agg = PA.combine_categories(fuel; names = intersect(get_palette_category(), keys(fuel)))
+    fuel_agg =
+        PA.combine_categories(fuel; names = intersect(get_palette_category(), keys(fuel)))
     y_label = get(kwargs, :y_label, bar ? "MWh" : "MW")
 
     seriescolor = get(kwargs, :seriescolor, match_fuel_colors(fuel_agg, backend))

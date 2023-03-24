@@ -20,7 +20,6 @@ function PaletteColor(category::String, RGB::String, order::Int64)
     return PaletteColor(category, RGB, color, order)
 end
 
-
 function load_palette()
     if haskey(ENV, "PG_PALETTE")
         load_palette(ENV["PG_PALETTE"])
@@ -116,7 +115,6 @@ end
 function get_default_seriescolor(backend::Plots.PlotlyJSBackend)
     return get_palette_plotly()
 end
-
 
 SUPPORTED_EXTRA_PLOT_KWARGS = [:linestyle, :linewidth]
 SUPPORTED_PLOTLY_SAVE_KWARGS =
