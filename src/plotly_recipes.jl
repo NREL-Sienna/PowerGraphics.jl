@@ -17,7 +17,7 @@ function _dataframe_plots_internal(
     plot_length = length(traces)
     seriescolor = permutedims(
         set_seriescolor(
-            get(kwargs, :seriescolor, get_palette_plotly()),
+            get(kwargs, :seriescolor, get_palette_plotly(get(kwargs, :palette, PALETTE))),
             vcat(ones(plot_length), names),
         )[(plot_length + 1):end],
     )

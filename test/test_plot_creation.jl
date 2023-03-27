@@ -322,19 +322,20 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         out_path = joinpath(file_path, backend_pkg * "_alternate_palette")
         !isdir(out_path) && mkdir(out_path)
 
-        PG.with_palette(joinpath(TEST_DIR, "test_yamls/color-palette.yaml")) do
-            PG.plot_fuel(
-                results_uc,
-                set_display = set_display,
-                title = "fuel",
-                save = out_path,
-                bar = true,
-                generator_mapping_file = joinpath(
-                    TEST_DIR,
-                    "test_yamls/generator_mapping.yaml",
-                ),
-            )
-        end
+        palette = PG.load_palette(joinpath(TEST_DIR, "test_yamls/color-palette.yaml"))
+
+        PG.plot_fuel(
+            results_uc,
+            set_display = set_display,
+            title = "fuel",
+            save = out_path,
+            bar = true,
+            generator_mapping_file = joinpath(
+                TEST_DIR,
+                "test_yamls/generator_mapping.yaml",
+            ),
+            palette = palette,
+        )
         list = readdir(out_path)
         expected_files = ["fuel.png"]
         @test isempty(setdiff(expected_files, list))
