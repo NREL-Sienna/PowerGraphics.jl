@@ -1,6 +1,6 @@
 
 # Color Definitions
-DEFAULT_PALETTE_FILE = joinpath(
+const DEFAULT_PALETTE_FILE = joinpath(
     dirname(dirname(pathof(PowerGraphics))),
     "report_templates",
     "color-palette.yaml",
@@ -106,8 +106,8 @@ function get_palette_seriescolor(backend::Plots.PlotlyJSBackend, palette)
     return get_palette_plotly(palette)
 end
 
-SUPPORTED_EXTRA_PLOT_KWARGS = [:linestyle, :linewidth]
-SUPPORTED_PLOTLY_SAVE_KWARGS =
+const SUPPORTED_EXTRA_PLOT_KWARGS = [:linestyle, :linewidth]
+const SUPPORTED_PLOTLY_SAVE_KWARGS =
     [:autoplay, :post_script, :full_html, :animation_opts, :default_width, :default_height]
 
 function match_fuel_colors(data::DataFrames.DataFrame, backend; palette = PALETTE)
