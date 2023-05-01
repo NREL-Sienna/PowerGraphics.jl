@@ -5,7 +5,7 @@ This function uses Weave.jl to either generate a LaTeX or HTML
 file based on the report_design.jmd (julia markdown) file
 that it reads. Out_path in the weave function dictates
 where the created file gets exported. An example template is available
-[here](https://github.com/NREL-SIIP/PowerGraphics.jl/blob/master/report_templates/generic_report_template.jmd)
+[here](https://github.com/NREL-Sienna/PowerGraphics.jl/blob/main/report_templates/generic_report_template.jmd)
 
 # Arguments
 - `results::IS.Results`: The results to be plotted

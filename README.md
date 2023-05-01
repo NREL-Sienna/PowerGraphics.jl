@@ -1,9 +1,9 @@
 # PowerGraphics
 
-[![Master - CI](https://github.com/NREL-SIIP/PowerGraphics.jl/workflows/Master%20-%20CI/badge.svg)](https://github.com/NREL-SIIP/PowerGraphics.jl/actions/workflows/master-tests.yml)
-[![codecov](https://codecov.io/gh/NREL-SIIP/PowerGraphics.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/NREL-SIIP/PowerGraphics.jl)
-[![Documentation Build](https://github.com/NREL-SIIP/PowerGraphics.jl/workflows/Documentation/badge.svg?)](https://nrel-siip.github.io/PowerGraphics.jl/stable)
-[<img src="https://img.shields.io/badge/slack-@SIIP/PG-blue.svg?logo=slack">](https://join.slack.com/t/nrel-siip/shared_invite/zt-glam9vdu-o8A9TwZTZqqNTKHa7q3BpQ)
+[![Main - CI](https://github.com/NREL-Sienna/PowerGraphics.jl/workflows/Main%20-%20CI/badge.svg)](https://github.com/NREL-Sienna/PowerGraphics.jl/actions/workflows/main-tests.yml)
+[![codecov](https://codecov.io/gh/NREL-Sienna/PowerGraphics.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/NREL-Sienna/PowerGraphics.jl)
+[![Documentation Build](https://github.com/NREL-Sienna/PowerGraphics.jl/workflows/Documentation/badge.svg?)](https://nrel-sienna.github.io/PowerGraphics.jl/stable)
+[<img src="https://img.shields.io/badge/slack-@Sienna/PG-sienna.svg?logo=slack">](https://join.slack.com/t/nrel-sienna/shared_invite/zt-glam9vdu-o8A9TwZTZqqNTKHa7q3BpQ)
 
 PowerGraphics.jl is a Julia package for plotting results from [PowerSimulations.jl](https://github.com/NREL/PowerSimulations.jl).
 
@@ -16,7 +16,7 @@ julia> ]
 
 ## Usage
 
-`PowerGraphics.jl` uses [PowerSystems.jl](https://github.com/NREL/PowerSystems.jl) and [PowerSimulations.jl](https://github.com/NREL/PowerSimulations.jl) to handle the data and execution power system simulations.
+`PowerGraphics.jl` uses [PowerSystems.jl](https://github.com/NREL-Sienna/PowerSystems.jl) and [PowerSimulations.jl](https://github.com/NREL-Sienna/PowerSimulations.jl) to handle the data and execution power system simulations.
 
 ```julia
 using PowerGraphics
@@ -49,9 +49,9 @@ plot_fuel(res)
 
 ## Development
 
-Contributions to the development and enhancement of PowerGraphics is welcome. Please see [CONTRIBUTING.md](https://github.com/NREL-SIIP/PowerGraphics.jl/blob/master/CONTRIBUTING.md) for code contribution guidelines.
+Contributions to the development and enhancement of PowerGraphics is welcome. Please see [CONTRIBUTING.md](https://github.com/NREL-Sienna/PowerGraphics.jl/blob/main/CONTRIBUTING.md) for code contribution guidelines.
 
 ## License
 
-PowerGraphics is released under a BSD [license](https://github.com/nrel-siip/PowerGraphics.jl/blob/master/LICENSE). PowerGraphics has been developed as part of the Scalable Integrated Infrastructure Planning (SIIP)
+PowerGraphics is released under a BSD [license](https://github.com/nrel-sienna/PowerGraphics.jl/blob/main/LICENSE). PowerGraphics has been developed as part of the Scalable Integrated Infrastructure Planning (SIIP)
 initiative at the U.S. Department of Energy's National Renewable Energy Laboratory ([NREL](https://www.nrel.gov/))
