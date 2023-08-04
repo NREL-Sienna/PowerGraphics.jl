@@ -2,6 +2,7 @@ isdefined(Base, :__precompile__) && __precompile__()
 @info "PowerGraphics.jl loads Plots.jl. Precompile might take a while"
 module PowerGraphics
 
+export load_palette
 export plot_demand
 export plot_dataframe
 export plot_powerdata

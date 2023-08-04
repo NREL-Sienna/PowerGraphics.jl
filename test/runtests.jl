@@ -11,6 +11,7 @@ using PowerGraphics
 using PowerAnalytics
 using PlotlyJS
 using PowerSimulations
+using StorageSystemsSimulations
 using GLPK
 using Weave
 using TimeSeries

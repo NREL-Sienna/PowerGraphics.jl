@@ -317,6 +317,34 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         cleanup && rm(out_path, recursive = true)
     end
 
+    @testset "test alternate mapping yamls" begin
+        # Alternate color palette makes curtailment hot pink
+        out_path = joinpath(file_path, backend_pkg * "_alternate_palette")
+        !isdir(out_path) && mkdir(out_path)
+
+        palette = PG.load_palette(joinpath(TEST_DIR, "test_yamls/color-palette.yaml"))
+
+        PG.plot_fuel(
+            results_uc,
+            set_display = set_display,
+            title = "fuel",
+            save = out_path,
+            bar = true,
+            generator_mapping_file = joinpath(
+                TEST_DIR,
+                "test_yamls/generator_mapping.yaml",
+            ),
+            palette = palette,
+        )
+        list = readdir(out_path)
+        expected_files = ["fuel.png"]
+        @test isempty(setdiff(expected_files, list))
+        @test isempty(setdiff(list, expected_files))
+
+        @info "removing alternate test fuel outputs"
+        cleanup && rm(out_path, recursive = true)
+    end
+
     @testset "test html saving" begin
         plot_fuel(
             results_ed,

@@ -22,18 +22,6 @@ function _make_ylabel(
     return ylabel
 end
 
-function get_default_seriescolor()
-    backend = Plots.backend()
-    return get_default_seriescolor(backend)
-end
-
-function get_default_seriescolor(backend)
-    return GR_DEFAULT
-end
-
-function get_default_seriescolor(backend::Plots.PlotlyJSBackend)
-    return PLOTLY_DEFAULT
-end
 ################################### DEMAND #################################
 
 """
@@ -104,6 +92,7 @@ This function makes a plot of the demand in the system.
 - `nofill::Bool` : force empty area fill
 - `stair::Bool`: Make a stair plot instead of a stack plot
 - `filter_func::Function = PowerSystems.get_available` : filter components included in plot
+- `palette` : color palette from `load_palette`
 """
 function plot_demand!(p, result::Union{IS.Results, PSY.System}; kwargs...)
     backend = Plots.backend()
@@ -114,6 +103,7 @@ function plot_demand!(p, result::Union{IS.Results, PSY.System}; kwargs...)
 
     title = get(kwargs, :title, "Demand")
     y_label = get(kwargs, :y_label, bar ? "MWh" : "MW")
+    palette = get(kwargs, :palette, PALETTE)
 
     load = PA.get_load_data(result; kwargs...)
     kwargs = popkwargs(kwargs, :filter_func)
@@ -127,7 +117,7 @@ function plot_demand!(p, result::Union{IS.Results, PSY.System}; kwargs...)
         p,
         load_agg,
         load.time;
-        seriescolor = get(kwargs, :seriescolor, get_default_seriescolor()),
+        seriescolor = get(kwargs, :seriescolor, get_palette_seriescolor(palette)),
         linestyle = Symbol(linestyle),
         line_dash = string(linestyle),
         linewidth = get(kwargs, :linewidth, 1),
@@ -446,6 +436,7 @@ and assigns each fuel type a specific color.
 - `nofill::Bool` : force empty area fill
 - `stair::Bool`: Make a stair plot instead of a stack plot
 - `filter_func::Function = PowerSystems.get_available` : filter components included in plot
+- `palette` : Color palette as from `load_palette`.
 """
 function plot_fuel!(p, result::IS.Results; kwargs...)
     backend = Plots.backend()
@@ -457,6 +448,7 @@ function plot_fuel!(p, result::IS.Results; kwargs...)
     title = get(kwargs, :title, "Fuel")
     stack = get(kwargs, :stack, true)
     bar = get(kwargs, :bar, false)
+    palette = get(kwargs, :palette, PALETTE)
     kwargs =
         Dict{Symbol, Any}((k, v) for (k, v) in kwargs if k ∉ [:title, :save, :set_display])
 
@@ -464,7 +456,7 @@ function plot_fuel!(p, result::IS.Results; kwargs...)
     gen = PA.get_generation_data(result; kwargs...)
     sys = PA.PSI.get_system(result)
     if sys === nothing
-        Throw(error("No System data present: please run `set_system!(results, sys)`"))
+        throw(error("No System data present: please run `set_system!(results, sys)`"))
     end
     cat = PA.make_fuel_dictionary(sys; kwargs...)
     fuel = PA.categorize_data(gen.data, cat; curtailment = curtailment, slacks = slacks)
@@ -474,10 +466,14 @@ function plot_fuel!(p, result::IS.Results; kwargs...)
 
     # passing names here enforces order
     # TODO: enable custom sort with kwarg
-    fuel_agg = PA.combine_categories(fuel; names = intersect(CATEGORY_DEFAULT, keys(fuel)))
+    fuel_agg = PA.combine_categories(
+        fuel;
+        names = intersect(get_palette_category(palette), keys(fuel)),
+    )
     y_label = get(kwargs, :y_label, bar ? "MWh" : "MW")
 
-    seriescolor = get(kwargs, :seriescolor, match_fuel_colors(fuel_agg, backend))
+    seriescolor =
+        get(kwargs, :seriescolor, match_fuel_colors(fuel_agg, backend; palette = palette))
     p = plot_dataframe!(
         p,
         fuel_agg,
