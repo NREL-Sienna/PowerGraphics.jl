@@ -15,6 +15,7 @@ using StorageSystemsSimulations
 using GLPK
 using Weave
 using TimeSeries
+using HydroPowerSimulations
 
 const PG = PowerGraphics
 const IS = InfrastructureSystems
