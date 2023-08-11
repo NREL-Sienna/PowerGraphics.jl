@@ -84,6 +84,7 @@ function run_test_sim(result_dir::String)
         c_sys5_hy_uc = PSB.build_system(PSB.PSISystems, "5_bus_hydro_uc_sys")
         @info "Building ED system from"
         c_sys5_hy_ed = PSB.build_system(PSB.PSISystems, "5_bus_hydro_ed_sys")
+        transform_single_time_series!(c_sys5_hy_ed, 1, Hour(1))
 
         @info "Adding extra RE"
         add_re!(c_sys5_hy_uc)
@@ -144,12 +145,6 @@ function run_test_sim(result_dir::String)
                         component_type = ThermalStandard,
                         source = OnVariable,
                         affected_values = [ActivePowerVariable],
-                    ),
-                    EnergyLimitFeedforward(
-                        component_type = HydroEnergyReservoir,
-                        source = ActivePowerVariable,
-                        affected_values = [ActivePowerVariable],
-                        number_of_periods = 12,
                     ),
                 ],
             ),
