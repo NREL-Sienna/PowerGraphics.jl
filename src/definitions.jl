@@ -41,7 +41,7 @@ end
 
 function load_palette(file)
     palette_config = YAML.load_file(file)
-    palette_colors = []
+    palette_colors = Vector{PaletteColor}()
     for (k, v) in palette_config
         push!(palette_colors, PaletteColor(k, v["RGB"], v["order"]))
     end
@@ -52,7 +52,7 @@ end
 const PALETTE = load_palette()
 
 function get_default_palette(palette)
-    default_palette = []
+    default_palette = Vector{PaletteColor}()
     default_order = [6, 52, 14, 1, 32, 7, 18, 20, 27, 53, 17] # the default order from the color palette #
     for i in default_order
         for p in palette
@@ -65,70 +65,70 @@ function get_default_palette(palette)
 end
 
 # Recursively find all subtypes: useful for categorizing variables
-function all_subtypes(t::Type)
-    st = [t]
-    for t in st
-        union!(st, InteractiveUtils.subtypes(t))
-    end
-    return [split(string(s), ".")[end] for s in st]
-end
+# function all_subtypes(t::Type)
+#     st = [t]
+#     for t in st
+#         union!(st, InteractiveUtils.subtypes(t))
+#     end
+#     return [split(string(s), ".")[end] for s in st]
+# end
 
-function get_palette_gr(palette)
-    permutedims(getfield.(palette, :color))
-end
+# function get_palette_gr(palette)
+#     permutedims(getfield.(palette, :color))
+# end
 
 function get_palette_fuel(palette)
     getfield.(palette, :color)
 end
 
-function get_palette_plotly(palette)
-    getfield.(get_default_palette(palette), :RGB)
-end
+# function get_palette_plotly(palette)
+#     getfield.(get_default_palette(palette), :RGB)
+# end
 
-function get_palette_plotly_fuel(palette)
-    getfield.(palette, :RGB)
-end
+# function get_palette_plotly_fuel(palette)
+#     getfield.(palette, :RGB)
+# end
 
-function get_palette_category(palette)
-    getfield.(palette, :category)
-end
+# function get_palette_category(palette)
+#     getfield.(palette, :category)
+# end
 
-function get_palette_seriescolor(palette)
-    backend = Plots.backend()
-    return get_palette_seriescolor(backend, palette)
-end
+# function get_palette_seriescolor(palette)
+#     backend = Plots.backend()
+#     return get_palette_seriescolor(backend, palette)
+# end
 
-function get_palette_seriescolor(backend, palette)
-    return get_palette_gr(palette)
-end
+# function get_palette_seriescolor(backend, palette)
+#     return get_palette_gr(palette)
+# end
 
-function get_palette_seriescolor(backend::Plots.PlotlyJSBackend, palette)
-    return get_palette_plotly(palette)
-end
+# function get_palette_seriescolor(backend::Plots.PlotlyJSBackend, palette)
+#     return get_palette_plotly(palette)
+# end
 
-const SUPPORTED_EXTRA_PLOT_KWARGS = [:linestyle, :linewidth]
-const SUPPORTED_PLOTLY_SAVE_KWARGS =
-    [:autoplay, :post_script, :full_html, :animation_opts, :default_width, :default_height]
+# const SUPPORTED_EXTRA_PLOT_KWARGS = [:linestyle, :linewidth]
+# const SUPPORTED_PLOTLY_SAVE_KWARGS =
+#     [:autoplay, :post_script, :full_html, :animation_opts, :default_width, :default_height]
 
-function match_fuel_colors(data::DataFrames.DataFrame, backend; palette = PALETTE)
-    if backend == Plots.PlotlyJSBackend()
-        color_range = get_palette_plotly_fuel(palette)
-    else
-        color_range = get_palette_fuel(palette)
-    end
-    color_fuel =
-        DataFrames.DataFrame(fuels = get_palette_category(palette), colors = color_range)
-    names = DataFrames.names(data)
-    default =
-        [(color_fuel[findall(in(["$(names[1])"]), color_fuel.fuels), :][:, :colors])[1]]
-    for i in 2:length(names)
-        @debug names[i] (color_fuel[findall(in(["$(names[i])"]), color_fuel.fuels), :][
-            :,
-            :colors,
-        ])
-        specific_color =
-            (color_fuel[findall(in(["$(names[i])"]), color_fuel.fuels), :][:, :colors])[1]
-        default = hcat(default, specific_color)
-    end
-    return default
-end
+# function match_fuel_colors(data::DataFrames.DataFrame, backend; palette = PALETTE)
+#     if backend == Plots.PlotlyJSBackend()
+#         color_range = get_palette_plotly_fuel(palette)
+#     else
+#         color_range = get_palette_fuel(palette)
+#     end
+#     color_fuel =
+#         DataFrames.DataFrame(fuels = get_palette_category(palette), colors = color_range)
+#     names = DataFrames.names(data)
+#     default =
+#         [(color_fuel[findall(in(["$(names[1])"]), color_fuel.fuels), :][:, :colors])[1]]
+#     for i in 2:length(names)
+#         @debug names[i] (color_fuel[findall(in(["$(names[i])"]), color_fuel.fuels), :][
+#             :,
+#             :colors,
+#         ])
+#         specific_color =
+#             (color_fuel[findall(in(["$(names[i])"]), color_fuel.fuels), :][:, :colors])[1]
+#         default = hcat(default, specific_color)
+#     end
+#     return default
+# end
