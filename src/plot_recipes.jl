@@ -86,7 +86,7 @@ function _dataframe_plots_internal(
                 x = labels
                 plot_data = permutedims(plot_data)
                 plot_kwargs[:lab] = hcat(string.(labels)...)
-                plot_kwargs[:seriescolor] = permutedims(seriescolor)
+                plot_kwargs[:seriescolor] = seriescolor[:, length(labels):-1:1]
                 plot_kwargs[:legend] = false
             end
             plot_func = nofill ? Plots.hline! : Plots.bar!

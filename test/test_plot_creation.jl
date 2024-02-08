@@ -240,7 +240,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             set_display = set_display,
             title = "sysdemand_bus",
             save = out_path,
-            aggregation = Bus,
+            aggregation = ACBus,
         )
         plot_length = backend_pkg == "gr" ? length(p.series_list) : length(p.data)
         @test plot_length == 3
