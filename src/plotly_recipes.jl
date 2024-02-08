@@ -45,7 +45,7 @@ function _dataframe_plots_internal(
 
     plot_kwargs = Dict()
     if bar
-        plot_data = sum(plot_data, dims = 1) ./ interval
+        plot_data = sum(plot_data; dims = 1) ./ interval
         showtxicklabels = false
         if nofill
             plot_kwargs[:type] = "scatter"

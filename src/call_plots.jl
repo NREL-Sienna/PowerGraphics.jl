@@ -176,7 +176,6 @@ plot = plot_dataframe(df, time_range)
 - `nofill::Bool` : force empty area fill
 - `stair::Bool`: Make a stair plot instead of a stack plot
 """
-
 function plot_dataframe(df::DataFrames.DataFrame; kwargs...)
     return plot_dataframe!(_empty_plot(), PA.no_datetime(df), df.DateTime; kwargs...)
 end
@@ -213,7 +212,6 @@ If only the dataframe is provided, it must have a column of `DateTime` values.
 - `nofill::Bool` : force empty area fill
 - `stair::Bool`: Make a stair plot instead of a stack plot
 """
-
 function plot_dataframe!(p, df::DataFrames.DataFrame; kwargs...)
     return plot_dataframe!(p, PA.no_datetime(df), df.DateTime; kwargs...)
 end
@@ -404,7 +402,6 @@ plot = plot_fuel(res)
 - `stair::Bool`: Make a stair plot instead of a stack plot
 - `filter_func::Function = PowerSystems.get_available` : filter components included in plot
 """
-
 function plot_fuel(result::IS.Results; kwargs...)
     return plot_fuel!(_empty_plot(), result; kwargs...)
 end

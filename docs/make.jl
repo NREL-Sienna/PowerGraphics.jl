@@ -1,6 +1,6 @@
 using Documenter, PowerGraphics
 
-makedocs(
+makedocs(;
     modules = [PowerGraphics],
     format = Documenter.HTML(),
     sitename = "PowerGraphics.jl",
@@ -12,7 +12,7 @@ makedocs(
     ],
 )
 
-Documenter.deploydocs(
+Documenter.deploydocs(;
     repo = "github.com/NREL-Sienna/PowerGraphics.jl.git",
     target = "build",
     branch = "gh-pages",

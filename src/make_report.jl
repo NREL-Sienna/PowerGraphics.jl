@@ -33,7 +33,7 @@ function report(res::IS.Results, out_path::String, design_template::String; kwar
         throw(ArgumentError("The provided template file is invalid"))
     args = Dict("results" => res, "backend" => backend)
     Weave.weave(
-        design_template,
+        design_template;
         out_path = out_path,
         latex_cmd = ["xelatex"],
         doctype = doctype,
