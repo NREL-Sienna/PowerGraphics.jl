@@ -47,7 +47,7 @@ function _dataframe_plots_internal(
         data = Matrix(PA.no_datetime(variable))
         labels = DataFrames.names(PA.no_datetime(variable))
         if stack
-            plot_data = cumsum(data, dims = 2)
+            plot_data = cumsum(data; dims = 2)
             if !nofill
                 plot_kwargs[:fillrange] = hcat(zeros(length(time_range)), plot_data)
             end
@@ -75,7 +75,7 @@ function _dataframe_plots_internal(
         plot_kwargs[:grid] = false
 
         if bar
-            plot_data = sum(plot_data, dims = 1) ./ interval
+            plot_data = sum(plot_data; dims = 1) ./ interval
             if stack
                 x = nothing
                 plot_data = plot_data[end:-1:1, end:-1:1]

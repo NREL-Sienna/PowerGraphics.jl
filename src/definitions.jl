@@ -45,7 +45,7 @@ function load_palette(file)
     for (k, v) in palette_config
         push!(palette_colors, PaletteColor(k, v["RGB"], v["order"]))
     end
-    sort!(palette_colors, by = x -> x.order)
+    sort!(palette_colors; by = x -> x.order)
     return palette_colors
 end
 
@@ -117,7 +117,7 @@ function match_fuel_colors(data::DataFrames.DataFrame, backend; palette = PALETT
         color_range = get_palette_fuel(palette)
     end
     color_fuel =
-        DataFrames.DataFrame(fuels = get_palette_category(palette), colors = color_range)
+        DataFrames.DataFrame(; fuels = get_palette_category(palette), colors = color_range)
     names = DataFrames.names(data)
     default =
         [(color_fuel[findall(in(["$(names[1])"]), color_fuel.fuels), :][:, :colors])[1]]

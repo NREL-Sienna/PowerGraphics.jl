@@ -26,13 +26,13 @@ function test_reports(file_path::String; backend_pkg::String = "gr")
         @test isfile(report_out_path)
 
         @info("removing test files")
-        cleanup && rm(out_path, recursive = true)
+        cleanup && rm(out_path; recursive = true)
     end
 end
 
 try
-    test_reports(file_path, backend_pkg = "gr")
-    test_reports(file_path, backend_pkg = "plotlyjs")
+    test_reports(file_path; backend_pkg = "gr")
+    test_reports(file_path; backend_pkg = "plotlyjs")
 finally
     nothing
 end

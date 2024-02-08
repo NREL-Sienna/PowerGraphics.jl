@@ -31,7 +31,7 @@ function add_re!(sys)
 
     for g in get_components(HydroEnergyReservoir, sys)
         tpc = get_operation_cost(g)
-        smc = StorageManagementCost(
+        smc = StorageManagementCost(;
             variable = get_variable(tpc),
             fixed = get_fixed(tpc),
             start_up = 0.0,
@@ -68,12 +68,12 @@ function run_test_sim(result_dir::String)
     if ispath(sim_path)
         @info "Reading UC system from" sim_path
         c_sys5_hy_uc = System(
-            joinpath(sim_path, "..", "c_sys5_hy_uc.json"),
+            joinpath(sim_path, "..", "c_sys5_hy_uc.json");
             time_series_read_only = true,
         )
         @info "Reading ED system from" sim_path
         c_sys5_hy_ed = System(
-            joinpath(sim_path, "..", "c_sys5_hy_ed.json"),
+            joinpath(sim_path, "..", "c_sys5_hy_ed.json");
             time_series_read_only = true,
         )
         results_folders = filter!(x -> occursin("results_sim", x), readdir(result_dir))
@@ -89,8 +89,8 @@ function run_test_sim(result_dir::String)
         @info "Adding extra RE"
         add_re!(c_sys5_hy_uc)
         add_re!(c_sys5_hy_ed)
-        to_json(c_sys5_hy_uc, joinpath(sim_path, "..", "c_sys5_hy_uc.json"), force = true)
-        to_json(c_sys5_hy_ed, joinpath(sim_path, "..", "c_sys5_hy_ed.json"), force = true)
+        to_json(c_sys5_hy_uc, joinpath(sim_path, "..", "c_sys5_hy_uc.json"); force = true)
+        to_json(c_sys5_hy_ed, joinpath(sim_path, "..", "c_sys5_hy_ed.json"); force = true)
 
         mkpath(result_dir)
         GLPK_optimizer =
@@ -105,7 +105,7 @@ function run_test_sim(result_dir::String)
         )
         set_device_model!(template_hydro_st_uc, GenericBattery, StorageDispatchWithReserves)
 
-        template_hydro_st_ed = template_economic_dispatch(
+        template_hydro_st_ed = template_economic_dispatch(;
             network = CopperPlatePowerModel,
             use_slacks = true,
             duals = [CopperPlateBalanceConstraint],
@@ -118,18 +118,18 @@ function run_test_sim(result_dir::String)
         )
         set_device_model!(template_hydro_st_ed, GenericBattery, StorageDispatchWithReserves)
         template_hydro_st_ed.services = Dict() #remove ed services
-        models = SimulationModels(
+        models = SimulationModels(;
             decision_models = [
                 DecisionModel(
                     template_hydro_st_uc,
-                    c_sys5_hy_uc,
+                    c_sys5_hy_uc;
                     optimizer = GLPK_optimizer,
                     name = "UC",
                     system_to_file = false,
                 ),
                 DecisionModel(
                     template_hydro_st_ed,
-                    c_sys5_hy_ed,
+                    c_sys5_hy_ed;
                     optimizer = GLPK_optimizer,
                     name = "ED",
                     system_to_file = false,
@@ -137,11 +137,11 @@ function run_test_sim(result_dir::String)
             ],
         )
 
-        sequence = SimulationSequence(
+        sequence = SimulationSequence(;
             models = models,
             feedforwards = feedforward = Dict(
                 "ED" => [
-                    SemiContinuousFeedforward(
+                    SemiContinuousFeedforward(;
                         component_type = ThermalStandard,
                         source = OnVariable,
                         affected_values = [ActivePowerVariable],
@@ -150,7 +150,7 @@ function run_test_sim(result_dir::String)
             ),
             ini_cond_chronology = InterProblemChronology(),
         )
-        sim = Simulation(
+        sim = Simulation(;
             name = "results_sim",
             steps = 2,
             models = models,
@@ -186,11 +186,11 @@ function run_test_prob()
 
     prob = DecisionModel(
         template_hydro_st_uc,
-        c_sys5_hy_uc,
+        c_sys5_hy_uc;
         optimizer = GLPK_optimizer,
         horizon = 12,
     )
-    build!(prob, output_dir = mktempdir())
+    build!(prob; output_dir = mktempdir())
     solve!(prob)
     res = ProblemResults(prob)
     return res

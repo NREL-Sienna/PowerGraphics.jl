@@ -36,7 +36,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         )
         plot_dataframe(
             gen_uc.data[:ActivePowerVariable__ThermalStandard],
-            gen_uc.time,
+            gen_uc.time;
             set_display = set_display,
             title = "df_stack",
             save = out_path,
@@ -44,7 +44,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         )
         plot_dataframe(
             gen_uc.data[:ActivePowerVariable__ThermalStandard],
-            gen_uc.time,
+            gen_uc.time;
             set_display = set_display,
             title = "df_stair",
             save = out_path,
@@ -52,7 +52,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         )
         plot_dataframe(
             gen_uc.data[:ActivePowerVariable__ThermalStandard],
-            gen_uc.time,
+            gen_uc.time;
             set_display = set_display,
             title = "df_bar",
             save = out_path,
@@ -60,7 +60,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         )
         plot_dataframe(
             gen_uc.data[:ActivePowerVariable__ThermalStandard],
-            gen_uc.time,
+            gen_uc.time;
             set_display = set_display,
             title = "df_bar_stack",
             save = out_path,
@@ -70,12 +70,12 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         plot_dataframe!(
             plot_dataframe(
                 gen_uc.data[:ActivePowerVariable__ThermalStandard],
-                gen_uc.time,
+                gen_uc.time;
                 set_display = set_display,
                 stack = true,
             ),
             no_datetime(load_uc.data[:Load]) .* -1,
-            gen_uc.time,
+            gen_uc.time;
             set_display = set_display,
             title = "df_gen_load",
             save = out_path,
@@ -96,7 +96,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         @test isempty(setdiff(list, expected_files))
 
         @info("removing test files")
-        cleanup && rm(out_path, recursive = true)
+        cleanup && rm(out_path; recursive = true)
     end
 
     @testset "test $backend_pkg powerdata plot production" begin
@@ -104,7 +104,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         !isdir(out_path) && mkdir(out_path)
 
         PG.plot_powerdata(
-            gen_uc,
+            gen_uc;
             set_display = set_display,
             title = "pg_data",
             save = out_path,
@@ -112,7 +112,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             stack = false,
         )
         PG.plot_powerdata(
-            gen_uc,
+            gen_uc;
             set_display = set_display,
             title = "pg_data_stack",
             save = out_path,
@@ -120,7 +120,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             stack = true,
         )
         PG.plot_powerdata(
-            gen_uc,
+            gen_uc;
             set_display = set_display,
             title = "pg_data_bar",
             save = out_path,
@@ -128,7 +128,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             stack = false,
         )
         PG.plot_powerdata(
-            gen_uc,
+            gen_uc;
             set_display = set_display,
             title = "pg_data_bar_stack",
             save = out_path,
@@ -145,14 +145,14 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         @test isempty(setdiff(list, expected_files))
 
         @info("removing test files")
-        cleanup && rm(out_path, recursive = true)
+        cleanup && rm(out_path; recursive = true)
     end
 
     @testset "test $backend_pkg demand plot production" begin
         out_path = joinpath(file_path, backend_pkg * "_demand_plots")
         !isdir(out_path) && mkdir(out_path)
         PG.plot_demand(
-            results_uc,
+            results_uc;
             set_display = set_display,
             title = "demand",
             save = out_path,
@@ -162,7 +162,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             filter_func = x -> get_name(get_bus(x)) == "bus2",
         )
         PG.plot_demand(
-            results_uc,
+            results_uc;
             set_display = set_display,
             title = "demand_stack",
             save = out_path,
@@ -171,7 +171,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             nofill = false,
         )
         PG.plot_demand(
-            results_uc,
+            results_uc;
             set_display = set_display,
             title = "demand_bar",
             save = out_path,
@@ -180,7 +180,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             nofill = false,
         )
         PG.plot_demand(
-            results_uc,
+            results_uc;
             set_display = set_display,
             title = "demand_bar_stack",
             save = out_path,
@@ -189,7 +189,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             nofill = false,
         )
         PG.plot_demand(
-            results_uc,
+            results_uc;
             set_display = set_display,
             title = "demand_nofill",
             save = out_path,
@@ -198,7 +198,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             nofill = true,
         )
         PG.plot_demand(
-            results_uc,
+            results_uc;
             set_display = set_display,
             title = "demand_nofill_stack",
             save = out_path,
@@ -207,7 +207,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             nofill = true,
         )
         PG.plot_demand(
-            results_uc,
+            results_uc;
             set_display = set_display,
             title = "demand_nofill_bar",
             save = out_path,
@@ -216,7 +216,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             nofill = true,
         )
         PG.plot_demand(
-            results_uc,
+            results_uc;
             set_display = set_display,
             title = "demand_nofill_bar_stack",
             save = out_path,
@@ -226,7 +226,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         )
 
         p = PG.plot_demand(
-            results_uc.system,
+            results_uc.system;
             set_display = set_display,
             title = "sysdemand",
             save = out_path,
@@ -236,7 +236,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         @test plot_length == 1
 
         p = PG.plot_demand(
-            results_uc.system,
+            results_uc.system;
             set_display = set_display,
             title = "sysdemand_bus",
             save = out_path,
@@ -264,7 +264,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         @test isempty(setdiff(list, expected_files))
 
         @info("removing test files")
-        cleanup && rm(out_path, recursive = true)
+        cleanup && rm(out_path; recursive = true)
     end
 
     @testset "test $backend_pkg fuel plot production" begin
@@ -272,7 +272,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         !isdir(out_path) && mkdir(out_path)
 
         PG.plot_fuel(
-            results_uc,
+            results_uc;
             set_display = set_display,
             title = "fuel",
             save = out_path,
@@ -281,7 +281,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             filter_func = x -> get_name(get_area(get_bus(x))) == "1",
         )
         PG.plot_fuel(
-            results_uc,
+            results_uc;
             set_display = set_display,
             title = "fuel_stack",
             save = out_path,
@@ -289,7 +289,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             stack = true,
         )
         PG.plot_fuel(
-            results_uc,
+            results_uc;
             set_display = set_display,
             title = "fuel_bar",
             save = out_path,
@@ -297,7 +297,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
             stack = false,
         )
         PG.plot_fuel(
-            results_uc,
+            results_uc;
             set_display = set_display,
             title = "fuel_bar_stack",
             save = out_path,
@@ -314,7 +314,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         @test isempty(setdiff(list, expected_files))
 
         @info("removing test files")
-        cleanup && rm(out_path, recursive = true)
+        cleanup && rm(out_path; recursive = true)
     end
 
     @testset "test alternate mapping yamls" begin
@@ -325,7 +325,7 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         palette = PG.load_palette(joinpath(TEST_DIR, "test_yamls/color-palette.yaml"))
 
         PG.plot_fuel(
-            results_uc,
+            results_uc;
             set_display = set_display,
             title = "fuel",
             save = out_path,
@@ -342,12 +342,12 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
         @test isempty(setdiff(list, expected_files))
 
         @info "removing alternate test fuel outputs"
-        cleanup && rm(out_path, recursive = true)
+        cleanup && rm(out_path; recursive = true)
     end
 
     @testset "test html saving" begin
         plot_fuel(
-            results_ed,
+            results_ed;
             set_display = false,
             save = TEST_RESULT_DIR,
             title = "fuel_html_output",
@@ -357,9 +357,9 @@ function test_plots(file_path::String; backend_pkg::String = "gr")
     end
 end
 try
-    test_plots(file_path, backend_pkg = "gr")
+    test_plots(file_path; backend_pkg = "gr")
     @info("done with GR, starting plotlyjs")
-    test_plots(file_path, backend_pkg = "plotlyjs")
+    test_plots(file_path; backend_pkg = "plotlyjs")
 finally
     nothing
 end
