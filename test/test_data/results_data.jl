@@ -103,7 +103,7 @@ function run_test_sim(result_dir::String)
             HydroEnergyReservoir,
             HydroDispatchReservoirStorage,
         )
-        set_device_model!(template_hydro_st_uc, GenericBattery, BookKeeping)
+        set_device_model!(template_hydro_st_uc, GenericBattery, StorageDispatchWithReserves)
 
         template_hydro_st_ed = template_economic_dispatch(
             network = CopperPlatePowerModel,
@@ -116,7 +116,7 @@ function run_test_sim(result_dir::String)
             HydroEnergyReservoir,
             HydroDispatchReservoirStorage,
         )
-        set_device_model!(template_hydro_st_ed, GenericBattery, BookKeeping)
+        set_device_model!(template_hydro_st_ed, GenericBattery, StorageDispatchWithReserves)
         template_hydro_st_ed.services = Dict() #remove ed services
         models = SimulationModels(
             decision_models = [
