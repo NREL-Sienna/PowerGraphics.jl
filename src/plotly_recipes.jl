@@ -72,8 +72,15 @@ function _dataframe_plots_internal(
         if bar
             plot_kwargs[:marker_color] = seriescolor[ix]
         end
+        data_to_plot = plot_data[:, ix]
+        if sum(data_to_plot) >= 0
+            sign_group = 0
+        else
+            sign_group = 10
+        end
+
         if stack
-            plot_kwargs[:stackgroup] = string(plot_length + 1)
+            plot_kwargs[:stackgroup] = string(plot_length + 1 + sign_group)
             if nofill
                 plot_kwargs[:fillcolor] = "transparent"
             else
@@ -84,7 +91,6 @@ function _dataframe_plots_internal(
         end
         plot_kwargs[:line_color] = seriescolor[ix]
         plot_kwargs[:name] = names[ix]
-
         trace = Plots.PlotlyJS.scatter(; y = plot_data[:, ix], plot_kwargs...)
         push!(traces, trace)
     end
@@ -94,7 +100,7 @@ function _dataframe_plots_internal(
     layout_kwargs[:xaxis] =
         Plots.PlotlyJS.attr(; showticklabels = !bar, title = "$time_interval")
     layout_kwargs[:title] = "$title"
-    layout_kwargs[:barmode] = stack ? "stack" : "group"
+    layout_kwargs[:barmode] = stack ? "relative" : "group"
     merge!(layout_kwargs, kwargs)
     Plots.PlotlyJS.relayout!(plot, Plots.PlotlyJS.Layout(; layout_kwargs...))
 
