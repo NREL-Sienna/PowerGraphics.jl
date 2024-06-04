@@ -4,6 +4,7 @@
 [![codecov](https://codecov.io/gh/NREL-Sienna/PowerGraphics.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/NREL-Sienna/PowerGraphics.jl)
 [![Documentation Build](https://github.com/NREL-Sienna/PowerGraphics.jl/workflows/Documentation/badge.svg?)](https://nrel-sienna.github.io/PowerGraphics.jl/stable)
 [<img src="https://img.shields.io/badge/slack-@Sienna/PG-sienna.svg?logo=slack">](https://join.slack.com/t/nrel-sienna/shared_invite/zt-glam9vdu-o8A9TwZTZqqNTKHa7q3BpQ)
+[![PowerGraphics.jl Downloads](https://img.shields.io/badge/dynamic/json?url=http%3A%2F%2Fjuliapkgstats.com%2Fapi%2Fv1%2Ftotal_downloads%2FPowerGraphics&query=total_requests&label=Downloads)](http://juliapkgstats.com/pkg/PowerGraphics)
 
 PowerGraphics.jl is a Julia package for plotting results from [PowerSimulations.jl](https://github.com/NREL-Sienna/PowerSimulations.jl).
 
