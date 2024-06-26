@@ -21,6 +21,7 @@ julia> ]
 
 ```julia
 using PowerGraphics
+using PowerAnalytics
 # where "res" is a PowerSimulations.SimulationResults object
 gen = get_generation_data(res)
 plot_powerdata(gen)
