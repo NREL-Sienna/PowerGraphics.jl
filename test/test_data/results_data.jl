@@ -15,7 +15,7 @@ function add_re!(sys)
     add_component!(sys, re)
     copy_time_series!(re, get_component(PowerLoad, sys, "bus2"))
 
-    fx = RenewableFix(
+    fx = RenewableNonDispatch(
         "RoofTopSolar",
         true,
         get_component(Bus, sys, "bus5"),
