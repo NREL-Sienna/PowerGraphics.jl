@@ -84,7 +84,7 @@ function run_test_sim(result_dir::String)
         c_sys5_hy_uc = PSB.build_system(PSB.PSISystems, "5_bus_hydro_uc_sys")
         @info "Building ED system from"
         c_sys5_hy_ed = PSB.build_system(PSB.PSISystems, "5_bus_hydro_ed_sys")
-        transform_single_time_series!(c_sys5_hy_ed, 1, Hour(1))
+        transform_single_time_series!(c_sys5_hy_ed, Hour(1), Hour(1))
 
         @info "Adding extra RE"
         add_re!(c_sys5_hy_uc)
