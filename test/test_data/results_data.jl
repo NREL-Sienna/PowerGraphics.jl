@@ -9,7 +9,7 @@ function add_re!(sys)
         PrimeMovers.WT,
         (min = 0.0, max = 0.0),
         1.0,
-        TwoPartCost(0.220, 0.0),
+        RenewableGenerationCost(0.220),
         100.0,
     )
     add_component!(sys, re)
