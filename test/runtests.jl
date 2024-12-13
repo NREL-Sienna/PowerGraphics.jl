@@ -12,7 +12,7 @@ using PowerAnalytics
 using PlotlyJS
 using PowerSimulations
 using StorageSystemsSimulations
-using GLPK
+using HiGHS
 using Weave
 using TimeSeries
 using HydroPowerSimulations
