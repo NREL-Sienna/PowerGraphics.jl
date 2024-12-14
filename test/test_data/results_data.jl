@@ -33,6 +33,8 @@ function add_re!(sys)
         smc = StorageCost(;
             charge_variable_cost = CostCurve(LinearCurve(0.1)),
             discharge_variable_cost = CostCurve(LinearCurve(0.2)),
+            energy_shortage_cost = 10.0,
+            energy_surplus_cost = 10.0,
         )
         set_operation_cost!(g, smc)
     end
@@ -53,7 +55,7 @@ function add_re!(sys)
         efficiency = (in = 0.9, out = 0.9),   #(CSolar)-efficiency::NamedTuple{(:in, :out), Tuple{Float64, Float64}}: Average efficiency [0, 1] in (charging/filling) and out (discharging/consuming) of the storage system, validation range: (0, 1)
         reactive_power = 0.0,
         reactive_power_limits = (min = -1.0, max = 1.0),   #::Union{Nothing, MinMax}: Minimum and maximum reactive power limits. Set to Nothing if not applicable
-        base_power = 10.0,   #::Float64: Base power of the unit (MVA) for per unitization, validation range: (0, nothing)
+        base_power = 15.0,   #::Float64: Base power of the unit (MVA) for per unitization, validation range: (0, nothing)
         operation_cost = StorageCost(;
             charge_variable_cost = CostCurve(LinearCurve(0.1)),
             discharge_variable_cost = CostCurve(LinearCurve(0.2)),
@@ -138,6 +140,7 @@ function run_test_sim(result_dir::String)
                     optimizer = HiGHS_optimizer,
                     name = "UC",
                     system_to_file = false,
+                    calculate_conflict = true
                 ),
                 DecisionModel(
                     template_hydro_st_ed,
@@ -145,6 +148,7 @@ function run_test_sim(result_dir::String)
                     optimizer = HiGHS_optimizer,
                     name = "ED",
                     system_to_file = false,
+                    calculate_conflict = true
                 ),
             ],
         )
