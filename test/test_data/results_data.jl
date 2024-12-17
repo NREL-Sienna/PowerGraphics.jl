@@ -30,33 +30,39 @@ function add_re!(sys)
     copy_time_series!(fx, get_component(PowerLoad, sys, "bus2"))
 
     for g in get_components(HydroEnergyReservoir, sys)
-        tpc = get_operation_cost(g)
-        smc = StorageManagementCost(;
-            variable = get_variable(tpc),
-            fixed = get_fixed(tpc),
-            start_up = 0.0,
-            shut_down = 0.0,
+        smc = StorageCost(;
+            charge_variable_cost = CostCurve(LinearCurve(0.1)),
+            discharge_variable_cost = CostCurve(LinearCurve(0.2)),
             energy_shortage_cost = 10.0,
             energy_surplus_cost = 10.0,
         )
         set_operation_cost!(g, smc)
     end
 
-    batt = GenericBattery(
-        "test_batt",
-        true,
-        get_component(Bus, sys, "bus4"),
-        PrimeMovers.BA,
-        0.0,
-        (min = 0.0, max = 1.0),
-        1.0,
-        0.0,
-        (min = 0.0, max = 1.0),
-        (min = 0.0, max = 1.0),
-        (in = 1.0, out = 1.0),
-        0.0,
-        nothing,
-        10.0,
+    batt = EnergyReservoirStorage(;
+        name = "test_batt",
+        available = true,
+        bus = get_component(Bus, sys, "bus4"),
+        prime_mover_type = PrimeMovers.BA,
+        storage_technology_type = StorageTech.OTHER_CHEM,
+        storage_capacity = 2.0,
+        storage_level_limits = (min = 0.0, max = 1.0),
+        initial_storage_capacity_level = 0.7,
+        rating = 1.0,
+        active_power = 0.1,
+        input_active_power_limits = (min = 0.0, max = 1.0),
+        output_active_power_limits = (min = 0.0, max = 1.0),
+        efficiency = (in = 0.9, out = 0.9),
+        reactive_power = 0.0,
+        reactive_power_limits = (min = -1.0, max = 1.0),
+        base_power = 15.0,
+        operation_cost = StorageCost(;
+            charge_variable_cost = CostCurve(LinearCurve(0.1)),
+            discharge_variable_cost = CostCurve(LinearCurve(0.2)),
+        ),
+        conversion_factor = 1,
+        storage_target = 0.0,
+        cycle_limits = 5000,
     )
     add_component!(sys, batt)
 end
@@ -93,8 +99,8 @@ function run_test_sim(result_dir::String)
         to_json(c_sys5_hy_ed, joinpath(sim_path, "..", "c_sys5_hy_ed.json"); force = true)
 
         mkpath(result_dir)
-        GLPK_optimizer =
-            optimizer_with_attributes(GLPK.Optimizer, "msg_lev" => GLPK.GLP_MSG_OFF)
+        HiGHS_optimizer =
+            optimizer_with_attributes(HiGHS.Optimizer)
 
         template_hydro_st_uc = template_unit_commitment()
         set_device_model!(template_hydro_st_uc, HydroDispatch, FixedOutput)
@@ -103,7 +109,11 @@ function run_test_sim(result_dir::String)
             HydroEnergyReservoir,
             HydroDispatchReservoirStorage,
         )
-        set_device_model!(template_hydro_st_uc, GenericBattery, StorageDispatchWithReserves)
+        set_device_model!(
+            template_hydro_st_uc,
+            EnergyReservoirStorage,
+            StorageDispatchWithReserves,
+        )
 
         template_hydro_st_ed = template_economic_dispatch(;
             network = CopperPlatePowerModel,
@@ -116,23 +126,29 @@ function run_test_sim(result_dir::String)
             HydroEnergyReservoir,
             HydroDispatchReservoirStorage,
         )
-        set_device_model!(template_hydro_st_ed, GenericBattery, StorageDispatchWithReserves)
+        set_device_model!(
+            template_hydro_st_ed,
+            EnergyReservoirStorage,
+            StorageDispatchWithReserves,
+        )
         template_hydro_st_ed.services = Dict() #remove ed services
         models = SimulationModels(;
             decision_models = [
                 DecisionModel(
                     template_hydro_st_uc,
                     c_sys5_hy_uc;
-                    optimizer = GLPK_optimizer,
+                    optimizer = HiGHS_optimizer,
                     name = "UC",
                     system_to_file = false,
+                    calculate_conflict = true,
                 ),
                 DecisionModel(
                     template_hydro_st_ed,
                     c_sys5_hy_ed;
-                    optimizer = GLPK_optimizer,
+                    optimizer = HiGHS_optimizer,
                     name = "ED",
                     system_to_file = false,
+                    calculate_conflict = true,
                 ),
             ],
         )
@@ -173,8 +189,8 @@ end
 function run_test_prob()
     c_sys5_hy_uc = PSB.build_system(PSB.PSISystems, "5_bus_hydro_uc_sys")
     add_re!(c_sys5_hy_uc)
-    GLPK_optimizer =
-        optimizer_with_attributes(GLPK.Optimizer, "msg_lev" => GLPK.GLP_MSG_OFF)
+    HiGHS_optimizer =
+        optimizer_with_attributes(HiGHS.Optimizer)
 
     template_hydro_st_uc = template_unit_commitment()
     set_device_model!(template_hydro_st_uc, HydroDispatch, FixedOutput)
@@ -187,11 +203,11 @@ function run_test_prob()
     prob = DecisionModel(
         template_hydro_st_uc,
         c_sys5_hy_uc;
-        optimizer = GLPK_optimizer,
-        horizon = 12,
+        optimizer = HiGHS_optimizer,
+        horizon = Hour(12),
     )
     build!(prob; output_dir = mktempdir())
     solve!(prob)
-    res = ProblemResults(prob)
+    res = OptimizationProblemResults(prob)
     return res
 end
