@@ -140,7 +140,7 @@ function run_test_sim(result_dir::String)
                     optimizer = HiGHS_optimizer,
                     name = "UC",
                     system_to_file = false,
-                    calculate_conflict = true
+                    calculate_conflict = true,
                 ),
                 DecisionModel(
                     template_hydro_st_ed,
@@ -148,7 +148,7 @@ function run_test_sim(result_dir::String)
                     optimizer = HiGHS_optimizer,
                     name = "ED",
                     system_to_file = false,
-                    calculate_conflict = true
+                    calculate_conflict = true,
                 ),
             ],
         )
