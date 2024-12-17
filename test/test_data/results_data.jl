@@ -43,26 +43,26 @@ function add_re!(sys)
         name = "test_batt",
         available = true,
         bus = get_component(Bus, sys, "bus4"),
-        prime_mover_type = PrimeMovers.BA,   #::PrimeMovers: Prime mover technology according to EIA 923. Options are listed here
-        storage_technology_type = StorageTech.OTHER_CHEM,   #StorageTech.OTHER_CHEM =::StorageTech: Storage Technology Complementary to EIA 923. Options are listed here
-        storage_capacity = 2.0,           #::Float64: Maximum storage capacity (can be in units of, e.g., MWh for batteries or liters for hydrogen), validation range: (0, nothing)
-        storage_level_limits = (min = 0.0, max = 1.0),       #::MinMax: Minimum and maximum allowable storage levels [0, 1], which can be used to model derates or other restrictions, such as state-of-charge restrictions on battery cycling, validation range: (0, 1)
-        initial_storage_capacity_level = 0.7,  #::Float64: Initial storage capacity level as a ratio [0, 1.0] of storage_capacity, validation range: (0, 1)
-        rating = 1.0,   #::Float64: Maximum output power rating of the unit (MVA)************
-        active_power = 0.1, #Initial active power set point of the unit in MW. For power flow, this is the steady state operating point of the system. For production cost modeling, this may or may not be used as the initial starting point for the solver, depending on the solver used
-        input_active_power_limits = (min = 0.0, max = 1.0),  #::MinMax: Minimum and maximum limits on the input active power (i.e., charging), validation range: (0, nothing)
-        output_active_power_limits = (min = 0.0, max = 1.0),   #::MinMax: Minimum and maximum limits on the output active power (i.e., discharging), validation range: (0, nothing)
-        efficiency = (in = 0.9, out = 0.9),   #(CSolar)-efficiency::NamedTuple{(:in, :out), Tuple{Float64, Float64}}: Average efficiency [0, 1] in (charging/filling) and out (discharging/consuming) of the storage system, validation range: (0, 1)
+        prime_mover_type = PrimeMovers.BA,
+        storage_technology_type = StorageTech.OTHER_CHEM,
+        storage_capacity = 2.0,
+        storage_level_limits = (min = 0.0, max = 1.0),
+        initial_storage_capacity_level = 0.7,
+        rating = 1.0,
+        active_power = 0.1,
+        input_active_power_limits = (min = 0.0, max = 1.0),
+        output_active_power_limits = (min = 0.0, max = 1.0),
+        efficiency = (in = 0.9, out = 0.9),
         reactive_power = 0.0,
-        reactive_power_limits = (min = -1.0, max = 1.0),   #::Union{Nothing, MinMax}: Minimum and maximum reactive power limits. Set to Nothing if not applicable
-        base_power = 15.0,   #::Float64: Base power of the unit (MVA) for per unitization, validation range: (0, nothing)
+        reactive_power_limits = (min = -1.0, max = 1.0),
+        base_power = 15.0,
         operation_cost = StorageCost(;
             charge_variable_cost = CostCurve(LinearCurve(0.1)),
             discharge_variable_cost = CostCurve(LinearCurve(0.2)),
         ),
         conversion_factor = 1,
-        storage_target = 0.0,   #::Float64: (default: 0.0) Storage target at the end of simulation as ratio of storage capacity
-        cycle_limits = 5000, #::Int: (default: 1e4) Storage Maximum number of cycles per year
+        storage_target = 0.0,
+        cycle_limits = 5000,
     )
     add_component!(sys, batt)
 end
