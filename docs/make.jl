@@ -6,7 +6,7 @@ pages = OrderedDict(
     "Welcome" => "index.md",
     ## TODO add additional pages here in the future and remove stubs
     "Tutorials" => Any[ "Examples" => "tutorials/examples.md"], # TODO: make examples page
-    # "How to..." => Any["stub" => "how_to_guides/stub.md"],
+    "How to..." => Any["Change Backends" => "how_to_guides/backends.md"],
     # "Explanation" => Any["stub" => "explanation/stub.md"],
     "Reference" => Any[ 
         "Public API" => "reference/public.md",
