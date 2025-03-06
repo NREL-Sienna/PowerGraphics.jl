@@ -540,7 +540,7 @@ plot = plot_fuel(res)
 save_plot(plot, "my_plot.png")
 ```
 
-# Accepted Key Words (currently only implemented for PlotlyJS backend)
+# Accepted Key Words (currently only implemented for `PlotlyJS` backend)
 - `width::Union{Nothing,Int}=nothing`
 - `height::Union{Nothing,Int}=nothing`
 - `scale::Union{Nothing,Real}=nothing`

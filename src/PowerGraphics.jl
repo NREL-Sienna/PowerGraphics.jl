@@ -14,6 +14,7 @@ export plot_powerdata!
 export plot_results!
 export plot_fuel!
 export report
+export save_plot
 
 #I/O Imports
 import Dates
