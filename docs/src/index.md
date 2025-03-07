@@ -7,7 +7,7 @@ CurrentModule = PowerGraphics
 ## Overview
 
 `PowerGraphics.jl` is a [`Julia`](http://www.julialang.org) package for plotting results
-from [PowerSimulations.jl](https://github.com/NREL/PowerSimulations.jl).
+from [PowerSimulations.jl](https://nrel-sienna.github.io/PowerSimulations.jl/latest/).
 
 ## About Sienna
 
