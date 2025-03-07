@@ -28,11 +28,13 @@ end
     plot_demand(results)
     plot_demand(system)
 
-This function makes a plot of the demand in the system.
+Plots the demand in the system.
 
 # Arguments
 
-- `res::Union{Results, Vector{IS.Results}}`: results to be plotted
+- `res::Union{`[`InfrastructureSystems.Results`](@extref)`, `[`PowerSystems.System`](@extref)`}`: 
+    A `Results` object (e.g., [`PowerSimulations.SimulationResults`](@extref :type:`PowerSimulations.SimulationResults`))
+    or [`PowerSystems.System`](@extref) to plot the demand from
 
 # Example
 
@@ -65,15 +67,17 @@ function plot_demand(result::Union{IS.Results, PSY.System}; kwargs...)
 end
 
 """
-    plot_demand!(plot, results)
+    plot_demand!(plot, result)
     plot_demand!(plot, system)
 
-This function makes a plot of the demand in the system.
+Plots the demand in the system.
 
 # Arguments
 
 - `plot` : existing plot handle
-- `result::Union{IS.Results, PSY.System}` : simulation results or [`PowerSystems.System`](@extref)
+- `res::Union{`[`InfrastructureSystems.Results`](@extref)`, `[`PowerSystems.System`](@extref)`}`: 
+    A `Results` object (e.g., [`PowerSimulations.SimulationResults`](@extref :type:`PowerSimulations.SimulationResults`))
+    or [`PowerSystems.System`](@extref) to plot the demand from
 
 # Accepted Key Words
 
@@ -236,11 +240,11 @@ end
 """
     plot_powerdata(powerdata)
 
-This function makes a plot of a PGdata object
+Makes a plot from a `PowerAnalytics.PowerData` object
 
 # Arguments
 
-- `powerdata::PowerData`: The dataframe to be plotted
+- `powerdata::PowerAnalytics.PowerData`: The `PowerData` object to be plotted
 
 # Accepted Key Words
 - `combine_categories::Bool = false` : plot category values or each value in a category
@@ -262,12 +266,12 @@ end
 """
     plot_powerdata!(plot, powerdata)
 
-This function makes a plot of a PGdata object
+Makes a plot from a `PowerAnalytics.PowerData` object
 
 # Arguments
 
 - `plot` : existing plot handle (optional)
-- `powerdata::PowerData`: The dataframe to be plotted
+- `powerdata::PowerAnalytics.PowerData`: The `PowerData` object to be plotted
 
 # Accepted Key Words
 - `combine_categories::Bool = false` : plot category values or each value in a category
@@ -318,7 +322,7 @@ end
 """
     plot_results(results)
 
-This function makes a plot of a results dictionary object
+Makes a plot from a results dictionary object
 
 # Arguments
 
@@ -344,7 +348,7 @@ end
 """
     plot_results!(plot, results)
 
-This function makes a plot of a results dictionary
+Makes a plot from a results dictionary
 
 # Arguments
 
@@ -378,9 +382,11 @@ and assigns each fuel type a specific color.
 
 # Arguments
 
-- `res::`[`PowerSimulations.SimulationResults`](@extref :type:`PowerSimulations.SimulationResults`) : results to be plotted
+- `res::`[`InfrastructureSystems.Results`](@extref): 
+    A `Results` object (e.g., [`PowerSimulations.SimulationResults`](@extref :type:`PowerSimulations.SimulationResults`))
+    to be plotted
 
-# Example
+    # Example
 
 ```julia
 res = solve_op_problem!(OpProblem)
@@ -417,7 +423,9 @@ and assigns each fuel type a specific color.
 # Arguments
 
 - `plot` : existing plot handle (optional)
-- `res::PowerSimulations.Results` : results to be plotted
+- `res::`[`InfrastructureSystems.Results`](@extref): 
+    A `Results` object (e.g., [`PowerSimulations.SimulationResults`](@extref :type:`PowerSimulations.SimulationResults`))
+    to be plotted
 
 # Accepted Key Words
 - `generator_mapping_file` = "file_path" : file path to yaml defining generator category by fuel and primemover
