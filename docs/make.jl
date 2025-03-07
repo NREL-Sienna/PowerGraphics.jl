@@ -1,6 +1,15 @@
 using Documenter
 import DataStructures: OrderedDict
 using PowerGraphics
+using DocumenterInterLinks
+
+links = InterLinks(
+    "Plots" => "https://docs.juliaplots.org/stable/",
+)
+
+if haskey(ENV, "GITHUB_ACTIONS")
+    ENV["JULIA_DEBUG"] = "Documenter"
+end
 
 pages = OrderedDict(
     "Welcome" => "index.md",
@@ -15,7 +24,6 @@ pages = OrderedDict(
     ],
 )
 
-
 makedocs(;
     modules = [PowerGraphics],
     format = Documenter.HTML(
@@ -24,6 +32,7 @@ makedocs(;
     authors = "Clayton Barrows",
     pages = Any[p for p in pages],
     draft = false,
+    plugins = [links],
 )
 
 Documenter.deploydocs(;
