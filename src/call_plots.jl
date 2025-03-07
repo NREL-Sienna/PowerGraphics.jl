@@ -50,14 +50,14 @@ plot = plot_demand(res)
 - `aggregate::String = "System", "PowerLoad", or "Bus"`: aggregate the demand other than by generator
 - `set_display::Bool = true`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "png"`: set a different format for saving a PlotlyJS plot
+- `format::String = "png"`: set a different format for saving a [PlotlyJS](@extref Plots [Plotly-/-PlotlyJS](https://github.com/spencerlyon2/PlotlyJS.jl)) plot
 - `seriescolor::Array`: Set different colors for the plots
 - `title::String = "Title"`: Set a title for the plots
 - `stack::Bool = true`: stack plot traces
 - `bar::Bool` : create bar plot
 - `nofill::Bool` : force empty area fill
 - `stair::Bool`: Make a stair plot instead of a stack plot
-- `filter_func::Function = PowerSystems.get_available` : filter components included in plot
+- `filter_func::Function = `[`PowerSystems.get_available`](@extref PowerSystems.get_available-Tuple{Component}): filter components included in plot
 """
 
 function plot_demand(result::Union{IS.Results, PSY.System}; kwargs...)
@@ -73,7 +73,7 @@ This function makes a plot of the demand in the system.
 # Arguments
 
 - `plot` : existing plot handle
-- `result::Union{IS.Results, PSY.System}` : simulation results or PowerSystems.System
+- `result::Union{IS.Results, PSY.System}` : simulation results or [`PowerSystems.System`](@extref)
 
 # Accepted Key Words
 
@@ -81,18 +81,20 @@ This function makes a plot of the demand in the system.
 - `title::String`: Set a title for the plots
 - `horizon::Int64`: To plot a shorter window of time than the full results
 - `initial_time::DateTime`: To start the plot at a different time other than the results initial time
-- `aggregate::String = "System", "PowerLoad", or "Bus"`: aggregate the demand other than by generator
+- `aggregate::String = "System", "PowerLoad", or "Bus"`: aggregate the demand by
+    [`PowerSystems.System`](@extref), [`PowerSystems.PowerLoad`](@extref), or [`PowerSystems.Bus`](@extref),
+    rather than by generator
 - `set_display::Bool = true`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "png"`: set a different format for saving a PlotlyJS plot
+- `format::String = "png"`: set a different format for saving a [PlotlyJS](@extref Plots [Plotly-/-PlotlyJS](https://github.com/spencerlyon2/PlotlyJS.jl)) plot
 - `seriescolor::Array`: Set different colors for the plots
 - `title::String = "Title"`: Set a title for the plots
 - `stack::Bool = true`: stack plot traces
 - `bar::Bool` : create bar plot
 - `nofill::Bool` : force empty area fill
 - `stair::Bool`: Make a stair plot instead of a stack plot
-- `filter_func::Function = PowerSystems.get_available` : filter components included in plot
-- `palette` : color palette from `load_palette`
+- `filter_func::Function = `[`PowerSystems.get_available`](@extref PowerSystems.get_available-Tuple{Component}): filter components included in plot
+- `palette` : color palette from [`load_palette`](@ref)
 """
 function plot_demand!(p, result::Union{IS.Results, PSY.System}; kwargs...)
     backend = Plots.backend()
@@ -147,12 +149,12 @@ end
     plot_dataframe(df)
     plot_dataframe(df, time_range)
 
-Plots data from DataFrame where each row represents a time period and each column represents a trace
+Plots data from `DataFrame` where each row represents a time period and each column represents a trace
 
 # Arguments
 
-- `df::DataFrames.DataFrame`: DataFrame where each row represents a time period and each column represents a trace.
-If only the dataframe is provided, it must have a column of `DateTime` values.
+- `df::DataFrames.DataFrame`: `DataFrame` where each row represents a time period and each column represents a trace.
+If only the `DataFrame` is provided, it must have a column of `DateTime` values.
 - `time_range:::Union{DataFrames.DataFrame, Array, StepRange}`: The time periods of the data
 
 # Example
@@ -168,7 +170,7 @@ plot = plot_dataframe(df, time_range)
 - `curtailment::Bool`: plot the curtailment with the variable
 - `set_display::Bool = true`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "png"`: set a different format for saving a PlotlyJS plot
+- `format::String = "png"`: set a different format for saving a [PlotlyJS](@extref Plots [Plotly-/-PlotlyJS](https://github.com/spencerlyon2/PlotlyJS.jl)) plot
 - `seriescolor::Array`: Set different colors for the plots
 - `title::String = "Title"`: Set a title for the plots
 - `stack::Bool = true`: stack plot traces
@@ -191,20 +193,20 @@ end
     plot_dataframe!(plot, df)
     plot_dataframe!(plot, df, time_range)
 
-Plots data from DataFrame where each row represents a time period and each column represents a trace
+Plots data from `DataFrame` where each row represents a time period and each column represents a trace
 
 # Arguments
 
 - `plot`: existing plot handle
-- `df::DataFrames.DataFrame`: DataFrame where each row represents a time period and each column represents a trace.
-If only the dataframe is provided, it must have a column of `DateTime` values.
+- `df::DataFrames.DataFrame`: `DataFrame` where each row represents a time period and each column represents a trace.
+If only the `DataFrame` is provided, it must have a column of `DateTime` values.
 - `time_range:::Union{DataFrames.DataFrame, Array, StepRange}`: The time periods of the data
 
 # Accepted Key Words
 - `curtailment::Bool`: plot the curtailment with the variable
 - `set_display::Bool = true`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "png"`: set a different format for saving a PlotlyJS plot
+- `format::String = "png"`: set a different format for saving a [PlotlyJS](@extref Plots [Plotly-/-PlotlyJS](https://github.com/spencerlyon2/PlotlyJS.jl)) plot
 - `seriescolor::Array`: Set different colors for the plots
 - `title::String = "Title"`: Set a title for the plots
 - `stack::Bool = true`: stack plot traces
@@ -245,7 +247,7 @@ This function makes a plot of a PGdata object
 - `curtailment::Bool`: plot the curtailment with the variable
 - `set_display::Bool = true`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "png"`: set a different format for saving a PlotlyJS plot
+- `format::String = "png"`: set a different format for saving a [PlotlyJS](@extref Plots [Plotly-/-PlotlyJS](https://github.com/spencerlyon2/PlotlyJS.jl)) plot
 - `seriescolor::Array`: Set different colors for the plots
 - `title::String = "Title"`: Set a title for the plots
 - `stack::Bool = true`: stack plot traces
@@ -272,7 +274,7 @@ This function makes a plot of a PGdata object
 - `curtailment::Bool`: plot the curtailment with the variable
 - `set_display::Bool = true`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "png"`: set a different format for saving a PlotlyJS plot
+- `format::String = "png"`: set a different format for saving a [PlotlyJS](@extref Plots [Plotly-/-PlotlyJS](https://github.com/spencerlyon2/PlotlyJS.jl)) plot
 - `seriescolor::Array`: Set different colors for the plots
 - `title::String = "Title"`: Set a title for the plots
 - `stack::Bool = true`: stack plot traces
@@ -327,7 +329,7 @@ This function makes a plot of a results dictionary object
 - `curtailment::Bool`: plot the curtailment with the variable
 - `set_display::Bool = true`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "png"`: set a different format for saving a PlotlyJS plot
+- `format::String = "png"`: set a different format for saving a [PlotlyJS](@extref Plots [Plotly-/-PlotlyJS](https://github.com/spencerlyon2/PlotlyJS.jl)) plot
 - `seriescolor::Array`: Set different colors for the plots
 - `title::String = "Title"`: Set a title for the plots
 - `stack::Bool = true`: stack plot traces
@@ -354,7 +356,7 @@ This function makes a plot of a results dictionary
 - `curtailment::Bool`: plot the curtailment with the variable
 - `set_display::Bool = true`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "png"`: set a different format for saving a PlotlyJS plot
+- `format::String = "png"`: set a different format for saving a [PlotlyJS](@extref Plots [Plotly-/-PlotlyJS](https://github.com/spencerlyon2/PlotlyJS.jl)) plot
 - `seriescolor::Array`: Set different colors for the plots
 - `title::String = "Title"`: Set a title for the plots
 - `stack::Bool = true`: stack plot traces
@@ -376,7 +378,7 @@ and assigns each fuel type a specific color.
 
 # Arguments
 
-- `res::PowerSimulations.Results` : results to be plotted
+- `res::`[`PowerSimulations.SimulationResults`](@extref :type:`PowerSimulations.SimulationResults`) : results to be plotted
 
 # Example
 
@@ -393,14 +395,14 @@ plot = plot_fuel(res)
 - `curtailment::Bool = true`: To plot the curtailment in the stack plot
 - `set_display::Bool = true`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "png"`: set a different format for saving a PlotlyJS plot
+- `format::String = "png"`: set a different format for saving a [PlotlyJS](@extref Plots [Plotly-/-PlotlyJS](https://github.com/spencerlyon2/PlotlyJS.jl)) plot
 - `seriescolor::Array`: Set different colors for the plots
 - `title::String = "Title"`: Set a title for the plots
 - `stack::Bool = true`: stack plot traces
 - `bar::Bool` : create bar plot
 - `nofill::Bool` : force empty area fill
 - `stair::Bool`: Make a stair plot instead of a stack plot
-- `filter_func::Function = PowerSystems.get_available` : filter components included in plot
+- `filter_func::Function = `[`PowerSystems.get_available`](@extref PowerSystems.get_available-Tuple{Component}): filter components included in plot
 """
 function plot_fuel(result::IS.Results; kwargs...)
     return plot_fuel!(_empty_plot(), result; kwargs...)
@@ -425,15 +427,15 @@ and assigns each fuel type a specific color.
 - `curtailment::Bool = true`: To plot the curtailment in the stack plot
 - `set_display::Bool = true`: set to false to prevent the plots from displaying
 - `save::String = "file_path"`: set a file path to save the plots
-- `format::String = "png"`: set a different format for saving a PlotlyJS plot
+- `format::String = "png"`: set a different format for saving a [PlotlyJS](@extref Plots [Plotly-/-PlotlyJS](https://github.com/spencerlyon2/PlotlyJS.jl)) plot
 - `seriescolor::Array`: Set different colors for the plots
 - `title::String = "Title"`: Set a title for the plots
 - `stack::Bool = true`: stack plot traces
 - `bar::Bool` : create bar plot
 - `nofill::Bool` : force empty area fill
 - `stair::Bool`: Make a stair plot instead of a stack plot
-- `filter_func::Function = PowerSystems.get_available` : filter components included in plot
-- `palette` : Color palette as from `load_palette`.
+- `filter_func::Function = `[`PowerSystems.get_available`](@extref PowerSystems.get_available-Tuple{Component}): filter components included in plot
+- `palette` : Color palette as from [`load_palette`](@ref).
 """
 function plot_fuel!(p, result::IS.Results; kwargs...)
     backend = Plots.backend()
@@ -540,7 +542,7 @@ plot = plot_fuel(res)
 save_plot(plot, "my_plot.png")
 ```
 
-# Accepted Key Words (currently only implemented for `PlotlyJS` backend)
+# Accepted Key Words (currently only implemented for [PlotlyJS](@extref Plots [Plotly-/-PlotlyJS](https://github.com/spencerlyon2/PlotlyJS.jl)) backend)
 - `width::Union{Nothing,Int}=nothing`
 - `height::Union{Nothing,Int}=nothing`
 - `scale::Union{Nothing,Real}=nothing`

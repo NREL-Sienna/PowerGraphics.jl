@@ -5,6 +5,8 @@ using DocumenterInterLinks
 
 links = InterLinks(
     "Plots" => "https://docs.juliaplots.org/stable/",
+    "PowerSystems" => "https://nrel-sienna.github.io/PowerSystems.jl/stable/",
+    "PowerSimulations" => "https://nrel-sienna.github.io/PowerSimulations.jl/stable/",
 )
 
 if haskey(ENV, "GITHUB_ACTIONS")
