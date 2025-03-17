@@ -33,7 +33,7 @@ Plots the demand in the system.
 # Arguments
 
 - `res::Union{`[`InfrastructureSystems.Results`](@extref)`, `[`PowerSystems.System`](@extref)`}`: 
-    A `Results` object (e.g., [`PowerSimulations.SimulationResults`](@extref :type:`PowerSimulations.SimulationResults`))
+    A `Results` object (e.g., [`PowerSimulations.SimulationProblemResults`](@extref))
     or [`PowerSystems.System`](@extref) to plot the demand from
 
 # Example
@@ -76,7 +76,7 @@ Plots the demand in the system.
 
 - `plot` : existing plot handle
 - `res::Union{`[`InfrastructureSystems.Results`](@extref)`, `[`PowerSystems.System`](@extref)`}`: 
-    A `Results` object (e.g., [`PowerSimulations.SimulationResults`](@extref :type:`PowerSimulations.SimulationResults`))
+    A `Results` object (e.g., [`PowerSimulations.SimulationProblemResults`](@extref))
     or [`PowerSystems.System`](@extref) to plot the demand from
 
 # Accepted Key Words
@@ -383,7 +383,7 @@ and assigns each fuel type a specific color.
 # Arguments
 
 - `res::`[`InfrastructureSystems.Results`](@extref): 
-    A `Results` object (e.g., [`PowerSimulations.SimulationResults`](@extref :type:`PowerSimulations.SimulationResults`))
+    A `Results` object (e.g., [`PowerSimulations.SimulationProblemResults`](@extref))
     to be plotted
 
     # Example
@@ -424,7 +424,7 @@ and assigns each fuel type a specific color.
 
 - `plot` : existing plot handle (optional)
 - `res::`[`InfrastructureSystems.Results`](@extref): 
-    A `Results` object (e.g., [`PowerSimulations.SimulationResults`](@extref :type:`PowerSimulations.SimulationResults`))
+    A `Results` object (e.g., [`PowerSimulations.SimulationProblemResults`](@extref))
     to be plotted
 
 # Accepted Key Words
