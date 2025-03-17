@@ -8,3 +8,5 @@ for more details. Currently, two backends are supported in `PowerGraphics.jl`:
     plots - run the `gr()` command to load
   - [PlotlyJS](@extref Plots [Plotly-/-PlotlyJS](https://github.com/spencerlyon2/PlotlyJS.jl)):
     creates interactive plots - run the `plotlyjs()` command to load
+
+If you run neither command, `PowerGraphics.jl` will default to using GR.
