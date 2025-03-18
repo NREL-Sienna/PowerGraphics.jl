@@ -1,10 +1,11 @@
 """
     report(res::IS.Results, out_path::String, design_template::String)
 
-This function uses Weave.jl to either generate a LaTeX or HTML
-file based on the report_design.jmd (julia markdown) file
-that it reads. Out_path in the weave function dictates
-where the created file gets exported. An example template is available
+This function uses [`Weave.jl`](https://weavejl.mpastell.com/stable/) to either generate a LaTeX or HTML
+file based on the `report_design.jmd` (Julia markdown) file
+that it reads. 
+
+An example template is available
 [here](https://github.com/NREL-Sienna/PowerGraphics.jl/blob/main/report_templates/generic_report_template.jmd)
 
 # Arguments
@@ -21,7 +22,7 @@ report(results, out_path, template)
 
 # Accepted Key Words
 - `doctype::String = "md2html"`: create an HTML, default is PDF via latex
-- `backend::Plots.backend() = plotlyjs()`: sets the plots backend, default is gr()
+- `backend::Plots.AbstractBackend = Plots.gr()`: sets the `Plots.jl` [backend](@extref Plots backends)
 """
 function report(res::IS.Results, out_path::String, design_template::String; kwargs...)
     doctype = get(kwargs, :doctype, "md2pdf")

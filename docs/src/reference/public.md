@@ -1,4 +1,4 @@
-# [PowerGraphics API](@id api)
+# [Public API Reference](@id api)
 
 ```@autodocs
 Modules = [PowerGraphics]
