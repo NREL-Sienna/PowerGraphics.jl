@@ -74,7 +74,7 @@ Plots the demand in the system.
 
 # Arguments
 
-- `plot` : existing plot handle
+- `plot`: existing plot handle, such as the result of [`plot()`](@extref RecipesBase.plot)
 - `res::Union{`[`InfrastructureSystems.Results`](@extref)`, `[`PowerSystems.System`](@extref)`}`: 
     A `Results` object (e.g., [`PowerSimulations.SimulationProblemResults`](@extref))
     or [`PowerSystems.System`](@extref) to plot the demand from
@@ -203,7 +203,7 @@ and each column represents a trace
 
 # Arguments
 
-- `plot`: existing plot handle
+- `plot`: existing plot handle, such as the result of [`plot()`](@extref RecipesBase.plot)
 - `df::DataFrames.DataFrame`: `DataFrame` where each row represents a time period and each column represents a trace.
 If only the `DataFrame` is provided, it must have a column of `DateTime` values.
 - `time_range:::Union{DataFrames.DataFrame, Array, StepRange}`: The time periods of the data
@@ -272,7 +272,7 @@ Makes a plot from a `PowerAnalytics.PowerData` object
 
 # Arguments
 
-- `plot` : existing plot handle (optional)
+- `plot`: existing plot handle, such as the result of [`plot()`](@extref RecipesBase.plot) (optional)
 - `powerdata::PowerAnalytics.PowerData`: The `PowerData` object to be plotted
 
 # Accepted Key Words
@@ -354,7 +354,7 @@ Makes a plot from a results dictionary
 
 # Arguments
 
-- `plot` : existing plot handle (optional)
+- `plot`: existing plot handle, such as the result of [`plot()`](@extref RecipesBase.plot) (optional)
 - `results::Dict{String, DataFrame}`: The results to be plotted
 
 # Accepted Key Words
@@ -424,7 +424,7 @@ and assigns each fuel type a specific color.
 
 # Arguments
 
-- `plot` : existing plot handle (optional)
+- `plot`: existing plot handle, such as the result of [`plot()`](@extref RecipesBase.plot) (optional)
 - `res::`[`InfrastructureSystems.Results`](@extref): 
     A `Results` object (e.g., [`PowerSimulations.SimulationProblemResults`](@extref))
     to be plotted
