@@ -377,7 +377,7 @@ end
 """
     plot_fuel(results)
 
-This function makes a stack plot of the results by fuel type
+Plots a stack plot of the results by fuel type
 and assigns each fuel type a specific color.
 
 # Arguments
@@ -417,7 +417,7 @@ end
 """
     plot_fuel!(plot, results)
 
-This function makes a stack plot of the results by fuel type
+Plots a stack plot of the results by fuel type
 and assigns each fuel type a specific color.
 
 # Arguments
