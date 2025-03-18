@@ -160,7 +160,7 @@ and each column represents a trace
 
 - `df::DataFrames.DataFrame`: `DataFrame` where each row represents a time period and each column represents a trace.
 If only the `DataFrame` is provided, it must have a column of `DateTime` values.
-- `time_range:::Union{DataFrames.DataFrame, Array, StepRange}`: The time periods of the data
+- `time_range::Union{DataFrames.DataFrame, Array, StepRange}`: The time periods of the data
 
 # Example
 
