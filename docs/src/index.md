@@ -26,3 +26,8 @@ power system modeling, simulation, and optimization. The Sienna ecosystem can be
 
 Each application uses multiple packages in the [`Julia`](http://www.julialang.org)
 programming language.
+
+## Installation
+
+See the [Sienna installation page](https://nrel-sienna.github.io/Sienna/SiennaDocs/docs/build/how-to/install/)
+to install `PowerGraphics.jl` and other Sienna packages.
