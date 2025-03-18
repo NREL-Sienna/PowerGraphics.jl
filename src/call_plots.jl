@@ -153,7 +153,8 @@ end
     plot_dataframe(df)
     plot_dataframe(df, time_range)
 
-Plots data from `DataFrame` where each row represents a time period and each column represents a trace
+Plots data from a [`DataFrames.DataFrame`](@extref) where each row represents a time period
+and each column represents a trace
 
 # Arguments
 
@@ -197,7 +198,8 @@ end
     plot_dataframe!(plot, df)
     plot_dataframe!(plot, df, time_range)
 
-Plots data from `DataFrame` where each row represents a time period and each column represents a trace
+Plots data from a [`DataFrames.DataFrame`](@extref) where each row represents a time period
+and each column represents a trace
 
 # Arguments
 
