@@ -242,7 +242,8 @@ end
 """
     plot_powerdata(powerdata)
 
-Makes a plot from a `PowerAnalytics.PowerData` object
+Makes a plot from a `PowerAnalytics.PowerData` object, such as the result of
+`PowerAnalytics.get_generation_data`
 
 # Arguments
 
@@ -268,7 +269,8 @@ end
 """
     plot_powerdata!(plot, powerdata)
 
-Makes a plot from a `PowerAnalytics.PowerData` object
+Makes a plot from a `PowerAnalytics.PowerData` object, such as the result of
+`PowerAnalytics.get_generation_data`
 
 # Arguments
 
