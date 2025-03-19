@@ -109,9 +109,6 @@ PV + battery:
 Unserved Energy:
   RGB: "rgba(220, 2, 1, 1)"
   order: 55
-Battery:
-  RGB: "rgba(255, 74, 136, 1)"
-  order: 42
 New steam reach (NSR):
   RGB: "rgba(130, 192, 192, 1)"
   order: 17
